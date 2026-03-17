@@ -173,7 +173,11 @@ SNS:       Reddit (7 subreddits), X/Twitter, YouTube, TikTok(proxy), Instagram(p
 # Gemini (최종 검증용, 선택 — 없으면 내부 분석만으로 운영)
 GEMINI_API_KEY      # Google Gemini 2.5 Pro
 
-# KIS API (실행 모듈 구현 시 필요)
+# Binance USDT-M Futures (현재 활성)
+BINANCE_API_KEY     # Binance API key (testnet 또는 live)
+BINANCE_API_SECRET  # Binance API secret
+
+# KIS API (예약 — 실행 모듈 구현 시 필요)
 KIS_APP_KEY, KIS_APP_SECRET, KIS_ACCOUNT_NO
 
 # 미사용 (비용 절감)

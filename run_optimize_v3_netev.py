@@ -56,7 +56,7 @@ EMBARGO_BARS = 6
 # 3코인 압축 (BTC 제외, DOGE 관찰만)
 ACTIVE_COINS = ["XRP", "DOT", "ADA"]
 
-# 비용 모델 (Bybit VIP0 Perpetual)
+# 비용 모델 (Binance USDT-M Futures)
 COST_MODEL = CostModel(
     fee_schedule=FeeSchedule(
         maker_fee=0.0002,           # 0.02%
@@ -794,7 +794,7 @@ def main():
     print(f"  Remaining: {(DEADLINE - datetime.now()).total_seconds()/3600:.1f} hours")
     print(f"  Coins: {ACTIVE_COINS}")
     print(f"  Objective: post-cost net EV (equity%)")
-    print(f"  Cost model: Bybit VIP0 (maker={COST_MODEL.fees.maker_fee:.4%} "
+    print(f"  Cost model: Binance USDT-M Futures (maker={COST_MODEL.fees.maker_fee:.4%} "
           f"taker={COST_MODEL.fees.taker_fee:.4%})")
     print(f"  Risk frac: {RISK_FRAC:.1%} per trade")
     print(f"{'='*70}")

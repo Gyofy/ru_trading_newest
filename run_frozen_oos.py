@@ -59,7 +59,7 @@ RISK_FRAC = 0.005  # 0.5% equity per trade
 
 N_JOBS = 6
 
-# 비용 모델 (Bybit VIP0 -- 동결)
+# 비용 모델 (Binance USDT-M Futures -- 동결)
 COST_MODEL = CostModel(
     fee_schedule=FeeSchedule(
         maker_fee=0.0002,
@@ -816,7 +816,7 @@ def main():
     print(f"  OOS window: last {OOS_DAYS} days")
     print(f"  Coins: {ACTIVE_COINS}")
     print(f"  Parameters: FROZEN (v3.1_netev R38)")
-    print(f"  Cost model: Bybit VIP0")
+    print(f"  Cost model: Binance USDT-M Futures")
     print(f"  Mode: Trade-level bar-by-bar simulation")
     print(f"{'='*70}")
 

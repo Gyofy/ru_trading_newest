@@ -70,12 +70,75 @@ ACTIVE_COINS  = list(COIN_PARAMS.keys())   # DOT, ADA
 
 BM            = COMMON["bar_minutes"]       # 240 min
 MAX_HORIZON   = COMMON["max_horizon"]       # 18 bars
-RISK_FRAC     = COMMON["risk_frac"]         # 0.005
+RISK_FRAC     = COMMON["risk_frac"]         # 0.005 (base)
+MAX_RISK_FRAC = RISK_FRAC * 2.0             # 최대 2x
 MIN_NOTIONAL  = 5.0                         # Binance 최소 $5
 N_JOBS        = 4
 POLL_SEC      = 60                          # 폴링 주기 (초)
 RETRAIN_HOURS = 24
 MONITOR_SEC   = 600                         # 10분 모니터링 주기
+
+# ── 동적 포지션 사이징 계수 ────────────────────────────────────
+
+# Confidence multiplier (Stage1 확률 기반)
+CONF_TIERS = [
+    (0.80, 2.0),   # s1_prob ≥ 0.80 → 2x
+    (0.65, 1.3),   # s1_prob ≥ 0.65 → 1.3x
+    (0.50, 1.0),   # s1_prob ≥ 0.50 → 1x (기본)
+    (0.40, 0.6),   # s1_prob ≥ 0.40 → 0.6x
+    (0.0,  0.4),   # s1_prob < 0.40 → 0.4x
+]
+
+# Regime multiplier
+REGIME_MULT = {
+    "TREND_UP"  : 1.5,
+    "TREND_DOWN": 1.5,
+    "RANGE_LOW" : 0.6,
+    "RANGE_HIGH": 0.4,
+    "UNKNOWN"   : 0.7,
+}
+
+# 일간 손실 임계값별 사이즈 축소
+DRAWDOWN_GUARD = [
+    (0.01, 0.5),   # equity 1% 손실 → 0.5x
+    (0.005, 0.75), # equity 0.5% 손실 → 0.75x
+    (0.0, 1.0),    # 손실 없음 → 1x
+]
+
+
+def _confidence_mult(s1_prob: float) -> float:
+    for threshold, mult in CONF_TIERS:
+        if s1_prob >= threshold:
+            return mult
+    return 0.4
+
+
+def _regime_mult(regime: str) -> float:
+    return REGIME_MULT.get(regime, 0.7)
+
+
+def _drawdown_mult(equity: float, peak_equity: float) -> float:
+    dd = (peak_equity - equity) / peak_equity if peak_equity > 0 else 0.0
+    for threshold, mult in DRAWDOWN_GUARD:
+        if dd >= threshold:
+            return mult
+    return 1.0
+
+
+def calc_dynamic_risk(s1_prob: float, regime: str,
+                      equity: float, peak_equity: float) -> tuple[float, dict]:
+    """동적 risk_frac 계산. 반환: (final_risk_frac, 분해 dict)"""
+    conf  = _confidence_mult(s1_prob)
+    reg   = _regime_mult(regime)
+    dd    = _drawdown_mult(equity, peak_equity)
+    raw   = RISK_FRAC * conf * reg * dd
+    final = float(np.clip(raw, RISK_FRAC * 0.3, MAX_RISK_FRAC))
+    breakdown = {
+        "base": RISK_FRAC, "conf_mult": conf,
+        "regime_mult": reg, "dd_mult": dd,
+        "raw": round(raw, 6), "final": round(final, 6),
+    }
+    return final, breakdown
 
 logging.basicConfig(
     level=logging.INFO,
@@ -310,9 +373,10 @@ class DemoEngine:
     """Binance Testnet 실주문 트래커."""
 
     def __init__(self, adapter: ExchangeAdapter, equity_usdt: float):
-        self.adapter = adapter
-        self.equity  = equity_usdt
-        self.positions: dict[str, dict] = {}   # coin → position info
+        self.adapter      = adapter
+        self.equity       = equity_usdt
+        self.peak_equity  = equity_usdt        # drawdown guard 기준
+        self.positions: dict[str, dict] = {}
         self.trades: list[dict] = []
 
     async def enter(self, sig: dict) -> bool:
@@ -324,15 +388,28 @@ class DemoEngine:
         kl    = sig["kl"]
         atr   = sig["atr"]
 
-        # 수량 계산: risk_frac / (kl * atr / entry)
+        # ── 동적 포지션 사이징 ─────────────────────────────────
+        dyn_risk, sizing_info = calc_dynamic_risk(
+            s1_prob=sig["s1_prob"],
+            regime=sig["regime"],
+            equity=self.equity,
+            peak_equity=self.peak_equity,
+        )
         stop_dist = max(kl * atr, COMMON["min_barrier_pct"] * entry)
-        risk_usdt = self.equity * RISK_FRAC
+        risk_usdt = self.equity * dyn_risk
         qty_raw   = risk_usdt / stop_dist
-        # 최소 노셔널 $5 보장
         qty_raw   = max(qty_raw, MIN_NOTIONAL / entry * 1.1)
         qty       = self.adapter.round_qty(coin, qty_raw)
         sl        = self.adapter.round_price(coin, sl)
         tp        = self.adapter.round_price(coin, tp)
+
+        log.info(
+            f"[{coin}] 사이징: base={RISK_FRAC:.4f} "
+            f"× conf={sizing_info['conf_mult']} "
+            f"× regime={sizing_info['regime_mult']} "
+            f"× dd={sizing_info['dd_mult']} "
+            f"= {dyn_risk:.4f}  qty={qty}"
+        )
 
         # 시장가 진입
         entry_id = ExchangeAdapter.make_order_id(coin, side, prefix="demo")
@@ -375,6 +452,8 @@ class DemoEngine:
             "regime": sig["regime"],
             "s1_prob": sig["s1_prob"],
             "s2_prob": sig["s2_prob"],
+            "dyn_risk": dyn_risk,
+            "sizing": sizing_info,
             "open_time": datetime.now(timezone.utc).isoformat(),
         }
 
@@ -384,6 +463,7 @@ class DemoEngine:
             "tp": round(tp, 6), "sl": round(sl, 6),
             "regime": sig["regime"],
             "s1": round(sig["s1_prob"], 3), "s2": round(sig["s2_prob"], 3),
+            "sizing": sizing_info,
         })
         log.info(f"[{coin}] OPEN {side} @{fill_price:.4f} SL={sl:.4f} TP={tp:.4f} qty={qty}")
         return True
@@ -446,6 +526,8 @@ class DemoEngine:
         net  = gpnl * nr * self.equity   # approximate USDT P&L
 
         self.equity += net
+        if self.equity > self.peak_equity:
+            self.peak_equity = self.equity
         trade = {
             "coin": coin, "side": pos["side"],
             "entry": round(pos["entry"], 6), "exit": round(exit_price, 6),
@@ -622,11 +704,15 @@ async def main():
                         upnl = (cur - pos["entry"]) / pos["entry"] * 100
                     else:
                         upnl = (pos["entry"] - cur) / pos["entry"] * 100
+                    sz = pos.get("sizing", {})
                     pos_lines.append(
                         f"    {coin} {pos['side']} @{pos['entry']:.4f} "
                         f"현재={cur:.4f} upnl={upnl:+.2f}% "
                         f"TP={pos['tp']:.4f} SL={pos['sl']:.4f} "
-                        f"bars={pos['bars']}/{MAX_HORIZON}"
+                        f"bars={pos['bars']}/{MAX_HORIZON} "
+                        f"risk={pos.get('dyn_risk', RISK_FRAC):.4f}"
+                        + (f"[conf×{sz.get('conf_mult',1)} reg×{sz.get('regime_mult',1)} dd×{sz.get('dd_mult',1)}]"
+                           if sz else "")
                     )
 
                 # 최근 거래 5건
