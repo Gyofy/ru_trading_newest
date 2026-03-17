@@ -17,7 +17,9 @@ import json
 import time
 import warnings
 import traceback
+import multiprocessing
 import numpy as np
+from concurrent.futures import ProcessPoolExecutor, as_completed
 import pandas as pd
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -46,6 +48,10 @@ from src.utils.feature_policy import is_excluded_feature
 DEADLINE = datetime(2026, 3, 19, 2, 0, 0)   # 2026-03-19 11:00 KST = 02:00 UTC
 REPORT_DIR = Path("data/reports/walkforward_v3_1")
 REPORT_DIR.mkdir(parents=True, exist_ok=True)
+
+N_CPU = multiprocessing.cpu_count()        # 16
+WINDOW_WORKERS = min(4, N_CPU // 4)        # 4 parallel window workers
+LGB_THREADS_PER_WORKER = max(1, N_CPU // WINDOW_WORKERS)  # 4 threads each
 
 SETTINGS = load_settings()
 BM = cfg_bar_minutes()
@@ -256,6 +262,19 @@ class DataManager:
         return train_df, test_df
 
 
+# ==================== 병렬 윈도우 평가 (standalone picklable) ====================
+
+def _eval_window_task(args):
+    """ProcessPoolExecutor용 독립 평가 함수 (picklable)."""
+    trainer_lightweight, train_df, test_df, params_dict, coin, horizon = args
+    trainer = ModelTrainerV3(lightweight=trainer_lightweight)
+    try:
+        return trainer.train_and_evaluate(train_df, test_df, params_dict,
+                                          coin=coin, horizon=horizon)
+    except Exception:
+        return None
+
+
 # ==================== 모델 학습 (v3 호환) ====================
 
 class ModelTrainerV3:
@@ -342,7 +361,7 @@ class ModelTrainerV3:
                 min_child_samples=params.get("min_child_samples", 10),
                 subsample=params.get("subsample", 0.8),
                 colsample_bytree=params.get("colsample", 0.8),
-                device="gpu", gpu_use_dp=False, verbose=-1,
+                device="cpu", num_threads=LGB_THREADS_PER_WORKER, verbose=-1,
                 is_unbalance=True, random_state=42,
             )
         else:
@@ -382,7 +401,7 @@ class ModelTrainerV3:
                     min_child_samples=params.get("min_child_samples", 10),
                     subsample=params.get("subsample", 0.8),
                     colsample_bytree=params.get("colsample", 0.8),
-                    device="gpu", gpu_use_dp=False, verbose=-1,
+                    device="cpu", num_threads=LGB_THREADS_PER_WORKER, verbose=-1,
                     is_unbalance=True, random_state=42,
                 )
             else:
@@ -548,23 +567,28 @@ class CoinOptimizer:
             window_scores = []
             t_param_start = time.time()
 
-            for wi, window in enumerate(windows):
+            # 윈도우 태스크 준비 (데드라인 체크 후)
+            window_tasks = []
+            window_names = []
+            for window in windows:
                 if datetime.now() >= DEADLINE:
                     break
                 train_df, test_df = self.data_mgr.split_data(coin_df, window)
                 if len(train_df) < 80 or len(test_df) < 8:
                     continue
-                try:
-                    metrics = self.trainer.train_and_evaluate(
-                        train_df, test_df, params_dict, coin=coin, horizon=HORIZONS[-1])
-                except Exception as e:
-                    print(f"      [{coin}] P{pi+1} W{wi+1}/{len(windows)} ERROR: {e}")
-                    continue
+                window_tasks.append((self.trainer.lightweight, train_df, test_df,
+                                     params_dict, coin, HORIZONS[-1]))
+                window_names.append(window["name"])
 
-                if metrics:
-                    results.append({"params": params_dict, "window": window["name"],
-                                    "coin": coin, **metrics})
-                    window_scores.append(metrics)
+            # WINDOW_WORKERS 병렬 평가
+            if window_tasks:
+                with ProcessPoolExecutor(max_workers=WINDOW_WORKERS) as ex:
+                    for wname, metrics in zip(window_names,
+                                              ex.map(_eval_window_task, window_tasks)):
+                        if metrics:
+                            results.append({"params": params_dict, "window": wname,
+                                            "coin": coin, **metrics})
+                            window_scores.append(metrics)
 
             if window_scores:
                 s1_avg = np.mean([m["stage1_balanced_accuracy"] for m in window_scores])

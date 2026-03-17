@@ -19,6 +19,7 @@ import warnings
 import numpy as np
 import pandas as pd
 from typing import Optional
+from concurrent.futures import ThreadPoolExecutor
 
 import lightgbm as lgb
 import xgboost as xgb
@@ -57,7 +58,7 @@ class EnhancedEnsemble:
         self,
         n_classes: int = 2,
         use_stacking: bool = True,
-        n_jobs: int = 6,
+        n_jobs: int = -1,
         random_state: int = 42,
         verbose: bool = False,
     ):
@@ -90,9 +91,8 @@ class EnhancedEnsemble:
             "bagging_fraction": 0.8,
             "bagging_freq": 5,
             "is_unbalance": True,
-            "num_threads": -1,
-            "device": "gpu",
-            "gpu_use_dp": False,
+            "num_threads": 16,
+            "device": "cpu",
             "verbose": -1,
             "seed": rs,
         }
@@ -184,8 +184,13 @@ class EnhancedEnsemble:
         """전체 앙상블 학습."""
         model_specs = self._build_models(iter_num)
 
-        # 개별 모델 학습
-        for name, spec in model_specs.items():
+        # GPU 모델(lgb, xgb, catboost)은 순차 실행, CPU 모델은 병렬 실행
+        gpu_names  = {"lgb", "xgb", "catboost"}
+        cpu_specs  = {n: s for n, s in model_specs.items() if n not in gpu_names}
+        gpu_specs  = {n: s for n, s in model_specs.items() if n in gpu_names}
+
+        # GPU 모델 순차 학습
+        for name, spec in gpu_specs.items():
             try:
                 model = self._fit_single(name, spec, X, y, sample_weight)
                 if model is not None:
@@ -195,6 +200,22 @@ class EnhancedEnsemble:
             except Exception as e:
                 if self.verbose:
                     print(f"  [{name}] FAILED: {e}")
+
+        # CPU 모델 병렬 학습 (ThreadPoolExecutor, GIL-free zone in sklearn/lgb)
+        def _train(item):
+            name, spec = item
+            try:
+                return name, self._fit_single(name, spec, X, y, sample_weight)
+            except Exception as e:
+                return name, None
+
+        n_cpu_workers = min(len(cpu_specs), 4)
+        with ThreadPoolExecutor(max_workers=n_cpu_workers) as ex:
+            for name, model in ex.map(_train, cpu_specs.items()):
+                if model is not None:
+                    self.models_[name] = model
+                    if self.verbose:
+                        print(f"  [{name}] trained OK")
 
         if not self.models_:
             raise ValueError("No models trained successfully")
