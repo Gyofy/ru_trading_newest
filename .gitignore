@@ -1,0 +1,39 @@
+# API 키 / 비밀정보
+.env
+.env.*
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+
+# 데이터 (용량 큼)
+data/raw/
+data/processed/
+data/features/
+data/predictions/
+data/orders/
+
+# 로그
+logs/*.log
+
+# Models / artifacts
+data/models/
+data/ledger.db
+*.pt
+*.h5
+catboost_info/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temp
+*.tmp
+*.bak

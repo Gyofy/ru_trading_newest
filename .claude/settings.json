@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Read",
+      "Glob",
+      "Grep",
+      "Bash(python *)",
+      "Bash(pip install *)",
+      "Bash(git *)"
+    ],
+    "deny": [
+      "Bash(rm -rf *)",
+      "Bash(* --force *)"
+    ]
+  },
+  "preferences": {
+    "tmuxSplitPanes": true
+}
+}

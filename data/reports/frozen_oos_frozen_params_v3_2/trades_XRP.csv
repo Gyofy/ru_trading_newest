@@ -1,0 +1,3 @@
+coin,side,entry_idx,entry_time,entry_price,tp_price,sl_price,atr,exit_idx,exit_time,exit_price,exit_type,holding_bars,gross_pnl_pct,gross_pnl_eq,cost_entry_fee,cost_exit_fee,cost_slippage,cost_funding,cost_miss_fill,cost_total,net_pnl_eq,regime,block
+XRP,SELL,92,2026-03-04 12:00:00+00:00,1.458061,1.361965,1.47728,0.032032,104,2026-03-06 12:00:00+00:00,1.361965,take_profit,12,0.065906,0.025,7.6e-05,7.6e-05,0.000152,0.000228,0.000265,0.000796,0.024204,TREND_UP,B
+XRP,SELL,128,2026-03-10 12:00:00+00:00,1.42749,1.358254,1.441337,0.023079,146,2026-03-13 12:00:00+00:00,1.441337,stop_loss,18,-0.0097,-0.005,0.000103,0.000283,0.000412,0.000464,0.000265,0.001528,-0.006528,TREND_UP,B

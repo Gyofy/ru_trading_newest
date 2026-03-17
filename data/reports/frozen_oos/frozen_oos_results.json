@@ -1,0 +1,1031 @@
+{
+  "version": "frozen_oos_v1",
+  "generated_at": "2026-03-17T11:40:44.092025",
+  "oos_days": 42,
+  "frozen_params": {
+    "XRP": {
+      "k_upper": 3.0,
+      "k_lower": 0.6,
+      "stage1_threshold": 0.6,
+      "max_features": 120,
+      "num_leaves": 47,
+      "learning_rate": 0.02,
+      "n_estimators": 100,
+      "max_depth_tree": 6,
+      "subsample": 0.8,
+      "colsample": 0.6,
+      "min_child_samples": 30
+    },
+    "ADA": {
+      "k_upper": 3.0,
+      "k_lower": 0.6,
+      "stage1_threshold": 0.5,
+      "max_features": 120,
+      "num_leaves": 15,
+      "learning_rate": 0.02,
+      "n_estimators": 400,
+      "max_depth_tree": 8,
+      "subsample": 0.7,
+      "colsample": 0.9,
+      "min_child_samples": 5
+    },
+    "DOT": {
+      "k_upper": 3.0,
+      "k_lower": 0.6,
+      "stage1_threshold": 0.5,
+      "max_features": 80,
+      "num_leaves": 47,
+      "learning_rate": 0.1,
+      "n_estimators": 300,
+      "max_depth_tree": 8,
+      "subsample": 0.7,
+      "colsample": 0.8,
+      "min_child_samples": 10
+    }
+  },
+  "cost_model": {
+    "maker_fee": 0.0002,
+    "taker_fee": 0.00055,
+    "slippage_entry": 0.0003,
+    "slippage_exit_market": 0.0005,
+    "funding_rate": 0.0001,
+    "miss_fill_prob": 0.15
+  },
+  "coin_results": {
+    "XRP": {
+      "coin": "XRP",
+      "trade_count": 0,
+      "verdict": "NO TRADES",
+      "train_time_sec": 35.8,
+      "params": {
+        "k_upper": 3.0,
+        "k_lower": 0.6,
+        "stage1_threshold": 0.6,
+        "max_features": 120,
+        "num_leaves": 47,
+        "learning_rate": 0.02,
+        "n_estimators": 100,
+        "max_depth_tree": 6,
+        "subsample": 0.8,
+        "colsample": 0.6,
+        "min_child_samples": 30
+      },
+      "oos_period": "2026-02-03 00:00:00+00:00 ~ 2026-03-17 00:00:00+00:00",
+      "n_train_bars": 1885,
+      "n_oos_bars": 253
+    },
+    "DOT": {
+      "coin": "DOT",
+      "trade_count": 18,
+      "tp_count": 6,
+      "sl_count": 10,
+      "time_stop_count": 2,
+      "win_rate": 0.3333,
+      "loss_rate": 0.5556,
+      "time_exit_rate": 0.1111,
+      "avg_net_pnl": 0.00624,
+      "total_net_pnl": 0.112314,
+      "total_gross_pnl": 0.127081,
+      "total_cost": 0.014768,
+      "cost_share": 0.065,
+      "avg_holding_bars": 7.56,
+      "max_drawdown": 0.022789,
+      "sharpe_like": 6.3294,
+      "ci_95_lo": -0.000203,
+      "ci_95_hi": 0.012682,
+      "pnl_p5": -0.006066,
+      "pnl_p25": -0.005822,
+      "pnl_p50": -0.005654,
+      "pnl_p75": 0.024176,
+      "pnl_p95": 0.024324,
+      "regime_breakdown": {
+        "UNKNOWN": {
+          "count": 18,
+          "avg_net_pnl": 0.00624,
+          "total_net_pnl": 0.112314
+        }
+      },
+      "verdict": "PASS",
+      "train_time_sec": 33.3,
+      "params": {
+        "k_upper": 3.0,
+        "k_lower": 0.6,
+        "stage1_threshold": 0.5,
+        "max_features": 80,
+        "num_leaves": 47,
+        "learning_rate": 0.1,
+        "n_estimators": 300,
+        "max_depth_tree": 8,
+        "subsample": 0.7,
+        "colsample": 0.8,
+        "min_child_samples": 10
+      },
+      "oos_period": "2026-02-03 00:00:00+00:00 ~ 2026-03-17 00:00:00+00:00",
+      "n_train_bars": 1885,
+      "n_oos_bars": 253
+    },
+    "ADA": {
+      "coin": "ADA",
+      "trade_count": 13,
+      "tp_count": 4,
+      "sl_count": 9,
+      "time_stop_count": 0,
+      "win_rate": 0.3077,
+      "loss_rate": 0.6923,
+      "time_exit_rate": 0.0,
+      "avg_net_pnl": 0.003343,
+      "total_net_pnl": 0.043465,
+      "total_gross_pnl": 0.055,
+      "total_cost": 0.011535,
+      "cost_share": 0.0796,
+      "avg_holding_bars": 4.08,
+      "max_drawdown": 0.035649,
+      "sharpe_like": 4.6146,
+      "ci_95_lo": -0.004242,
+      "ci_95_hi": 0.010929,
+      "pnl_p5": -0.006019,
+      "pnl_p25": -0.005974,
+      "pnl_p50": -0.005932,
+      "pnl_p75": 0.024259,
+      "pnl_p95": 0.024283,
+      "regime_breakdown": {
+        "UNKNOWN": {
+          "count": 13,
+          "avg_net_pnl": 0.003343,
+          "total_net_pnl": 0.043465
+        }
+      },
+      "verdict": "MARGINAL (CI includes zero)",
+      "train_time_sec": 33.4,
+      "params": {
+        "k_upper": 3.0,
+        "k_lower": 0.6,
+        "stage1_threshold": 0.5,
+        "max_features": 120,
+        "num_leaves": 15,
+        "learning_rate": 0.02,
+        "n_estimators": 400,
+        "max_depth_tree": 8,
+        "subsample": 0.7,
+        "colsample": 0.9,
+        "min_child_samples": 5
+      },
+      "oos_period": "2026-02-03 00:00:00+00:00 ~ 2026-03-17 00:00:00+00:00",
+      "n_train_bars": 1885,
+      "n_oos_bars": 253
+    }
+  },
+  "perturbation": {
+    "XRP": {
+      "coin": "XRP",
+      "perturbation_results": [
+        {
+          "k_upper": 2.5,
+          "k_lower": 0.5,
+          "threshold": 0.5499999999999999,
+          "rr": 5.0,
+          "trade_count": 15,
+          "avg_net_pnl": 0.004339,
+          "total_net_pnl": 0.065078,
+          "win_rate": 0.2667,
+          "verdict": "MARGINAL (CI includes zero)"
+        },
+        {
+          "k_upper": 2.5,
+          "k_lower": 0.5,
+          "threshold": 0.6,
+          "rr": 5.0,
+          "trade_count": 11,
+          "avg_net_pnl": 0.008143,
+          "total_net_pnl": 0.089576,
+          "win_rate": 0.3636,
+          "verdict": "PASS (low N, cautious)"
+        },
+        {
+          "k_upper": 2.5,
+          "k_lower": 0.5,
+          "threshold": 0.65,
+          "rr": 5.0,
+          "trade_count": 6,
+          "avg_net_pnl": 0.004826,
+          "total_net_pnl": 0.028959,
+          "win_rate": 0.1667,
+          "verdict": "MARGINAL (CI includes zero)"
+        },
+        {
+          "k_upper": 2.5,
+          "k_lower": 0.6,
+          "threshold": 0.5499999999999999,
+          "rr": 4.17,
+          "trade_count": 26,
+          "avg_net_pnl": 0.004959,
+          "total_net_pnl": 0.128925,
+          "win_rate": 0.3462,
+          "verdict": "PASS"
+        },
+        {
+          "k_upper": 2.5,
+          "k_lower": 0.6,
+          "threshold": 0.6,
+          "rr": 4.17,
+          "trade_count": 14,
+          "avg_net_pnl": 0.004247,
+          "total_net_pnl": 0.059456,
+          "win_rate": 0.3571,
+          "verdict": "MARGINAL (CI includes zero)"
+        },
+        {
+          "k_upper": 2.5,
+          "k_lower": 0.6,
+          "threshold": 0.65,
+          "rr": 4.17,
+          "trade_count": 5,
+          "avg_net_pnl": 0.004511,
+          "total_net_pnl": 0.022554,
+          "win_rate": 0.4,
+          "verdict": "MARGINAL (CI includes zero)"
+        },
+        {
+          "k_upper": 2.5,
+          "k_lower": 0.7,
+          "threshold": 0.5499999999999999,
+          "rr": 3.57,
+          "trade_count": 36,
+          "avg_net_pnl": 0.004493,
+          "total_net_pnl": 0.16175,
+          "win_rate": 0.3889,
+          "verdict": "PASS"
+        },
+        {
+          "k_upper": 2.5,
+          "k_lower": 0.7,
+          "threshold": 0.6,
+          "rr": 3.57,
+          "trade_count": 15,
+          "avg_net_pnl": 0.009105,
+          "total_net_pnl": 0.13657,
+          "win_rate": 0.6,
+          "verdict": "PASS"
+        },
+        {
+          "k_upper": 2.5,
+          "k_lower": 0.7,
+          "threshold": 0.65,
+          "rr": 3.57,
+          "trade_count": 2,
+          "avg_net_pnl": 0.017268,
+          "total_net_pnl": 0.034537,
+          "win_rate": 1.0,
+          "verdict": "PASS (low N, cautious)"
+        },
+        {
+          "k_upper": 3.0,
+          "k_lower": 0.5,
+          "threshold": 0.5499999999999999,
+          "rr": 6.0,
+          "trade_count": 6,
+          "avg_net_pnl": 0.005767,
+          "total_net_pnl": 0.034601,
+          "win_rate": 0.3333,
+          "verdict": "MARGINAL (CI includes zero)"
+        },
+        {
+          "k_upper": 3.0,
+          "k_lower": 0.5,
+          "threshold": 0.6,
+          "rr": 6.0,
+          "trade_count": 4,
+          "avg_net_pnl": 0.011667,
+          "total_net_pnl": 0.046667,
+          "win_rate": 0.5,
+          "verdict": "MARGINAL (CI includes zero)"
+        },
+        {
+          "k_upper": 3.0,
+          "k_lower": 0.5,
+          "threshold": 0.65,
+          "rr": 6.0,
+          "trade_count": 1,
+          "avg_net_pnl": 0.029554,
+          "total_net_pnl": 0.029554,
+          "win_rate": 1.0,
+          "verdict": "PASS (low N, cautious)"
+        },
+        {
+          "k_upper": 3.0,
+          "k_lower": 0.6,
+          "threshold": 0.5499999999999999,
+          "error": "'avg_net_pnl'"
+        },
+        {
+          "k_upper": 3.0,
+          "k_lower": 0.6,
+          "threshold": 0.6,
+          "error": "'avg_net_pnl'"
+        },
+        {
+          "k_upper": 3.0,
+          "k_lower": 0.6,
+          "threshold": 0.65,
+          "error": "'avg_net_pnl'"
+        },
+        {
+          "k_upper": 3.0,
+          "k_lower": 0.7,
+          "threshold": 0.5499999999999999,
+          "rr": 4.29,
+          "trade_count": 1,
+          "avg_net_pnl": -0.005878,
+          "total_net_pnl": -0.005878,
+          "win_rate": 0.0,
+          "verdict": "FAIL"
+        },
+        {
+          "k_upper": 3.0,
+          "k_lower": 0.7,
+          "threshold": 0.6,
+          "error": "'avg_net_pnl'"
+        },
+        {
+          "k_upper": 3.0,
+          "k_lower": 0.7,
+          "threshold": 0.65,
+          "error": "'avg_net_pnl'"
+        },
+        {
+          "k_upper": 3.5,
+          "k_lower": 0.5,
+          "threshold": 0.5499999999999999,
+          "rr": 7.0,
+          "trade_count": 1,
+          "avg_net_pnl": -0.006038,
+          "total_net_pnl": -0.006038,
+          "win_rate": 0.0,
+          "verdict": "FAIL"
+        },
+        {
+          "k_upper": 3.5,
+          "k_lower": 0.5,
+          "threshold": 0.6,
+          "error": "'avg_net_pnl'"
+        },
+        {
+          "k_upper": 3.5,
+          "k_lower": 0.5,
+          "threshold": 0.65,
+          "error": "'avg_net_pnl'"
+        },
+        {
+          "k_upper": 3.5,
+          "k_lower": 0.6,
+          "threshold": 0.5499999999999999,
+          "error": "'avg_net_pnl'"
+        },
+        {
+          "k_upper": 3.5,
+          "k_lower": 0.6,
+          "threshold": 0.6,
+          "error": "'avg_net_pnl'"
+        },
+        {
+          "k_upper": 3.5,
+          "k_lower": 0.6,
+          "threshold": 0.65,
+          "error": "'avg_net_pnl'"
+        },
+        {
+          "k_upper": 3.5,
+          "k_lower": 0.7,
+          "threshold": 0.5499999999999999,
+          "rr": 5.0,
+          "trade_count": 2,
+          "avg_net_pnl": -0.005662,
+          "total_net_pnl": -0.011323,
+          "win_rate": 0.0,
+          "verdict": "FAIL"
+        },
+        {
+          "k_upper": 3.5,
+          "k_lower": 0.7,
+          "threshold": 0.6,
+          "rr": 5.0,
+          "trade_count": 1,
+          "avg_net_pnl": -0.005506,
+          "total_net_pnl": -0.005506,
+          "win_rate": 0.0,
+          "verdict": "FAIL"
+        },
+        {
+          "k_upper": 3.5,
+          "k_lower": 0.7,
+          "threshold": 0.65,
+          "error": "'avg_net_pnl'"
+        }
+      ]
+    },
+    "DOT": {
+      "coin": "DOT",
+      "perturbation_results": [
+        {
+          "k_upper": 2.5,
+          "k_lower": 0.5,
+          "threshold": 0.45,
+          "rr": 5.0,
+          "trade_count": 22,
+          "avg_net_pnl": 0.00584,
+          "total_net_pnl": 0.12848,
+          "win_rate": 0.3182,
+          "verdict": "PASS"
+        },
+        {
+          "k_upper": 2.5,
+          "k_lower": 0.5,
+          "threshold": 0.5,
+          "rr": 5.0,
+          "trade_count": 23,
+          "avg_net_pnl": 0.008224,
+          "total_net_pnl": 0.189141,
+          "win_rate": 0.4348,
+          "verdict": "PASS"
+        },
+        {
+          "k_upper": 2.5,
+          "k_lower": 0.5,
+          "threshold": 0.55,
+          "rr": 5.0,
+          "trade_count": 22,
+          "avg_net_pnl": 0.008876,
+          "total_net_pnl": 0.195261,
+          "win_rate": 0.4545,
+          "verdict": "PASS"
+        },
+        {
+          "k_upper": 2.5,
+          "k_lower": 0.6,
+          "threshold": 0.45,
+          "rr": 4.17,
+          "trade_count": 19,
+          "avg_net_pnl": 0.00567,
+          "total_net_pnl": 0.107724,
+          "win_rate": 0.3684,
+          "verdict": "PASS"
+        },
+        {
+          "k_upper": 2.5,
+          "k_lower": 0.6,
+          "threshold": 0.5,
+          "rr": 4.17,
+          "trade_count": 19,
+          "avg_net_pnl": 0.00567,
+          "total_net_pnl": 0.107724,
+          "win_rate": 0.3684,
+          "verdict": "PASS"
+        },
+        {
+          "k_upper": 2.5,
+          "k_lower": 0.6,
+          "threshold": 0.55,
+          "rr": 4.17,
+          "trade_count": 17,
+          "avg_net_pnl": 0.003978,
+          "total_net_pnl": 0.067631,
+          "win_rate": 0.2941,
+          "verdict": "MARGINAL (CI includes zero)"
+        },
+        {
+          "k_upper": 2.5,
+          "k_lower": 0.7,
+          "threshold": 0.45,
+          "rr": 3.57,
+          "trade_count": 15,
+          "avg_net_pnl": 0.005861,
+          "total_net_pnl": 0.08792,
+          "win_rate": 0.4667,
+          "verdict": "PASS"
+        },
+        {
+          "k_upper": 2.5,
+          "k_lower": 0.7,
+          "threshold": 0.5,
+          "rr": 3.57,
+          "trade_count": 15,
+          "avg_net_pnl": 0.005861,
+          "total_net_pnl": 0.08792,
+          "win_rate": 0.4667,
+          "verdict": "PASS"
+        },
+        {
+          "k_upper": 2.5,
+          "k_lower": 0.7,
+          "threshold": 0.55,
+          "rr": 3.57,
+          "trade_count": 15,
+          "avg_net_pnl": 0.006489,
+          "total_net_pnl": 0.097328,
+          "win_rate": 0.5333,
+          "verdict": "PASS"
+        },
+        {
+          "k_upper": 3.0,
+          "k_lower": 0.5,
+          "threshold": 0.45,
+          "rr": 6.0,
+          "trade_count": 18,
+          "avg_net_pnl": 0.004592,
+          "total_net_pnl": 0.08265,
+          "win_rate": 0.2222,
+          "verdict": "MARGINAL (CI includes zero)"
+        },
+        {
+          "k_upper": 3.0,
+          "k_lower": 0.5,
+          "threshold": 0.5,
+          "rr": 6.0,
+          "trade_count": 18,
+          "avg_net_pnl": 0.004591,
+          "total_net_pnl": 0.082643,
+          "win_rate": 0.2222,
+          "verdict": "MARGINAL (CI includes zero)"
+        },
+        {
+          "k_upper": 3.0,
+          "k_lower": 0.5,
+          "threshold": 0.55,
+          "rr": 6.0,
+          "trade_count": 18,
+          "avg_net_pnl": 0.004381,
+          "total_net_pnl": 0.078857,
+          "win_rate": 0.2222,
+          "verdict": "MARGINAL (CI includes zero)"
+        },
+        {
+          "k_upper": 3.0,
+          "k_lower": 0.6,
+          "threshold": 0.45,
+          "rr": 5.0,
+          "trade_count": 18,
+          "avg_net_pnl": 0.00624,
+          "total_net_pnl": 0.112314,
+          "win_rate": 0.3333,
+          "verdict": "PASS"
+        },
+        {
+          "k_upper": 3.0,
+          "k_lower": 0.6,
+          "threshold": 0.5,
+          "rr": 5.0,
+          "trade_count": 18,
+          "avg_net_pnl": 0.00624,
+          "total_net_pnl": 0.112314,
+          "win_rate": 0.3333,
+          "verdict": "PASS"
+        },
+        {
+          "k_upper": 3.0,
+          "k_lower": 0.6,
+          "threshold": 0.55,
+          "rr": 5.0,
+          "trade_count": 16,
+          "avg_net_pnl": 0.003993,
+          "total_net_pnl": 0.063884,
+          "win_rate": 0.25,
+          "verdict": "MARGINAL (CI includes zero)"
+        },
+        {
+          "k_upper": 3.0,
+          "k_lower": 0.7,
+          "threshold": 0.45,
+          "rr": 4.29,
+          "trade_count": 20,
+          "avg_net_pnl": 0.005166,
+          "total_net_pnl": 0.103323,
+          "win_rate": 0.35,
+          "verdict": "PASS"
+        },
+        {
+          "k_upper": 3.0,
+          "k_lower": 0.7,
+          "threshold": 0.5,
+          "rr": 4.29,
+          "trade_count": 16,
+          "avg_net_pnl": 0.004592,
+          "total_net_pnl": 0.073468,
+          "win_rate": 0.3125,
+          "verdict": "MARGINAL (CI includes zero)"
+        },
+        {
+          "k_upper": 3.0,
+          "k_lower": 0.7,
+          "threshold": 0.55,
+          "rr": 4.29,
+          "trade_count": 16,
+          "avg_net_pnl": 0.004592,
+          "total_net_pnl": 0.073468,
+          "win_rate": 0.3125,
+          "verdict": "MARGINAL (CI includes zero)"
+        },
+        {
+          "k_upper": 3.5,
+          "k_lower": 0.5,
+          "threshold": 0.45,
+          "rr": 7.0,
+          "trade_count": 11,
+          "avg_net_pnl": 0.005822,
+          "total_net_pnl": 0.064039,
+          "win_rate": 0.1818,
+          "verdict": "MARGINAL (CI includes zero)"
+        },
+        {
+          "k_upper": 3.5,
+          "k_lower": 0.5,
+          "threshold": 0.5,
+          "rr": 7.0,
+          "trade_count": 8,
+          "avg_net_pnl": 0.007145,
+          "total_net_pnl": 0.057163,
+          "win_rate": 0.25,
+          "verdict": "MARGINAL (CI includes zero)"
+        },
+        {
+          "k_upper": 3.5,
+          "k_lower": 0.5,
+          "threshold": 0.55,
+          "rr": 7.0,
+          "trade_count": 7,
+          "avg_net_pnl": 0.011197,
+          "total_net_pnl": 0.078381,
+          "win_rate": 0.4286,
+          "verdict": "MARGINAL (CI includes zero)"
+        },
+        {
+          "k_upper": 3.5,
+          "k_lower": 0.6,
+          "threshold": 0.45,
+          "rr": 5.83,
+          "trade_count": 10,
+          "avg_net_pnl": 0.011668,
+          "total_net_pnl": 0.116685,
+          "win_rate": 0.3,
+          "verdict": "PASS (low N, cautious)"
+        },
+        {
+          "k_upper": 3.5,
+          "k_lower": 0.6,
+          "threshold": 0.5,
+          "rr": 5.83,
+          "trade_count": 11,
+          "avg_net_pnl": 0.009521,
+          "total_net_pnl": 0.104736,
+          "win_rate": 0.2727,
+          "verdict": "PASS (low N, cautious)"
+        },
+        {
+          "k_upper": 3.5,
+          "k_lower": 0.6,
+          "threshold": 0.55,
+          "rr": 5.83,
+          "trade_count": 9,
+          "avg_net_pnl": 0.012511,
+          "total_net_pnl": 0.112602,
+          "win_rate": 0.4444,
+          "verdict": "PASS (low N, cautious)"
+        },
+        {
+          "k_upper": 3.5,
+          "k_lower": 0.7,
+          "threshold": 0.45,
+          "rr": 5.0,
+          "trade_count": 14,
+          "avg_net_pnl": 0.009822,
+          "total_net_pnl": 0.137505,
+          "win_rate": 0.3571,
+          "verdict": "PASS (low N, cautious)"
+        },
+        {
+          "k_upper": 3.5,
+          "k_lower": 0.7,
+          "threshold": 0.5,
+          "rr": 5.0,
+          "trade_count": 14,
+          "avg_net_pnl": 0.009432,
+          "total_net_pnl": 0.132047,
+          "win_rate": 0.3571,
+          "verdict": "PASS (low N, cautious)"
+        },
+        {
+          "k_upper": 3.5,
+          "k_lower": 0.7,
+          "threshold": 0.55,
+          "rr": 5.0,
+          "trade_count": 9,
+          "avg_net_pnl": 0.011985,
+          "total_net_pnl": 0.107865,
+          "win_rate": 0.4444,
+          "verdict": "PASS (low N, cautious)"
+        }
+      ]
+    },
+    "ADA": {
+      "coin": "ADA",
+      "perturbation_results": [
+        {
+          "k_upper": 2.5,
+          "k_lower": 0.5,
+          "threshold": 0.45,
+          "rr": 5.0,
+          "trade_count": 8,
+          "avg_net_pnl": 0.003955,
+          "total_net_pnl": 0.031642,
+          "win_rate": 0.25,
+          "verdict": "MARGINAL (CI includes zero)"
+        },
+        {
+          "k_upper": 2.5,
+          "k_lower": 0.5,
+          "threshold": 0.5,
+          "rr": 5.0,
+          "trade_count": 7,
+          "avg_net_pnl": 0.001061,
+          "total_net_pnl": 0.007427,
+          "win_rate": 0.1429,
+          "verdict": "MARGINAL (CI includes zero)"
+        },
+        {
+          "k_upper": 2.5,
+          "k_lower": 0.5,
+          "threshold": 0.55,
+          "rr": 5.0,
+          "trade_count": 7,
+          "avg_net_pnl": 0.001061,
+          "total_net_pnl": 0.007427,
+          "win_rate": 0.1429,
+          "verdict": "MARGINAL (CI includes zero)"
+        },
+        {
+          "k_upper": 2.5,
+          "k_lower": 0.6,
+          "threshold": 0.45,
+          "rr": 4.17,
+          "trade_count": 7,
+          "avg_net_pnl": 0.001496,
+          "total_net_pnl": 0.010469,
+          "win_rate": 0.2857,
+          "verdict": "MARGINAL (CI includes zero)"
+        },
+        {
+          "k_upper": 2.5,
+          "k_lower": 0.6,
+          "threshold": 0.5,
+          "rr": 4.17,
+          "trade_count": 7,
+          "avg_net_pnl": 0.001499,
+          "total_net_pnl": 0.010495,
+          "win_rate": 0.2857,
+          "verdict": "MARGINAL (CI includes zero)"
+        },
+        {
+          "k_upper": 2.5,
+          "k_lower": 0.6,
+          "threshold": 0.55,
+          "rr": 4.17,
+          "trade_count": 7,
+          "avg_net_pnl": 0.001499,
+          "total_net_pnl": 0.010495,
+          "win_rate": 0.2857,
+          "verdict": "MARGINAL (CI includes zero)"
+        },
+        {
+          "k_upper": 2.5,
+          "k_lower": 0.7,
+          "threshold": 0.45,
+          "rr": 3.57,
+          "trade_count": 13,
+          "avg_net_pnl": 0.002992,
+          "total_net_pnl": 0.038895,
+          "win_rate": 0.3846,
+          "verdict": "MARGINAL (CI includes zero)"
+        },
+        {
+          "k_upper": 2.5,
+          "k_lower": 0.7,
+          "threshold": 0.5,
+          "rr": 3.57,
+          "trade_count": 12,
+          "avg_net_pnl": 0.001814,
+          "total_net_pnl": 0.021773,
+          "win_rate": 0.3333,
+          "verdict": "MARGINAL (CI includes zero)"
+        },
+        {
+          "k_upper": 2.5,
+          "k_lower": 0.7,
+          "threshold": 0.55,
+          "rr": 3.57,
+          "trade_count": 10,
+          "avg_net_pnl": 0.001034,
+          "total_net_pnl": 0.010336,
+          "win_rate": 0.3,
+          "verdict": "MARGINAL (CI includes zero)"
+        },
+        {
+          "k_upper": 3.0,
+          "k_lower": 0.5,
+          "threshold": 0.45,
+          "rr": 6.0,
+          "trade_count": 21,
+          "avg_net_pnl": 0.005692,
+          "total_net_pnl": 0.119522,
+          "win_rate": 0.3333,
+          "verdict": "MARGINAL (CI includes zero)"
+        },
+        {
+          "k_upper": 3.0,
+          "k_lower": 0.5,
+          "threshold": 0.5,
+          "rr": 6.0,
+          "trade_count": 20,
+          "avg_net_pnl": 0.004504,
+          "total_net_pnl": 0.09007,
+          "win_rate": 0.3,
+          "verdict": "MARGINAL (CI includes zero)"
+        },
+        {
+          "k_upper": 3.0,
+          "k_lower": 0.5,
+          "threshold": 0.55,
+          "rr": 6.0,
+          "trade_count": 17,
+          "avg_net_pnl": 0.004265,
+          "total_net_pnl": 0.07251,
+          "win_rate": 0.2941,
+          "verdict": "MARGINAL (CI includes zero)"
+        },
+        {
+          "k_upper": 3.0,
+          "k_lower": 0.6,
+          "threshold": 0.45,
+          "rr": 5.0,
+          "trade_count": 15,
+          "avg_net_pnl": 0.006138,
+          "total_net_pnl": 0.092067,
+          "win_rate": 0.4,
+          "verdict": "MARGINAL (CI includes zero)"
+        },
+        {
+          "k_upper": 3.0,
+          "k_lower": 0.6,
+          "threshold": 0.5,
+          "rr": 5.0,
+          "trade_count": 13,
+          "avg_net_pnl": 0.003343,
+          "total_net_pnl": 0.043465,
+          "win_rate": 0.3077,
+          "verdict": "MARGINAL (CI includes zero)"
+        },
+        {
+          "k_upper": 3.0,
+          "k_lower": 0.6,
+          "threshold": 0.55,
+          "rr": 5.0,
+          "trade_count": 11,
+          "avg_net_pnl": 0.005034,
+          "total_net_pnl": 0.05537,
+          "win_rate": 0.3636,
+          "verdict": "MARGINAL (CI includes zero)"
+        },
+        {
+          "k_upper": 3.0,
+          "k_lower": 0.7,
+          "threshold": 0.45,
+          "rr": 4.29,
+          "trade_count": 15,
+          "avg_net_pnl": 0.00124,
+          "total_net_pnl": 0.018604,
+          "win_rate": 0.2667,
+          "verdict": "MARGINAL (CI includes zero)"
+        },
+        {
+          "k_upper": 3.0,
+          "k_lower": 0.7,
+          "threshold": 0.5,
+          "rr": 4.29,
+          "trade_count": 14,
+          "avg_net_pnl": 0.001747,
+          "total_net_pnl": 0.024455,
+          "win_rate": 0.2857,
+          "verdict": "MARGINAL (CI includes zero)"
+        },
+        {
+          "k_upper": 3.0,
+          "k_lower": 0.7,
+          "threshold": 0.55,
+          "rr": 4.29,
+          "trade_count": 10,
+          "avg_net_pnl": 0.002121,
+          "total_net_pnl": 0.021214,
+          "win_rate": 0.3,
+          "verdict": "MARGINAL (CI includes zero)"
+        },
+        {
+          "k_upper": 3.5,
+          "k_lower": 0.5,
+          "threshold": 0.45,
+          "rr": 7.0,
+          "trade_count": 18,
+          "avg_net_pnl": 0.002876,
+          "total_net_pnl": 0.051769,
+          "win_rate": 0.2222,
+          "verdict": "MARGINAL (CI includes zero)"
+        },
+        {
+          "k_upper": 3.5,
+          "k_lower": 0.5,
+          "threshold": 0.5,
+          "rr": 7.0,
+          "trade_count": 18,
+          "avg_net_pnl": 0.002876,
+          "total_net_pnl": 0.051769,
+          "win_rate": 0.2222,
+          "verdict": "MARGINAL (CI includes zero)"
+        },
+        {
+          "k_upper": 3.5,
+          "k_lower": 0.5,
+          "threshold": 0.55,
+          "rr": 7.0,
+          "trade_count": 13,
+          "avg_net_pnl": 0.003218,
+          "total_net_pnl": 0.04183,
+          "win_rate": 0.2308,
+          "verdict": "MARGINAL (CI includes zero)"
+        },
+        {
+          "k_upper": 3.5,
+          "k_lower": 0.6,
+          "threshold": 0.45,
+          "rr": 5.83,
+          "trade_count": 17,
+          "avg_net_pnl": 0.002154,
+          "total_net_pnl": 0.03661,
+          "win_rate": 0.2353,
+          "verdict": "MARGINAL (CI includes zero)"
+        },
+        {
+          "k_upper": 3.5,
+          "k_lower": 0.6,
+          "threshold": 0.5,
+          "rr": 5.83,
+          "trade_count": 15,
+          "avg_net_pnl": 0.00094,
+          "total_net_pnl": 0.014105,
+          "win_rate": 0.2,
+          "verdict": "MARGINAL (CI includes zero)"
+        },
+        {
+          "k_upper": 3.5,
+          "k_lower": 0.6,
+          "threshold": 0.55,
+          "rr": 5.83,
+          "trade_count": 13,
+          "avg_net_pnl": -0.000661,
+          "total_net_pnl": -0.00859,
+          "win_rate": 0.1538,
+          "verdict": "FAIL"
+        },
+        {
+          "k_upper": 3.5,
+          "k_lower": 0.7,
+          "threshold": 0.45,
+          "rr": 5.0,
+          "trade_count": 9,
+          "avg_net_pnl": 0.004193,
+          "total_net_pnl": 0.037739,
+          "win_rate": 0.3333,
+          "verdict": "MARGINAL (CI includes zero)"
+        },
+        {
+          "k_upper": 3.5,
+          "k_lower": 0.7,
+          "threshold": 0.5,
+          "rr": 5.0,
+          "trade_count": 8,
+          "avg_net_pnl": 0.001636,
+          "total_net_pnl": 0.013087,
+          "win_rate": 0.25,
+          "verdict": "MARGINAL (CI includes zero)"
+        },
+        {
+          "k_upper": 3.5,
+          "k_lower": 0.7,
+          "threshold": 0.55,
+          "rr": 5.0,
+          "trade_count": 6,
+          "avg_net_pnl": -0.000895,
+          "total_net_pnl": -0.005369,
+          "win_rate": 0.1667,
+          "verdict": "FAIL"
+        }
+      ]
+    }
+  }
+}

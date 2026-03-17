@@ -1,0 +1,732 @@
+
+======================================================================
+  WALK-FORWARD v3.1 -- net EV Optimization
+  Started: 2026-03-16 12:19:57
+  Deadline: 2026-03-17 10:00:00
+  Remaining: 21.7 hours
+  Coins: ['XRP', 'DOT', 'ADA']
+  Objective: post-cost net EV (equity%)
+  Cost model: Bybit VIP0 (maker=0.0200% taker=0.0550%)
+  Risk frac: 0.5% per trade
+======================================================================
+
+======================================================================
+  DATA COLLECTION + SIGNAL FEATURES
+======================================================================
+  [RESAMPLE] BTC: 1h → 4h, 2179 bars
+  [Signal Features] Starting with 49 columns, 2179 rows
+  [+] Wavelet: 10 new
+  [+] FFT: 5 new
+  [+] Hilbert: 4 new
+  [+] Entropy: 3 new
+  [+] Hurst/ACF: 7 new
+  [+] Technicals: 23 new
+  [+] Microstructure: 13 new
+  [+] CUSUM: 4 new
+  [+] Multi-TF: 15 new
+  [Signal Features] Done: 49 → 133 columns (+84 signal features)
+  [OK] BTC: 2179 bars (4h), 133 cols, latest $72,539.25
+  [RESAMPLE] ETH: 1h → 4h, 2179 bars
+  [Signal Features] Starting with 49 columns, 2179 rows
+  [+] Wavelet: 10 new
+  [+] FFT: 5 new
+  [+] Hilbert: 4 new
+  [+] Entropy: 3 new
+  [+] Hurst/ACF: 7 new
+  [+] Technicals: 23 new
+  [+] Microstructure: 13 new
+  [+] CUSUM: 4 new
+  [+] Multi-TF: 15 new
+  [Signal Features] Done: 49 → 133 columns (+84 signal features)
+  [OK] ETH: 2179 bars (4h), 133 cols, latest $2,183.28
+  [RESAMPLE] SOL: 1h → 4h, 2179 bars
+  [Signal Features] Starting with 49 columns, 2179 rows
+  [+] Wavelet: 10 new
+  [+] FFT: 5 new
+  [+] Hilbert: 4 new
+  [+] Entropy: 3 new
+  [+] Hurst/ACF: 7 new
+  [+] Technicals: 23 new
+  [+] Microstructure: 13 new
+  [+] CUSUM: 4 new
+  [+] Multi-TF: 15 new
+  [Signal Features] Done: 49 → 133 columns (+84 signal features)
+  [OK] SOL: 2179 bars (4h), 133 cols, latest $91.53
+  [RESAMPLE] XRP: 1h → 4h, 2179 bars
+  [Signal Features] Starting with 49 columns, 2179 rows
+  [+] Wavelet: 10 new
+  [+] FFT: 5 new
+  [+] Hilbert: 4 new
+  [+] Entropy: 3 new
+  [+] Hurst/ACF: 7 new
+  [+] Technicals: 23 new
+  [+] Microstructure: 13 new
+  [+] CUSUM: 4 new
+  [+] Multi-TF: 15 new
+  [Signal Features] Done: 49 → 133 columns (+84 signal features)
+  [OK] XRP: 2179 bars (4h), 133 cols, latest $1.44
+  [RESAMPLE] ADA: 1h → 4h, 2179 bars
+  [Signal Features] Starting with 49 columns, 2179 rows
+  [+] Wavelet: 10 new
+  [+] FFT: 5 new
+  [+] Hilbert: 4 new
+  [+] Entropy: 3 new
+  [+] Hurst/ACF: 7 new
+  [+] Technicals: 23 new
+  [+] Microstructure: 13 new
+  [+] CUSUM: 4 new
+  [+] Multi-TF: 15 new
+  [Signal Features] Done: 49 → 133 columns (+84 signal features)
+  [OK] ADA: 2179 bars (4h), 133 cols, latest $0.27
+  [RESAMPLE] DOGE: 1h → 4h, 2179 bars
+  [Signal Features] Starting with 49 columns, 2179 rows
+  [+] Wavelet: 10 new
+  [+] FFT: 5 new
+  [+] Hilbert: 4 new
+  [+] Entropy: 3 new
+  [+] Hurst/ACF: 7 new
+  [+] Technicals: 23 new
+  [+] Microstructure: 13 new
+  [+] CUSUM: 4 new
+  [+] Multi-TF: 15 new
+  [Signal Features] Done: 49 → 133 columns (+84 signal features)
+  [OK] DOGE: 2179 bars (4h), 133 cols, latest $0.10
+  [RESAMPLE] AVAX: 1h → 4h, 2179 bars
+  [Signal Features] Starting with 49 columns, 2179 rows
+  [+] Wavelet: 10 new
+  [+] FFT: 5 new
+  [+] Hilbert: 4 new
+  [+] Entropy: 3 new
+  [+] Hurst/ACF: 7 new
+  [+] Technicals: 23 new
+  [+] Microstructure: 13 new
+  [+] CUSUM: 4 new
+  [+] Multi-TF: 15 new
+  [Signal Features] Done: 49 → 133 columns (+84 signal features)
+  [OK] AVAX: 2179 bars (4h), 133 cols, latest $10.00
+  [RESAMPLE] DOT: 1h → 4h, 2179 bars
+  [Signal Features] Starting with 49 columns, 2179 rows
+  [+] Wavelet: 10 new
+  [+] FFT: 5 new
+  [+] Hilbert: 4 new
+  [+] Entropy: 3 new
+  [+] Hurst/ACF: 7 new
+  [+] Technicals: 23 new
+  [+] Microstructure: 13 new
+  [+] CUSUM: 4 new
+  [+] Multi-TF: 15 new
+  [Signal Features] Done: 49 → 133 columns (+84 signal features)
+  [OK] DOT: 2179 bars (4h), 133 cols, latest $1.45
+  [RESAMPLE] LINK: 1h → 4h, 2179 bars
+  [Signal Features] Starting with 49 columns, 2179 rows
+  [+] Wavelet: 10 new
+  [+] FFT: 5 new
+  [+] Hilbert: 4 new
+  [+] Entropy: 3 new
+  [+] Hurst/ACF: 7 new
+  [+] Technicals: 23 new
+  [+] Microstructure: 13 new
+  [+] CUSUM: 4 new
+  [+] Multi-TF: 15 new
+  [Signal Features] Done: 49 → 133 columns (+84 signal features)
+  [OK] LINK: 2179 bars (4h), 133 cols, latest $9.49
+  [RESAMPLE] BNB: 1h → 4h, 2179 bars
+  [Signal Features] Starting with 49 columns, 2179 rows
+  [+] Wavelet: 10 new
+  [+] FFT: 5 new
+  [+] Hilbert: 4 new
+  [+] Entropy: 3 new
+  [+] Hurst/ACF: 7 new
+  [+] Technicals: 23 new
+  [+] Microstructure: 13 new
+  [+] CUSUM: 4 new
+  [+] Multi-TF: 15 new
+  [Signal Features] Done: 49 → 133 columns (+84 signal features)
+  [OK] BNB: 2179 bars (4h), 133 cols, latest $673.17
+  => 10 coins loaded
+
+======================================================================
+  MACRO / COMMODITY / LIQUIDITY DATA COLLECTION
+======================================================================
+[Macro] 거시경제/원자재 데이터 수집 시작...
+  [OK] Gold Futures: 6829 bars, latest=5004.70
+  [OK] VIX Volatility Index: 4944 bars, latest=27.21
+  [OK] US Dollar Index: 7108 bars, latest=100.25
+  [OK] US 10Y Treasury Yield: 2433 bars, latest=4.28
+  [OK] S&P 500: 2526 bars, latest=6631.88
+[Macro] 완료: 5/5 수집 성공
+[FearGreed] Fear & Greed Index 수집...
+  [OK] Fear & Greed: 365 days, latest=23 (Extreme Fear)
+[DeFiLlama] Total Value Locked 수집...
+  [OK] DeFi TVL: 65 days, latest=$97.7B
+
+[Macro] 시간 정렬 완료: 23 features → 2179 rows
+  XRP: 2179 bars (1h), 2179 bars (4h), 135 features
+  DOT: 2179 bars (1h), 2179 bars (4h), 135 features
+  ADA: 2179 bars (1h), 2179 bars (4h), 135 features
+
+  15 augmented windows generated
+
+======================================================================
+  === Round 1 === (n_iter=12/coin, 15 windows, 21.6h remaining)
+  Objective: net EV (post-cost equity%)
+======================================================================
+
+  >> XRP (1/3)
+    [XRP] P1/12 | S1:54.5% S2:58.5% netEV:+0.1504% cost:0.1298% R:R=1.67 BEP:47.2% margin:+11.3%p MCC:0.184 (15 wins) | k=1.0/0.6 th=0.5 [357s]
+    [XRP] P2/12 | S1:58.1% S2:58.7% netEV:+0.0569% cost:0.1039% R:R=1.25 BEP:53.7% margin:+5.1%p MCC:0.194 (15 wins) | k=1.0/0.8 th=0.5 [132s]
+    [XRP] P3/12 | S1:38.1% S2:65.0% netEV:+0.5121% cost:0.1259% R:R=2.50 BEP:35.8% margin:+29.3%p MCC:0.083 (15 wins) | k=1.5/0.6 th=0.55 [54s]
+    [XRP] P4/12 | S1:39.3% S2:58.4% netEV:+0.0164% cost:0.0678% R:R=1.00 BEP:56.8% margin:+1.6%p MCC:-0.037 (15 wins) | k=1.5/1.5 th=0.45 [111s]
+    [XRP] P5/12 | S1:56.7% S2:65.1% netEV:+0.0204% cost:0.0762% R:R=0.83 BEP:62.9% margin:+2.2%p MCC:0.293 (15 wins) | k=1.0/1.2 th=0.45 [157s]
+    [XRP] P6/12 | S1:36.9% S2:65.3% netEV:+0.0871% cost:0.0662% R:R=1.00 BEP:56.6% margin:+8.7%p MCC:-0.001 (15 wins) | k=1.5/1.5 th=0.5 [92s]
+    [XRP] P7/12 | S1:47.9% S2:60.1% netEV:+0.6141% cost:0.0879% R:R=3.00 BEP:29.4% margin:+30.7%p MCC:0.143 (15 wins) | k=3.0/1.0 th=0.5 [152s]
+    [XRP] P8/12 | S1:37.4% S2:63.6% netEV:+0.0689% cost:0.0666% R:R=1.00 BEP:56.7% margin:+6.9%p MCC:0.009 (15 wins) | k=1.5/1.5 th=0.55 [56s]
+    [XRP] P9/12 | S1:43.0% S2:61.8% netEV:+0.4798% cost:0.1025% R:R=2.50 BEP:34.4% margin:+27.4%p MCC:0.074 (15 wins) | k=2.0/0.8 th=0.55 [57s]
+    [XRP] P10/12 | S1:48.1% S2:68.5% netEV:+0.4628% cost:0.0654% R:R=2.00 BEP:37.7% margin:+30.9%p MCC:0.177 (15 wins) | k=3.0/1.5 th=0.45 [124s]
+    [XRP] P11/12 | S1:39.4% S2:68.4% netEV:+0.3844% cost:0.0995% R:R=1.88 BEP:41.7% margin:+26.7%p MCC:0.126 (15 wins) | k=1.5/0.8 th=0.55 [121s]
+    [XRP] P12/12 | S1:37.3% S2:65.2% netEV:+0.5643% cost:0.0762% R:R=2.50 BEP:32.9% margin:+32.2%p MCC:-0.046 (15 wins) | k=3.0/1.2 th=0.6 [35s]
+
+  >> DOT (2/3)
+    [DOT] P1/12 | S1:49.0% S2:51.2% netEV:+0.4690% cost:0.0860% R:R=3.12 BEP:28.4% margin:+22.7%p MCC:0.006 (15 wins) | k=2.5/0.8 th=0.45 [155s]
+    [DOT] P2/12 | S1:51.7% S2:62.0% netEV:+0.2037% cost:0.0712% R:R=1.50 BEP:45.7% margin:+16.3%p MCC:0.223 (15 wins) | k=1.5/1.0 th=0.45 [108s]
+    [DOT] P3/12 | S1:46.6% S2:54.6% netEV:+0.7111% cost:0.0849% R:R=3.75 BEP:24.6% margin:+29.9%p MCC:0.037 (15 wins) | k=3.0/0.8 th=0.5 [84s]
+    [DOT] P4/12 | S1:47.5% S2:65.6% netEV:+0.1750% cost:0.0630% R:R=1.25 BEP:50.0% margin:+15.6%p MCC:0.216 (15 wins) | k=1.5/1.2 th=0.6 [42s]
+    [DOT] P5/12 | S1:51.7% S2:54.2% netEV:+0.1181% cost:0.1045% R:R=1.67 BEP:45.3% margin:+8.9%p MCC:0.120 (15 wins) | k=1.0/0.6 th=0.4 [20s]
+    [DOT] P6/12 | S1:48.7% S2:63.2% netEV:+0.1811% cost:0.0561% R:R=1.33 BEP:47.7% margin:+15.5%p MCC:0.152 (15 wins) | k=2.0/1.5 th=0.5 [92s]
+    [DOT] P7/12 | S1:51.7% S2:53.7% netEV:+0.0187% cost:0.0852% R:R=1.25 BEP:52.0% margin:+1.7%p MCC:0.122 (15 wins) | k=1.0/0.8 th=0.4 [30s]
+    [DOT] P8/12 | S1:47.7% S2:57.6% netEV:+0.7851% cost:0.0839% R:R=3.75 BEP:24.6% margin:+33.1%p MCC:0.106 (15 wins) | k=3.0/0.8 th=0.5 [87s]
+    [DOT] P9/12 | S1:49.1% S2:50.7% netEV:+0.4403% cost:0.0742% R:R=3.00 BEP:28.7% margin:+22.0%p MCC:-0.025 (15 wins) | k=3.0/1.0 th=0.55 [116s]
+    [DOT] P10/12 | S1:48.4% S2:59.1% netEV:+0.2235% cost:0.0644% R:R=1.67 BEP:42.3% margin:+16.8%p MCC:0.140 (15 wins) | k=2.0/1.2 th=0.45 [96s]
+    [DOT] P11/12 | S1:49.7% S2:52.2% netEV:+0.0013% cost:0.0857% R:R=1.25 BEP:52.1% margin:+0.1%p MCC:0.064 (15 wins) | k=1.0/0.8 th=0.45 [34s]
+    [DOT] P12/12 | S1:50.6% S2:57.2% netEV:+0.1974% cost:0.0648% R:R=1.67 BEP:42.4% margin:+14.8%p MCC:0.133 (15 wins) | k=2.0/1.2 th=0.6 [109s]
+
+  >> ADA (3/3)
+    [ADA] P1/12 | S1:49.8% S2:58.4% netEV:+0.7992% cost:0.0873% R:R=3.75 BEP:24.7% margin:+33.7%p MCC:0.149 (15 wins) | k=3.0/0.8 th=0.55 [44s]
+    [ADA] P2/12 | S1:57.7% S2:69.4% netEV:+0.2164% cost:0.0644% R:R=1.25 BEP:50.2% margin:+19.2%p MCC:0.338 (15 wins) | k=1.5/1.2 th=0.45 [58s]
+    [ADA] P3/12 | S1:51.4% S2:59.6% netEV:+0.1581% cost:0.0869% R:R=1.50 BEP:46.9% margin:+12.7%p MCC:0.158 (15 wins) | k=1.2/0.8 th=0.6 [115s]
+    [ADA] P4/12 | S1:57.9% S2:61.9% netEV:+0.3229% cost:0.1059% R:R=2.00 BEP:40.4% margin:+21.5%p MCC:0.154 (15 wins) | k=1.2/0.6 th=0.55 [32s]
+    [ADA] P5/12 | S1:49.7% S2:68.0% netEV:+0.4841% cost:0.0648% R:R=2.08 BEP:36.6% margin:+31.4%p MCC:0.306 (15 wins) | k=2.5/1.2 th=0.55 [70s]
+    [ADA] P6/12 | S1:50.1% S2:61.8% netEV:+0.6876% cost:0.0861% R:R=3.12 BEP:28.4% margin:+33.3%p MCC:0.226 (15 wins) | k=2.5/0.8 th=0.5 [102s]
+    [ADA] P7/12 | S1:51.4% S2:61.4% netEV:+0.1012% cost:0.0743% R:R=1.20 BEP:52.2% margin:+9.2%p MCC:0.201 (15 wins) | k=1.2/1.0 th=0.55 [35s]
+    [ADA] P8/12 | S1:48.7% S2:64.4% netEV:+0.0248% cost:0.0656% R:R=0.83 BEP:61.7% margin:+2.7%p MCC:0.244 (15 wins) | k=1.0/1.2 th=0.55 [55s]
+    [ADA] P9/12 | S1:49.9% S2:73.6% netEV:+0.3029% cost:0.0561% R:R=1.33 BEP:47.7% margin:+26.0%p MCC:0.377 (15 wins) | k=2.0/1.5 th=0.4 [78s]
+    [ADA] P10/12 | S1:56.9% S2:65.3% netEV:+0.1452% cost:0.0732% R:R=1.20 BEP:52.1% margin:+13.2%p MCC:0.291 (15 wins) | k=1.2/1.0 th=0.4 [67s]
+    [ADA] P11/12 | S1:51.1% S2:61.3% netEV:+0.4868% cost:0.0863% R:R=2.50 BEP:33.5% margin:+27.8%p MCC:0.187 (15 wins) | k=2.0/0.8 th=0.4 [79s]
+    [ADA] P12/12 | S1:51.3% S2:52.9% netEV:+0.9782% cost:0.1101% R:R=5.00 BEP:20.3% margin:+32.6%p MCC:0.075 (15 wins) | k=3.0/0.6 th=0.45 [141s]
+
+  ============================================================
+  COIN-LEVEL BEST (Round 1) -- net EV ranking
+  ============================================================
+  XRP   | netEV:+0.6141% cost:0.0879% R:R=3.00 BEP:29.4% margin:+30.7%p | S2:60.1% MCC:0.143 (15 evals)
+  DOT   | netEV:+0.7851% cost:0.0839% R:R=3.75 BEP:24.6% margin:+33.1%p | S2:57.6% MCC:0.106 (15 evals)
+  ADA   | netEV:+0.9782% cost:0.1101% R:R=5.00 BEP:20.3% margin:+32.6%p | S2:52.9% MCC:0.075 (15 evals)
+  [CHECKPOINT] data\reports\walkforward_v3_1\wf3_1_checkpoint_r1.json
+
+======================================================================
+  === Round 2 === (n_iter=12/coin, 15 windows, 20.7h remaining)
+  Objective: net EV (post-cost equity%)
+======================================================================
+
+  >> XRP (1/3)
+    [XRP] P1/12 | S1:49.1% S2:65.7% netEV:+0.2005% cost:0.0661% R:R=1.33 BEP:48.5% margin:+17.2%p MCC:0.231 (15 wins) | k=2.0/1.5 th=0.4 [65s]
+    [XRP] P2/12 | S1:37.9% S2:63.8% netEV:+0.6900% cost:0.0866% R:R=3.00 BEP:29.3% margin:+34.5%p MCC:-0.015 (15 wins) | k=3.0/1.0 th=0.55 [50s]
+    [XRP] P3/12 | S1:40.2% S2:59.3% netEV:+0.2595% cost:0.1294% R:R=2.00 BEP:42.0% margin:+17.3%p MCC:0.051 (15 wins) | k=1.2/0.6 th=0.55 [187s]
+    [XRP] P4/12 | S1:38.6% S2:59.5% netEV:+0.8101% cost:0.1035% R:R=3.75 BEP:25.4% margin:+34.1%p MCC:-0.043 (15 wins) | k=3.0/0.8 th=0.6 [109s]
+    [XRP] P5/12 | S1:47.3% S2:69.9% netEV:+0.4053% cost:0.0989% R:R=1.88 BEP:41.7% margin:+28.2%p MCC:0.273 (15 wins) | k=1.5/0.8 th=0.45 [46s]
+    [XRP] P6/12 | S1:43.3% S2:67.5% netEV:+0.0417% cost:0.0657% R:R=0.80 BEP:62.9% margin:+4.6%p MCC:0.137 (15 wins) | k=1.2/1.5 th=0.4 [82s]
+    [XRP] P7/12 | S1:64.4% S2:59.3% netEV:+0.1612% cost:0.1294% R:R=1.67 BEP:47.2% margin:+12.1%p MCC:0.144 (15 wins) | k=1.0/0.6 th=0.55 [61s]
+    [XRP] P8/12 | S1:44.1% S2:54.3% netEV:+0.6826% cost:0.1059% R:R=3.75 BEP:25.5% margin:+28.7%p MCC:-0.015 (15 wins) | k=3.0/0.8 th=0.6 [78s]
+    [XRP] P9/12 | S1:41.8% S2:69.8% netEV:+0.4040% cost:0.0990% R:R=1.88 BEP:41.7% margin:+28.1%p MCC:0.185 (15 wins) | k=1.5/0.8 th=0.6 [30s]
+    [XRP] P10/12 | S1:47.8% S2:53.3% netEV:+0.9666% cost:0.1329% R:R=5.00 BEP:21.1% margin:+32.2%p MCC:0.032 (15 wins) | k=3.0/0.6 th=0.45 [67s]
+    [XRP] P11/12 | S1:49.7% S2:59.1% netEV:+0.0031% cost:0.0883% R:R=1.00 BEP:58.8% margin:+0.3%p MCC:0.146 (15 wins) | k=1.0/1.0 th=0.4 [44s]
+    [XRP] P12/12 | S1:47.7% S2:54.6% netEV:+1.0059% cost:0.1322% R:R=5.00 BEP:21.1% margin:+33.5%p MCC:0.055 (15 wins) | k=3.0/0.6 th=0.45 [38s]
+
+  >> DOT (2/3)
+    [DOT] P1/12 | S1:43.2% S2:58.8% netEV:+0.4266% cost:0.1025% R:R=2.50 BEP:34.4% margin:+24.4%p MCC:0.069 (15 wins) | k=1.5/0.6 th=0.5 [62s]
+    [DOT] P2/12 | S1:49.6% S2:57.1% netEV:-0.0015% cost:0.0725% R:R=1.00 BEP:57.3% margin:-0.1%p MCC:0.190 (15 wins) | k=1.0/1.0 th=0.6 [77s]
+    [DOT] P3/12 | S1:49.6% S2:54.9% netEV:+0.3875% cost:0.0731% R:R=2.50 BEP:32.7% margin:+22.1%p MCC:0.089 (15 wins) | k=2.5/1.0 th=0.5 [83s]
+    [DOT] P4/12 | S1:49.9% S2:58.8% netEV:+0.3247% cost:0.0569% R:R=2.00 BEP:37.1% margin:+21.6%p MCC:0.111 (15 wins) | k=3.0/1.5 th=0.5 [192s]
+    [DOT] P5/12 | S1:47.1% S2:56.2% netEV:+0.2391% cost:0.1036% R:R=2.00 BEP:40.2% margin:+15.9%p MCC:0.070 (15 wins) | k=1.2/0.6 th=0.5 [204s]
+    [DOT] P6/12 | S1:47.9% S2:61.8% netEV:+0.5176% cost:0.0638% R:R=2.50 BEP:32.2% margin:+29.6%p MCC:0.137 (15 wins) | k=3.0/1.2 th=0.6 [81s]
+    [DOT] P7/12 | S1:52.4% S2:64.7% netEV:+0.2386% cost:0.0705% R:R=1.50 BEP:45.6% margin:+19.1%p MCC:0.272 (15 wins) | k=1.5/1.0 th=0.6 [18s]
+    [DOT] P8/12 | S1:52.5% S2:56.9% netEV:+0.1266% cost:0.0841% R:R=1.50 BEP:46.7% margin:+10.1%p MCC:0.105 (15 wins) | k=1.2/0.8 th=0.6 [60s]
+    [DOT] P9/12 | S1:49.1% S2:62.0% netEV:+0.0641% cost:0.0563% R:R=1.00 BEP:55.6% margin:+6.4%p MCC:0.159 (15 wins) | k=1.5/1.5 th=0.4 [32s]
+    [DOT] P10/12 | S1:48.1% S2:55.4% netEV:+0.3655% cost:0.1040% R:R=2.50 BEP:34.5% margin:+20.9%p MCC:0.089 (15 wins) | k=1.5/0.6 th=0.6 [53s]
+    [DOT] P11/12 | S1:49.4% S2:63.5% netEV:+0.2232% cost:0.0708% R:R=1.50 BEP:45.7% margin:+17.9%p MCC:0.228 (15 wins) | k=1.5/1.0 th=0.5 [66s]
+    [DOT] P12/12 | S1:48.7% S2:53.4% netEV:+0.4949% cost:0.0735% R:R=3.00 BEP:28.7% margin:+24.7%p MCC:0.093 (15 wins) | k=3.0/1.0 th=0.55 [88s]
+
+  >> ADA (3/3)
+    [ADA] P1/12 | S1:53.7% S2:60.9% netEV:+0.4791% cost:0.0864% R:R=2.50 BEP:33.5% margin:+27.4%p MCC:0.223 (15 wins) | k=2.0/0.8 th=0.4 [27s]
+    [ADA] P2/12 | S1:46.9% S2:66.0% netEV:+0.7767% cost:0.0846% R:R=3.12 BEP:28.3% margin:+37.7%p MCC:0.188 (15 wins) | k=2.5/0.8 th=0.6 [43s]
+    [ADA] P3/12 | S1:50.9% S2:54.8% netEV:+0.5415% cost:0.0885% R:R=3.12 BEP:28.5% margin:+26.3%p MCC:0.101 (15 wins) | k=2.5/0.8 th=0.6 [49s]
+    [ADA] P4/12 | S1:49.3% S2:66.6% netEV:-0.0022% cost:0.0574% R:R=0.67 BEP:66.9% margin:-0.3%p MCC:0.308 (15 wins) | k=1.0/1.5 th=0.55 [77s]
+    [ADA] P5/12 | S1:56.3% S2:59.4% netEV:+0.4326% cost:0.1071% R:R=2.50 BEP:34.7% margin:+24.7%p MCC:0.224 (15 wins) | k=1.5/0.6 th=0.45 [37s]
+    [ADA] P6/12 | S1:50.9% S2:60.9% netEV:+0.8588% cost:0.0864% R:R=3.75 BEP:24.7% margin:+36.2%p MCC:0.144 (15 wins) | k=3.0/0.8 th=0.45 [33s]
+    [ADA] P7/12 | S1:55.8% S2:60.2% netEV:+0.2958% cost:0.1067% R:R=2.00 BEP:40.4% margin:+19.7%p MCC:0.152 (15 wins) | k=1.2/0.6 th=0.45 [55s]
+    [ADA] P8/12 | S1:54.4% S2:61.5% netEV:+0.9831% cost:0.1061% R:R=4.17 BEP:23.5% margin:+38.1%p MCC:0.251 (15 wins) | k=2.5/0.6 th=0.45 [60s]
+    [ADA] P9/12 | S1:54.1% S2:61.6% netEV:+0.6579% cost:0.0742% R:R=3.00 BEP:28.7% margin:+32.9%p MCC:0.232 (15 wins) | k=3.0/1.0 th=0.45 [37s]
+    [ADA] P10/12 | S1:49.0% S2:71.3% netEV:+0.2758% cost:0.0565% R:R=1.33 BEP:47.7% margin:+23.6%p MCC:0.349 (15 wins) | k=2.0/1.5 th=0.4 [46s]
+    [ADA] P11/12 | S1:51.2% S2:65.7% netEV:+0.4273% cost:0.0575% R:R=2.00 BEP:37.2% margin:+28.5%p MCC:0.198 (15 wins) | k=3.0/1.5 th=0.55 [25s]
+    [ADA] P12/12 | S1:48.0% S2:70.0% netEV:+0.0736% cost:0.0567% R:R=0.80 BEP:61.9% margin:+8.2%p MCC:0.313 (15 wins) | k=1.2/1.5 th=0.4 [60s]
+
+  ============================================================
+  COIN-LEVEL BEST (Round 2) -- net EV ranking
+  ============================================================
+  XRP   | netEV:+1.0059% cost:0.1322% R:R=5.00 BEP:21.1% margin:+33.5%p | S2:54.6% MCC:0.055 (15 evals)
+  DOT   | netEV:+0.7851% cost:0.0839% R:R=3.75 BEP:24.6% margin:+33.1%p | S2:57.6% MCC:0.106 (15 evals)
+  ADA   | netEV:+0.9831% cost:0.1061% R:R=4.17 BEP:23.5% margin:+38.1%p | S2:61.5% MCC:0.251 (15 evals)
+  [CHECKPOINT] data\reports\walkforward_v3_1\wf3_1_checkpoint_r2.json
+
+======================================================================
+  === Round 3 === (n_iter=12/coin, 15 windows, 20.0h remaining)
+  Objective: net EV (post-cost equity%)
+======================================================================
+
+  >> XRP (1/3)
+    [XRP] P1/12 | S1:44.1% S2:53.7% netEV:+0.6704% cost:0.1061% R:R=3.75 BEP:25.5% margin:+28.2%p MCC:0.013 (15 wins) | k=3.0/0.8 th=0.45 [86s]
+    [XRP] P2/12 | S1:39.4% S2:68.6% netEV:+0.3397% cost:0.0751% R:R=1.67 BEP:43.1% margin:+25.5%p MCC:0.112 (15 wins) | k=2.0/1.2 th=0.4 [38s]
+    [XRP] P3/12 | S1:41.1% S2:65.6% netEV:+0.5716% cost:0.0760% R:R=2.50 BEP:32.9% margin:+32.7%p MCC:0.051 (15 wins) | k=3.0/1.2 th=0.4 [95s]
+    [XRP] P4/12 | S1:43.7% S2:54.1% netEV:+0.7653% cost:0.1324% R:R=4.17 BEP:24.5% margin:+29.6%p MCC:0.003 (15 wins) | k=2.5/0.6 th=0.5 [77s]
+    [XRP] P5/12 | S1:47.2% S2:62.6% netEV:+0.1960% cost:0.0870% R:R=1.50 BEP:47.0% margin:+15.7%p MCC:0.178 (15 wins) | k=1.5/1.0 th=0.6 [56s]
+    [XRP] P6/12 | S1:47.6% S2:61.2% netEV:-0.0574% cost:0.0672% R:R=0.67 BEP:68.1% margin:-6.9%p MCC:0.069 (15 wins) | k=1.0/1.5 th=0.6 [55s]
+    [XRP] P7/12 | S1:46.7% S2:68.4% netEV:+0.3839% cost:0.0996% R:R=1.88 BEP:41.7% margin:+26.7%p MCC:0.240 (15 wins) | k=1.5/0.8 th=0.45 [53s]
+    [XRP] P8/12 | S1:44.2% S2:61.7% netEV:+0.4514% cost:0.1279% R:R=2.50 BEP:35.9% margin:+25.8%p MCC:0.116 (15 wins) | k=1.5/0.6 th=0.5 [54s]
+    [XRP] P9/12 | S1:57.8% S2:62.5% netEV:+0.0375% cost:0.0871% R:R=1.00 BEP:58.7% margin:+3.7%p MCC:0.245 (15 wins) | k=1.0/1.0 th=0.4 [33s]
+    [XRP] P10/12 | S1:56.9% S2:61.0% netEV:+0.0838% cost:0.1029% R:R=1.25 BEP:53.6% margin:+7.4%p MCC:0.189 (15 wins) | k=1.0/0.8 th=0.4 [71s]
+    [XRP] P11/12 | S1:41.0% S2:67.0% netEV:+0.7807% cost:0.1002% R:R=3.12 BEP:29.1% margin:+37.9%p MCC:0.021 (15 wins) | k=2.5/0.8 th=0.55 [54s]
+    [XRP] P12/12 | S1:38.0% S2:62.2% netEV:+0.5015% cost:0.0872% R:R=2.50 BEP:33.6% margin:+28.7%p MCC:-0.025 (15 wins) | k=2.5/1.0 th=0.45 [59s]
+
+  >> DOT (2/3)
+    [DOT] P1/12 | S1:50.3% S2:56.4% netEV:+0.1868% cost:0.0650% R:R=1.67 BEP:42.4% margin:+14.0%p MCC:0.169 (15 wins) | k=2.0/1.2 th=0.55 [81s]
+    [DOT] P2/12 | S1:50.2% S2:59.9% netEV:+0.0872% cost:0.0718% R:R=1.20 BEP:52.0% margin:+7.9%p MCC:0.238 (15 wins) | k=1.2/1.0 th=0.45 [58s]
+    [DOT] P3/12 | S1:52.3% S2:58.7% netEV:+0.1498% cost:0.0835% R:R=1.50 BEP:46.7% margin:+12.0%p MCC:0.170 (15 wins) | k=1.2/0.8 th=0.5 [188s]
+    [DOT] P4/12 | S1:52.0% S2:62.4% netEV:+0.1154% cost:0.0711% R:R=1.20 BEP:51.9% margin:+10.5%p MCC:0.248 (15 wins) | k=1.2/1.0 th=0.55 [161s]
+    [DOT] P5/12 | S1:61.2% S2:63.0% netEV:+0.2052% cost:0.0821% R:R=1.50 BEP:46.6% margin:+16.4%p MCC:0.205 (15 wins) | k=1.2/0.8 th=0.5 [46s]
+    [DOT] P6/12 | S1:49.9% S2:58.0% netEV:+0.2083% cost:0.0647% R:R=1.67 BEP:42.3% margin:+15.6%p MCC:0.145 (15 wins) | k=2.0/1.2 th=0.5 [93s]
+    [DOT] P7/12 | S1:49.4% S2:63.6% netEV:+0.2242% cost:0.0708% R:R=1.50 BEP:45.7% margin:+17.9%p MCC:0.233 (15 wins) | k=1.5/1.0 th=0.5 [61s]
+    [DOT] P8/12 | S1:49.7% S2:56.8% netEV:+0.1930% cost:0.0649% R:R=1.67 BEP:42.4% margin:+14.5%p MCC:0.122 (15 wins) | k=2.0/1.2 th=0.4 [164s]
+    [DOT] P9/12 | S1:57.6% S2:60.7% netEV:+0.4792% cost:0.0829% R:R=2.50 BEP:33.3% margin:+27.4%p MCC:0.142 (15 wins) | k=2.0/0.8 th=0.55 [25s]
+    [DOT] P10/12 | S1:49.2% S2:50.3% netEV:+0.4520% cost:0.0863% R:R=3.12 BEP:28.4% margin:+21.9%p MCC:0.016 (15 wins) | k=2.5/0.8 th=0.45 [120s]
+    [DOT] P11/12 | S1:49.6% S2:64.4% netEV:+0.1617% cost:0.0632% R:R=1.25 BEP:50.1% margin:+14.4%p MCC:0.263 (15 wins) | k=1.5/1.2 th=0.6 [42s]
+    [DOT] P12/12 | S1:48.9% S2:55.4% netEV:+0.3962% cost:0.0730% R:R=2.50 BEP:32.7% margin:+22.6%p MCC:0.122 (15 wins) | k=2.5/1.0 th=0.4 [63s]
+
+  >> ADA (3/3)
+    [ADA] P1/12 | S1:56.9% S2:64.8% netEV:+0.2365% cost:0.0733% R:R=1.50 BEP:45.9% margin:+18.9%p MCC:0.315 (15 wins) | k=1.5/1.0 th=0.6 [66s]
+    [ADA] P2/12 | S1:49.2% S2:65.2% netEV:+0.4045% cost:0.0732% R:R=2.00 BEP:38.2% margin:+27.0%p MCC:0.205 (15 wins) | k=2.0/1.0 th=0.55 [83s]
+    [ADA] P3/12 | S1:47.1% S2:74.0% netEV:+0.1836% cost:0.0560% R:R=1.00 BEP:55.6% margin:+18.4%p MCC:0.333 (15 wins) | k=1.5/1.5 th=0.45 [59s]
+    [ADA] P4/12 | S1:48.5% S2:72.8% netEV:+0.2937% cost:0.0562% R:R=1.33 BEP:47.7% margin:+25.2%p MCC:0.366 (15 wins) | k=2.0/1.5 th=0.55 [131s]
+    [ADA] P5/12 | S1:54.0% S2:64.4% netEV:+0.2313% cost:0.0734% R:R=1.50 BEP:45.9% margin:+18.5%p MCC:0.245 (15 wins) | k=1.5/1.0 th=0.5 [58s]
+    [ADA] P6/12 | S1:44.9% S2:71.9% netEV:+0.4024% cost:0.0564% R:R=1.67 BEP:41.7% margin:+30.2%p MCC:0.242 (15 wins) | k=2.5/1.5 th=0.4 [36s]
+    [ADA] P7/12 | S1:51.7% S2:62.2% netEV:+0.3746% cost:0.0582% R:R=2.00 BEP:37.2% margin:+25.0%p MCC:0.256 (15 wins) | k=3.0/1.5 th=0.55 [82s]
+    [ADA] P8/12 | S1:53.5% S2:59.0% netEV:+0.4249% cost:0.1073% R:R=2.50 BEP:34.7% margin:+24.3%p MCC:0.199 (15 wins) | k=1.5/0.6 th=0.4 [48s]
+    [ADA] P9/12 | S1:57.1% S2:67.6% netEV:+0.3877% cost:0.0841% R:R=1.88 BEP:40.6% margin:+27.0%p MCC:0.295 (15 wins) | k=1.5/0.8 th=0.5 [36s]
+    [ADA] P10/12 | S1:48.8% S2:61.0% netEV:+0.9696% cost:0.1063% R:R=4.17 BEP:23.5% margin:+37.5%p MCC:0.124 (15 wins) | k=2.5/0.6 th=0.6 [26s]
+    [ADA] P11/12 | S1:50.3% S2:56.7% netEV:+0.5585% cost:0.0756% R:R=3.00 BEP:28.8% margin:+27.9%p MCC:0.160 (15 wins) | k=3.0/1.0 th=0.5 [32s]
+    [ADA] P12/12 | S1:50.7% S2:59.3% netEV:-0.0231% cost:0.0668% R:R=0.83 BEP:61.8% margin:-2.5%p MCC:0.214 (15 wins) | k=1.0/1.2 th=0.45 [35s]
+
+  ============================================================
+  COIN-LEVEL BEST (Round 3) -- net EV ranking
+  ============================================================
+  XRP   | netEV:+1.0059% cost:0.1322% R:R=5.00 BEP:21.1% margin:+33.5%p | S2:54.6% MCC:0.055 (15 evals)
+  DOT   | netEV:+0.7851% cost:0.0839% R:R=3.75 BEP:24.6% margin:+33.1%p | S2:57.6% MCC:0.106 (15 evals)
+  ADA   | netEV:+0.9831% cost:0.1061% R:R=4.17 BEP:23.5% margin:+38.1%p | S2:61.5% MCC:0.251 (15 evals)
+  [CHECKPOINT] data\reports\walkforward_v3_1\wf3_1_checkpoint_r3.json
+
+======================================================================
+  === Round 4 === (n_iter=12/coin, 15 windows, 19.3h remaining)
+  Objective: net EV (post-cost equity%)
+======================================================================
+
+  >> XRP (1/3)
+    [XRP] P1/12 | S1:40.4% S2:66.3% netEV:+0.5853% cost:0.0758% R:R=2.50 BEP:32.9% margin:+33.4%p MCC:0.040 (15 wins) | k=3.0/1.2 th=0.5 [28s]
+    [XRP] P2/12 | S1:42.7% S2:60.7% netEV:+0.1564% cost:0.1030% R:R=1.50 BEP:48.2% margin:+12.5%p MCC:0.116 (15 wins) | k=1.2/0.8 th=0.6 [88s]
+    [XRP] P3/12 | S1:45.3% S2:65.7% netEV:+0.0254% cost:0.0661% R:R=0.80 BEP:62.9% margin:+2.8%p MCC:0.195 (15 wins) | k=1.2/1.5 th=0.4 [57s]
+    [XRP] P4/12 | S1:58.5% S2:59.2% netEV:+0.0628% cost:0.1037% R:R=1.25 BEP:53.7% margin:+5.6%p MCC:0.162 (15 wins) | k=1.0/0.8 th=0.55 [29s]
+    [XRP] P5/12 | S1:47.5% S2:53.3% netEV:+0.4928% cost:0.1063% R:R=3.12 BEP:29.4% margin:+23.9%p MCC:0.038 (15 wins) | k=2.5/0.8 th=0.6 [160s]
+    [XRP] P6/12 | S1:43.1% S2:53.7% netEV:+0.5014% cost:0.1061% R:R=3.12 BEP:29.4% margin:+24.3%p MCC:0.012 (15 wins) | k=2.5/0.8 th=0.55 [109s]
+    [XRP] P7/12 | S1:55.4% S2:59.9% netEV:+0.1691% cost:0.1290% R:R=1.67 BEP:47.2% margin:+12.7%p MCC:0.200 (15 wins) | k=1.0/0.6 th=0.45 [60s]
+    [XRP] P8/12 | S1:45.8% S2:68.5% netEV:+0.7843% cost:0.0849% R:R=3.00 BEP:29.2% margin:+39.2%p MCC:0.081 (15 wins) | k=3.0/1.0 th=0.45 [28s]
+    [XRP] P9/12 | S1:39.2% S2:65.4% netEV:+0.5691% cost:0.0761% R:R=2.50 BEP:32.9% margin:+32.5%p MCC:-0.010 (15 wins) | k=3.0/1.2 th=0.6 [62s]
+    [XRP] P10/12 | S1:36.0% S2:68.8% netEV:+0.1232% cost:0.0653% R:R=1.00 BEP:56.5% margin:+12.3%p MCC:0.014 (15 wins) | k=1.5/1.5 th=0.55 [48s]
+    [XRP] P11/12 | S1:46.9% S2:57.7% netEV:+0.4051% cost:0.1044% R:R=2.50 BEP:34.5% margin:+23.2%p MCC:0.118 (15 wins) | k=2.0/0.8 th=0.5 [86s]
+    [XRP] P12/12 | S1:45.3% S2:67.2% netEV:+0.6009% cost:0.0756% R:R=2.50 BEP:32.9% margin:+34.3%p MCC:0.142 (15 wins) | k=3.0/1.2 th=0.4 [40s]
+
+  >> DOT (2/3)
+    [DOT] P1/12 | S1:48.5% S2:50.3% netEV:-0.1051% cost:0.0663% R:R=0.83 BEP:61.8% margin:-11.5%p MCC:0.091 (15 wins) | k=1.0/1.2 th=0.4 [45s]
+    [DOT] P2/12 | S1:48.7% S2:50.1% netEV:+0.6872% cost:0.1063% R:R=4.17 BEP:23.5% margin:+26.6%p MCC:0.010 (15 wins) | k=2.5/0.6 th=0.45 [82s]
+    [DOT] P3/12 | S1:46.5% S2:54.4% netEV:-0.1043% cost:0.0577% R:R=0.67 BEP:66.9% margin:-12.5%p MCC:0.095 (15 wins) | k=1.0/1.5 th=0.4 [44s]
+    [DOT] P4/12 | S1:45.1% S2:54.0% netEV:+0.6979% cost:0.0851% R:R=3.75 BEP:24.6% margin:+29.4%p MCC:0.055 (15 wins) | k=3.0/0.8 th=0.6 [36s]
+    [DOT] P5/12 | S1:48.5% S2:56.9% netEV:+0.4115% cost:0.0841% R:R=2.50 BEP:33.4% margin:+23.5%p MCC:0.157 (15 wins) | k=2.0/0.8 th=0.55 [32s]
+    [DOT] P6/12 | S1:45.5% S2:59.4% netEV:+0.3519% cost:0.0643% R:R=2.08 BEP:36.6% margin:+22.8%p MCC:0.096 (15 wins) | k=2.5/1.2 th=0.55 [41s]
+    [DOT] P7/12 | S1:49.1% S2:56.8% netEV:+0.4093% cost:0.0842% R:R=2.50 BEP:33.4% margin:+23.4%p MCC:0.155 (15 wins) | k=2.0/0.8 th=0.45 [87s]
+    [DOT] P8/12 | S1:49.4% S2:52.2% netEV:+0.3400% cost:0.0738% R:R=2.50 BEP:32.8% margin:+19.4%p MCC:0.021 (15 wins) | k=2.5/1.0 th=0.55 [57s]
+    [DOT] P9/12 | S1:49.1% S2:50.2% netEV:+0.9000% cost:0.1063% R:R=5.00 BEP:20.2% margin:+30.0%p MCC:-0.023 (15 wins) | k=3.0/0.6 th=0.45 [86s]
+    [DOT] P10/12 | S1:54.0% S2:55.0% netEV:-0.0232% cost:0.0731% R:R=1.00 BEP:57.3% margin:-2.3%p MCC:0.160 (15 wins) | k=1.0/1.0 th=0.4 [36s]
+    [DOT] P11/12 | S1:49.4% S2:60.4% netEV:+0.3669% cost:0.0641% R:R=2.08 BEP:36.6% margin:+23.8%p MCC:0.153 (15 wins) | k=2.5/1.2 th=0.45 [97s]
+    [DOT] P12/12 | S1:48.9% S2:60.8% netEV:+0.1522% cost:0.0565% R:R=1.33 BEP:47.7% margin:+13.0%p MCC:0.134 (15 wins) | k=2.0/1.5 th=0.4 [175s]
+
+  >> ADA (3/3)
+    [ADA] P1/12 | S1:51.1% S2:57.2% netEV:+1.1094% cost:0.1081% R:R=5.00 BEP:20.3% margin:+37.0%p MCC:0.136 (15 wins) | k=3.0/0.6 th=0.4 [51s]
+    [ADA] P2/12 | S1:50.0% S2:69.8% netEV:+0.0253% cost:0.0568% R:R=0.67 BEP:66.8% margin:+3.0%p MCC:0.348 (15 wins) | k=1.0/1.5 th=0.4 [57s]
+    [ADA] P3/12 | S1:44.9% S2:72.5% netEV:+0.4101% cost:0.0563% R:R=1.67 BEP:41.7% margin:+30.8%p MCC:0.260 (15 wins) | k=2.5/1.5 th=0.4 [60s]
+    [ADA] P4/12 | S1:51.3% S2:57.8% netEV:+0.1352% cost:0.0875% R:R=1.50 BEP:47.0% margin:+10.8%p MCC:0.102 (15 wins) | k=1.2/0.8 th=0.45 [69s]
+    [ADA] P5/12 | S1:46.7% S2:73.3% netEV:+0.2990% cost:0.0561% R:R=1.33 BEP:47.7% margin:+25.6%p MCC:0.306 (15 wins) | k=2.0/1.5 th=0.55 [57s]
+    [ADA] P6/12 | S1:55.8% S2:63.3% netEV:+0.0145% cost:0.0659% R:R=0.83 BEP:61.7% margin:+1.6%p MCC:0.249 (15 wins) | k=1.0/1.2 th=0.4 [50s]
+    [ADA] P7/12 | S1:51.7% S2:59.9% netEV:+0.2746% cost:0.0867% R:R=1.88 BEP:40.8% margin:+19.1%p MCC:0.156 (15 wins) | k=1.5/0.8 th=0.55 [63s]
+    [ADA] P8/12 | S1:59.4% S2:63.3% netEV:+0.3241% cost:0.0856% R:R=1.88 BEP:40.7% margin:+22.5%p MCC:0.275 (15 wins) | k=1.5/0.8 th=0.5 [137s]
+    [ADA] P9/12 | S1:48.9% S2:63.4% netEV:+0.0155% cost:0.0658% R:R=0.83 BEP:61.7% margin:+1.7%p MCC:0.252 (15 wins) | k=1.0/1.2 th=0.4 [31s]
+    [ADA] P10/12 | S1:50.6% S2:67.2% netEV:+0.1075% cost:0.0649% R:R=1.00 BEP:56.5% margin:+10.8%p MCC:0.292 (15 wins) | k=1.2/1.2 th=0.5 [114s]
+    [ADA] P11/12 | S1:49.7% S2:64.3% netEV:-0.0218% cost:0.0578% R:R=0.67 BEP:66.9% margin:-2.6%p MCC:0.289 (15 wins) | k=1.0/1.5 th=0.45 [41s]
+    [ADA] P12/12 | S1:47.9% S2:70.7% netEV:+0.2686% cost:0.0566% R:R=1.33 BEP:47.7% margin:+23.0%p MCC:0.313 (15 wins) | k=2.0/1.5 th=0.45 [57s]
+
+  ============================================================
+  COIN-LEVEL BEST (Round 4) -- net EV ranking
+  ============================================================
+  XRP   | netEV:+1.0059% cost:0.1322% R:R=5.00 BEP:21.1% margin:+33.5%p | S2:54.6% MCC:0.055 (15 evals)
+  DOT   | netEV:+0.9000% cost:0.1063% R:R=5.00 BEP:20.2% margin:+30.0%p | S2:50.2% MCC:-0.024 (15 evals)
+  ADA   | netEV:+1.1094% cost:0.1081% R:R=5.00 BEP:20.3% margin:+37.0%p | S2:57.2% MCC:0.136 (15 evals)
+  [CHECKPOINT] data\reports\walkforward_v3_1\wf3_1_checkpoint_r4.json
+
+======================================================================
+  === Round 5 === (n_iter=12/coin, 15 windows, 18.7h remaining)
+  Objective: net EV (post-cost equity%)
+======================================================================
+
+  >> XRP (1/3)
+    [XRP] P1/12 | S1:44.1% S2:67.5% netEV:+0.3700% cost:0.1000% R:R=1.88 BEP:41.7% margin:+25.7%p MCC:0.187 (15 wins) | k=1.5/0.8 th=0.4 [51s]
+    [XRP] P2/12 | S1:47.2% S2:60.6% netEV:+0.4569% cost:0.1031% R:R=2.50 BEP:34.5% margin:+26.1%p MCC:0.164 (15 wins) | k=2.0/0.8 th=0.6 [119s]
+    [XRP] P3/12 | S1:62.8% S2:58.4% netEV:+0.1482% cost:0.1299% R:R=1.67 BEP:47.2% margin:+11.1%p MCC:0.202 (15 wins) | k=1.0/0.6 th=0.6 [27s]
+    [XRP] P4/12 | S1:44.9% S2:59.1% netEV:+0.6509% cost:0.1295% R:R=3.33 BEP:29.1% margin:+30.0%p MCC:0.079 (15 wins) | k=2.0/0.6 th=0.5 [42s]
+    [XRP] P5/12 | S1:43.6% S2:60.4% netEV:+0.4288% cost:0.1287% R:R=2.50 BEP:35.9% margin:+24.5%p MCC:0.108 (15 wins) | k=1.5/0.6 th=0.5 [94s]
+    [XRP] P6/12 | S1:41.7% S2:65.0% netEV:+0.5505% cost:0.0862% R:R=2.50 BEP:33.5% margin:+31.5%p MCC:0.003 (15 wins) | k=2.5/1.0 th=0.6 [58s]
+    [XRP] P7/12 | S1:40.8% S2:57.1% netEV:+0.2265% cost:0.1306% R:R=2.00 BEP:42.0% margin:+15.1%p MCC:0.032 (15 wins) | k=1.2/0.6 th=0.45 [72s]
+    [XRP] P8/12 | S1:55.4% S2:58.1% netEV:+0.0489% cost:0.1042% R:R=1.25 BEP:53.7% margin:+4.3%p MCC:0.145 (15 wins) | k=1.0/0.8 th=0.6 [42s]
+    [XRP] P9/12 | S1:44.9% S2:60.6% netEV:+0.0791% cost:0.0877% R:R=1.20 BEP:53.4% margin:+7.2%p MCC:0.092 (15 wins) | k=1.2/1.0 th=0.45 [37s]
+    [XRP] P10/12 | S1:32.9% S2:61.7% netEV:+0.7086% cost:0.1279% R:R=3.33 BEP:29.0% margin:+32.7%p MCC:0.033 (15 wins) | k=2.0/0.6 th=0.5 [28s]
+    [XRP] P11/12 | S1:47.1% S2:65.8% netEV:+0.0269% cost:0.0760% R:R=0.83 BEP:62.8% margin:+2.9%p MCC:0.172 (15 wins) | k=1.0/1.2 th=0.6 [88s]
+    [XRP] P12/12 | S1:38.4% S2:69.0% netEV:+0.3931% cost:0.0993% R:R=1.88 BEP:41.7% margin:+27.3%p MCC:0.037 (15 wins) | k=1.5/0.8 th=0.6 [49s]
+
+  >> DOT (2/3)
+    [DOT] P1/12 | S1:47.7% S2:51.4% netEV:+0.9367% cost:0.1057% R:R=5.00 BEP:20.2% margin:+31.2%p MCC:0.031 (15 wins) | k=3.0/0.6 th=0.55 [34s]
+    [DOT] P2/12 | S1:49.2% S2:61.5% netEV:+0.7314% cost:0.1013% R:R=3.33 BEP:27.8% margin:+33.8%p MCC:0.184 (15 wins) | k=2.0/0.6 th=0.4 [27s]
+    [DOT] P3/12 | S1:49.0% S2:54.1% netEV:-0.0695% cost:0.0655% R:R=0.83 BEP:61.7% margin:-7.6%p MCC:0.128 (15 wins) | k=1.0/1.2 th=0.6 [27s]
+    [DOT] P4/12 | S1:51.2% S2:67.4% netEV:+0.1189% cost:0.0554% R:R=1.00 BEP:55.5% margin:+11.9%p MCC:0.299 (15 wins) | k=1.5/1.5 th=0.5 [65s]
+    [DOT] P5/12 | S1:54.2% S2:64.3% netEV:+0.1938% cost:0.0559% R:R=1.33 BEP:47.7% margin:+16.6%p MCC:0.201 (15 wins) | k=2.0/1.5 th=0.55 [68s]
+    [DOT] P6/12 | S1:53.8% S2:57.2% netEV:-0.0004% cost:0.0725% R:R=1.00 BEP:57.3% margin:-0.0%p MCC:0.202 (15 wins) | k=1.0/1.0 th=0.6 [59s]
+    [DOT] P7/12 | S1:50.2% S2:53.0% netEV:+0.1904% cost:0.1050% R:R=2.00 BEP:40.3% margin:+12.7%p MCC:0.069 (15 wins) | k=1.2/0.6 th=0.6 [61s]
+    [DOT] P8/12 | S1:46.6% S2:56.2% netEV:+0.5751% cost:0.0843% R:R=3.12 BEP:28.3% margin:+27.9%p MCC:0.076 (15 wins) | k=2.5/0.8 th=0.45 [53s]
+    [DOT] P9/12 | S1:51.7% S2:64.3% netEV:+0.1605% cost:0.0633% R:R=1.25 BEP:50.1% margin:+14.3%p MCC:0.262 (15 wins) | k=1.5/1.2 th=0.55 [50s]
+    [DOT] P10/12 | S1:44.5% S2:52.6% netEV:-0.0836% cost:0.0658% R:R=0.83 BEP:61.7% margin:-9.1%p MCC:0.078 (15 wins) | k=1.0/1.2 th=0.6 [87s]
+    [DOT] P11/12 | S1:47.4% S2:59.5% netEV:+0.3207% cost:0.0719% R:R=2.00 BEP:38.1% margin:+21.4%p MCC:0.134 (15 wins) | k=2.0/1.0 th=0.6 [59s]
+    [DOT] P12/12 | S1:49.0% S2:61.4% netEV:+0.3829% cost:0.0639% R:R=2.08 BEP:36.6% margin:+24.8%p MCC:0.156 (15 wins) | k=2.5/1.2 th=0.5 [74s]
+
+  >> ADA (3/3)
+    [ADA] P1/12 | S1:56.8% S2:61.4% netEV:+0.0394% cost:0.0743% R:R=1.00 BEP:57.4% margin:+3.9%p MCC:0.244 (15 wins) | k=1.0/1.0 th=0.5 [70s]
+    [ADA] P2/12 | S1:54.2% S2:61.7% netEV:+0.1046% cost:0.0742% R:R=1.20 BEP:52.2% margin:+9.5%p MCC:0.206 (15 wins) | k=1.2/1.0 th=0.55 [36s]
+    [ADA] P3/12 | S1:51.1% S2:59.2% netEV:+0.6758% cost:0.1072% R:R=3.33 BEP:28.0% margin:+31.2%p MCC:0.204 (15 wins) | k=2.0/0.6 th=0.55 [79s]
+    [ADA] P4/12 | S1:49.7% S2:67.6% netEV:+0.6107% cost:0.0725% R:R=2.50 BEP:32.7% margin:+34.9%p MCC:0.249 (15 wins) | k=2.5/1.0 th=0.55 [25s]
+    [ADA] P5/12 | S1:55.3% S2:67.4% netEV:+0.1088% cost:0.0649% R:R=1.00 BEP:56.5% margin:+10.9%p MCC:0.313 (15 wins) | k=1.2/1.2 th=0.5 [89s]
+    [ADA] P6/12 | S1:45.8% S2:73.8% netEV:+0.4273% cost:0.0560% R:R=1.67 BEP:41.7% margin:+32.1%p MCC:0.235 (15 wins) | k=2.5/1.5 th=0.4 [29s]
+    [ADA] P7/12 | S1:49.9% S2:75.3% netEV:+0.1969% cost:0.0558% R:R=1.00 BEP:55.6% margin:+19.7%p MCC:0.417 (15 wins) | k=1.5/1.5 th=0.45 [117s]
+    [ADA] P8/12 | S1:52.5% S2:61.8% netEV:+0.5073% cost:0.0742% R:R=2.50 BEP:32.8% margin:+29.0%p MCC:0.237 (15 wins) | k=2.5/1.0 th=0.5 [59s]
+    [ADA] P9/12 | S1:47.3% S2:58.9% netEV:+0.1775% cost:0.1073% R:R=1.67 BEP:45.6% margin:+13.3%p MCC:0.101 (15 wins) | k=1.0/0.6 th=0.5 [55s]
+    [ADA] P10/12 | S1:54.0% S2:63.2% netEV:+0.0131% cost:0.0659% R:R=0.83 BEP:61.7% margin:+1.4%p MCC:0.204 (15 wins) | k=1.0/1.2 th=0.45 [60s]
+    [ADA] P11/12 | S1:54.4% S2:60.2% netEV:+0.0271% cost:0.0746% R:R=1.00 BEP:57.5% margin:+2.7%p MCC:0.182 (15 wins) | k=1.0/1.0 th=0.55 [48s]
+    [ADA] P12/12 | S1:50.7% S2:57.7% netEV:+0.6425% cost:0.1079% R:R=3.33 BEP:28.1% margin:+29.7%p MCC:0.162 (15 wins) | k=2.0/0.6 th=0.55 [65s]
+
+  ============================================================
+  COIN-LEVEL BEST (Round 5) -- net EV ranking
+  ============================================================
+  XRP   | netEV:+1.0059% cost:0.1322% R:R=5.00 BEP:21.1% margin:+33.5%p | S2:54.6% MCC:0.055 (15 evals)
+  DOT   | netEV:+0.9367% cost:0.1057% R:R=5.00 BEP:20.2% margin:+31.2%p | S2:51.4% MCC:0.031 (15 evals)
+  ADA   | netEV:+1.1094% cost:0.1081% R:R=5.00 BEP:20.3% margin:+37.0%p | S2:57.2% MCC:0.136 (15 evals)
+  [CHECKPOINT] data\reports\walkforward_v3_1\wf3_1_checkpoint_r5.json
+
+======================================================================
+  === Round 6 === (n_iter=12/coin, 15 windows, 18.1h remaining)
+  Objective: net EV (post-cost equity%)
+======================================================================
+
+  >> XRP (1/3)
+    [XRP] P1/12 | S1:54.4% S2:57.7% netEV:+0.1385% cost:0.1303% R:R=1.67 BEP:47.3% margin:+10.4%p MCC:0.177 (15 wins) | k=1.0/0.6 th=0.4 [111s]
+    [XRP] P2/12 | S1:48.3% S2:63.3% netEV:+0.0564% cost:0.0767% R:R=1.00 BEP:57.7% margin:+5.6%p MCC:0.237 (15 wins) | k=1.2/1.2 th=0.5 [53s]
+    [XRP] P3/12 | S1:40.2% S2:60.1% netEV:+0.4226% cost:0.1289% R:R=2.50 BEP:35.9% margin:+24.1%p MCC:0.048 (15 wins) | k=1.5/0.6 th=0.6 [40s]
+    [XRP] P4/12 | S1:48.9% S2:65.2% netEV:+0.0215% cost:0.0762% R:R=0.83 BEP:62.9% margin:+2.3%p MCC:0.164 (15 wins) | k=1.0/1.2 th=0.55 [81s]
+    [XRP] P5/12 | S1:36.8% S2:64.1% netEV:+0.0102% cost:0.0665% R:R=0.80 BEP:62.9% margin:+1.1%p MCC:0.015 (15 wins) | k=1.2/1.5 th=0.4 [57s]
+    [XRP] P6/12 | S1:47.0% S2:71.3% netEV:+0.3760% cost:0.0743% R:R=1.67 BEP:43.1% margin:+28.2%p MCC:0.289 (15 wins) | k=2.0/1.2 th=0.55 [63s]
+    [XRP] P7/12 | S1:45.0% S2:57.2% netEV:+0.7539% cost:0.1046% R:R=3.75 BEP:25.5% margin:+31.7%p MCC:0.014 (15 wins) | k=3.0/0.8 th=0.45 [71s]
+    [XRP] P8/12 | S1:40.7% S2:61.1% netEV:+0.4412% cost:0.1283% R:R=2.50 BEP:35.9% margin:+25.2%p MCC:0.043 (15 wins) | k=1.5/0.6 th=0.45 [73s]
+    [XRP] P9/12 | S1:67.7% S2:56.6% netEV:+0.1239% cost:0.1310% R:R=1.67 BEP:47.3% margin:+9.3%p MCC:0.155 (15 wins) | k=1.0/0.6 th=0.4 [84s]
+    [XRP] P10/12 | S1:46.5% S2:62.5% netEV:-0.0463% cost:0.0669% R:R=0.67 BEP:68.0% margin:-5.6%p MCC:0.199 (15 wins) | k=1.0/1.5 th=0.4 [126s]
+    [XRP] P11/12 | S1:48.3% S2:67.3% netEV:+0.0411% cost:0.0755% R:R=0.83 BEP:62.8% margin:+4.5%p MCC:0.216 (15 wins) | k=1.0/1.2 th=0.5 [63s]
+    [XRP] P12/12 | S1:37.8% S2:68.8% netEV:+0.2375% cost:0.0654% R:R=1.33 BEP:48.5% margin:+20.4%p MCC:0.015 (15 wins) | k=2.0/1.5 th=0.45 [37s]
+
+  >> DOT (2/3)
+    [DOT] P1/12 | S1:52.0% S2:55.3% netEV:-0.0203% cost:0.0730% R:R=1.00 BEP:57.3% margin:-2.0%p MCC:0.168 (15 wins) | k=1.0/1.0 th=0.6 [57s]
+    [DOT] P2/12 | S1:50.2% S2:60.6% netEV:+0.0495% cost:0.0566% R:R=1.00 BEP:55.7% margin:+5.0%p MCC:0.160 (15 wins) | k=1.5/1.5 th=0.55 [35s]
+    [DOT] P3/12 | S1:48.4% S2:60.0% netEV:+0.4865% cost:0.0642% R:R=2.50 BEP:32.2% margin:+27.8%p MCC:0.118 (15 wins) | k=3.0/1.2 th=0.45 [50s]
+    [DOT] P4/12 | S1:49.8% S2:63.2% netEV:+0.0124% cost:0.0561% R:R=0.80 BEP:61.8% margin:+1.4%p MCC:0.261 (15 wins) | k=1.2/1.5 th=0.4 [141s]
+    [DOT] P5/12 | S1:50.4% S2:60.4% netEV:+0.0929% cost:0.0717% R:R=1.20 BEP:52.0% margin:+8.4%p MCC:0.224 (15 wins) | k=1.2/1.0 th=0.6 [59s]
+    [DOT] P6/12 | S1:52.2% S2:58.5% netEV:+0.0936% cost:0.0646% R:R=1.25 BEP:50.2% margin:+8.3%p MCC:0.221 (15 wins) | k=1.5/1.2 th=0.5 [38s]
+    [DOT] P7/12 | S1:48.5% S2:57.0% netEV:+0.4318% cost:0.0649% R:R=2.50 BEP:32.3% margin:+24.7%p MCC:0.063 (15 wins) | k=3.0/1.2 th=0.45 [67s]
+    [DOT] P8/12 | S1:55.5% S2:57.2% netEV:+0.4175% cost:0.0840% R:R=2.50 BEP:33.4% margin:+23.9%p MCC:0.153 (15 wins) | k=2.0/0.8 th=0.4 [48s]
+    [DOT] P9/12 | S1:45.9% S2:52.8% netEV:-0.0817% cost:0.0658% R:R=0.83 BEP:61.7% margin:-8.9%p MCC:0.094 (15 wins) | k=1.0/1.2 th=0.45 [27s]
+    [DOT] P10/12 | S1:48.8% S2:61.4% netEV:+0.2629% cost:0.0564% R:R=1.67 BEP:41.7% margin:+19.7%p MCC:0.139 (15 wins) | k=2.5/1.5 th=0.6 [42s]
+    [DOT] P11/12 | S1:50.0% S2:63.4% netEV:+0.1838% cost:0.0561% R:R=1.33 BEP:47.7% margin:+15.8%p MCC:0.182 (15 wins) | k=2.0/1.5 th=0.55 [63s]
+    [DOT] P12/12 | S1:49.9% S2:56.4% netEV:+0.2259% cost:0.0843% R:R=1.88 BEP:40.6% margin:+15.7%p MCC:0.102 (15 wins) | k=1.5/0.8 th=0.55 [52s]
+
+  >> ADA (3/3)
+    [ADA] P1/12 | S1:53.5% S2:57.0% netEV:+0.2461% cost:0.1082% R:R=2.00 BEP:40.5% margin:+16.4%p MCC:0.108 (15 wins) | k=1.2/0.6 th=0.55 [48s]
+    [ADA] P2/12 | S1:50.9% S2:59.5% netEV:+0.6815% cost:0.1071% R:R=3.33 BEP:28.0% margin:+31.5%p MCC:0.122 (15 wins) | k=2.0/0.6 th=0.45 [34s]
+    [ADA] P3/12 | S1:49.4% S2:64.0% netEV:+0.5543% cost:0.0657% R:R=2.50 BEP:32.3% margin:+31.7%p MCC:0.215 (15 wins) | k=3.0/1.2 th=0.4 [19s]
+    [ADA] P4/12 | S1:51.0% S2:63.4% netEV:+0.1232% cost:0.0737% R:R=1.20 BEP:52.2% margin:+11.2%p MCC:0.219 (15 wins) | k=1.2/1.0 th=0.45 [45s]
+    [ADA] P5/12 | S1:52.8% S2:63.1% netEV:+0.0127% cost:0.0659% R:R=0.83 BEP:61.7% margin:+1.4%p MCC:0.195 (15 wins) | k=1.0/1.2 th=0.6 [91s]
+    [ADA] P6/12 | S1:55.9% S2:59.4% netEV:+0.0812% cost:0.0869% R:R=1.25 BEP:52.2% margin:+7.2%p MCC:0.199 (15 wins) | k=1.0/0.8 th=0.45 [115s]
+    [ADA] P7/12 | S1:51.7% S2:71.6% netEV:+0.5405% cost:0.0639% R:R=2.08 BEP:36.6% margin:+35.1%p MCC:0.329 (15 wins) | k=2.5/1.2 th=0.5 [71s]
+    [ADA] P8/12 | S1:50.6% S2:61.5% netEV:+0.3490% cost:0.0742% R:R=2.00 BEP:38.3% margin:+23.3%p MCC:0.244 (15 wins) | k=2.0/1.0 th=0.4 [61s]
+    [ADA] P9/12 | S1:52.9% S2:60.3% netEV:+0.9500% cost:0.1067% R:R=4.17 BEP:23.5% margin:+36.8%p MCC:0.166 (15 wins) | k=2.5/0.6 th=0.4 [75s]
+    [ADA] P10/12 | S1:59.5% S2:61.4% netEV:+0.1814% cost:0.0862% R:R=1.50 BEP:46.9% margin:+14.5%p MCC:0.200 (15 wins) | k=1.2/0.8 th=0.55 [97s]
+    [ADA] P11/12 | S1:53.4% S2:66.0% netEV:+0.0948% cost:0.0652% R:R=1.00 BEP:56.5% margin:+9.5%p MCC:0.292 (15 wins) | k=1.2/1.2 th=0.45 [59s]
+    [ADA] P12/12 | S1:53.6% S2:60.9% netEV:+0.6443% cost:0.0744% R:R=3.00 BEP:28.7% margin:+32.2%p MCC:0.240 (15 wins) | k=3.0/1.0 th=0.5 [78s]
+
+  ============================================================
+  COIN-LEVEL BEST (Round 6) -- net EV ranking
+  ============================================================
+  XRP   | netEV:+1.0059% cost:0.1322% R:R=5.00 BEP:21.1% margin:+33.5%p | S2:54.6% MCC:0.055 (15 evals)
+  DOT   | netEV:+0.9367% cost:0.1057% R:R=5.00 BEP:20.2% margin:+31.2%p | S2:51.4% MCC:0.031 (15 evals)
+  ADA   | netEV:+1.1094% cost:0.1081% R:R=5.00 BEP:20.3% margin:+37.0%p | S2:57.2% MCC:0.136 (15 evals)
+  [CHECKPOINT] data\reports\walkforward_v3_1\wf3_1_checkpoint_r6.json
+
+======================================================================
+  === Round 7 === (n_iter=12/coin, 15 windows, 17.4h remaining)
+  Objective: net EV (post-cost equity%)
+======================================================================
+
+  >> XRP (1/3)
+    [XRP] P1/12 | S1:48.0% S2:68.7% netEV:+0.1212% cost:0.0654% R:R=1.00 BEP:56.5% margin:+12.1%p MCC:0.212 (15 wins) | k=1.5/1.5 th=0.55 [98s]
+    [XRP] P2/12 | S1:44.7% S2:58.9% netEV:+0.7958% cost:0.1038% R:R=3.75 BEP:25.4% margin:+33.5%p MCC:0.074 (15 wins) | k=3.0/0.8 th=0.55 [43s]
+    [XRP] P3/12 | S1:44.6% S2:65.8% netEV:+0.7301% cost:0.0859% R:R=3.00 BEP:29.3% margin:+36.5%p MCC:0.059 (15 wins) | k=3.0/1.0 th=0.45 [56s]
+    [XRP] P4/12 | S1:48.3% S2:71.8% netEV:+0.2731% cost:0.0646% R:R=1.33 BEP:48.4% margin:+23.4%p MCC:0.253 (15 wins) | k=2.0/1.5 th=0.55 [66s]
+    [XRP] P5/12 | S1:49.0% S2:61.9% netEV:+0.3773% cost:0.0771% R:R=2.08 BEP:37.4% margin:+24.5%p MCC:0.192 (15 wins) | k=2.5/1.2 th=0.5 [181s]
+    [XRP] P6/12 | S1:48.7% S2:60.8% netEV:+0.3591% cost:0.0775% R:R=2.08 BEP:37.5% margin:+23.3%p MCC:0.161 (15 wins) | k=2.5/1.2 th=0.45 [87s]
+    [XRP] P7/12 | S1:45.6% S2:63.1% netEV:+0.0018% cost:0.0768% R:R=0.83 BEP:62.9% margin:+0.2%p MCC:0.109 (15 wins) | k=1.0/1.2 th=0.4 [67s]
+    [XRP] P8/12 | S1:35.2% S2:66.9% netEV:+0.5457% cost:0.1248% R:R=2.50 BEP:35.7% margin:+31.2%p MCC:0.065 (15 wins) | k=1.5/0.6 th=0.5 [39s]
+    [XRP] P9/12 | S1:40.8% S2:69.7% netEV:+0.2482% cost:0.0651% R:R=1.33 BEP:48.4% margin:+21.3%p MCC:0.071 (15 wins) | k=2.0/1.5 th=0.5 [76s]
+    [XRP] P10/12 | S1:37.9% S2:69.0% netEV:+0.2014% cost:0.0750% R:R=1.25 BEP:51.1% margin:+17.9%p MCC:0.069 (15 wins) | k=1.5/1.2 th=0.5 [40s]
+    [XRP] P11/12 | S1:45.3% S2:58.9% netEV:+0.0596% cost:0.0883% R:R=1.20 BEP:53.5% margin:+5.4%p MCC:0.118 (15 wins) | k=1.2/1.0 th=0.4 [91s]
+    [XRP] P12/12 | S1:57.5% S2:63.2% netEV:+0.0030% cost:0.0767% R:R=0.83 BEP:62.9% margin:+0.3%p MCC:0.262 (15 wins) | k=1.0/1.2 th=0.4 [56s]
+
+  >> DOT (2/3)
+    [DOT] P1/12 | S1:49.3% S2:55.2% netEV:-0.0597% cost:0.0653% R:R=0.83 BEP:61.7% margin:-6.5%p MCC:0.135 (15 wins) | k=1.0/1.2 th=0.45 [65s]
+    [DOT] P2/12 | S1:54.2% S2:63.4% netEV:+0.3292% cost:0.0820% R:R=1.88 BEP:40.5% margin:+22.9%p MCC:0.226 (15 wins) | k=1.5/0.8 th=0.55 [55s]
+    [DOT] P3/12 | S1:49.5% S2:55.4% netEV:+0.0382% cost:0.0846% R:R=1.25 BEP:52.0% margin:+3.4%p MCC:0.134 (15 wins) | k=1.0/0.8 th=0.6 [41s]
+    [DOT] P4/12 | S1:45.1% S2:53.4% netEV:-0.0764% cost:0.0657% R:R=0.83 BEP:61.7% margin:-8.3%p MCC:0.099 (15 wins) | k=1.0/1.2 th=0.5 [97s]
+    [DOT] P5/12 | S1:47.6% S2:48.1% netEV:+0.0335% cost:0.1072% R:R=1.67 BEP:45.5% margin:+2.5%p MCC:0.025 (15 wins) | k=1.0/0.6 th=0.5 [38s]
+    [DOT] P6/12 | S1:51.0% S2:53.4% netEV:+0.1067% cost:0.1049% R:R=1.67 BEP:45.4% margin:+8.0%p MCC:0.081 (15 wins) | k=1.0/0.6 th=0.45 [120s]
+    [DOT] P7/12 | S1:46.8% S2:53.4% netEV:-0.1127% cost:0.0578% R:R=0.67 BEP:66.9% margin:-13.5%p MCC:0.088 (15 wins) | k=1.0/1.5 th=0.45 [56s]
+    [DOT] P8/12 | S1:48.8% S2:58.9% netEV:+0.4584% cost:0.0721% R:R=2.50 BEP:32.7% margin:+26.2%p MCC:0.151 (15 wins) | k=2.5/1.0 th=0.45 [93s]
+    [DOT] P9/12 | S1:48.7% S2:55.4% netEV:+0.5588% cost:0.0846% R:R=3.12 BEP:28.3% margin:+27.1%p MCC:0.117 (15 wins) | k=2.5/0.8 th=0.4 [88s]
+    [DOT] P10/12 | S1:52.8% S2:59.2% netEV:+0.1679% cost:0.0720% R:R=1.50 BEP:45.8% margin:+13.4%p MCC:0.189 (15 wins) | k=1.5/1.0 th=0.45 [60s]
+    [DOT] P11/12 | S1:49.2% S2:49.8% netEV:+0.6805% cost:0.1064% R:R=4.17 BEP:23.5% margin:+26.3%p MCC:-0.041 (15 wins) | k=2.5/0.6 th=0.6 [109s]
+    [DOT] P12/12 | S1:49.5% S2:65.1% netEV:+0.1688% cost:0.0631% R:R=1.25 BEP:50.1% margin:+15.0%p MCC:0.283 (15 wins) | k=1.5/1.2 th=0.5 [50s]
+
+  >> ADA (3/3)
+    [ADA] P1/12 | S1:50.6% S2:58.5% netEV:+0.0104% cost:0.0751% R:R=1.00 BEP:57.5% margin:+1.0%p MCC:0.127 (15 wins) | k=1.0/1.0 th=0.4 [46s]
+    [ADA] P2/12 | S1:50.5% S2:55.9% netEV:+0.5427% cost:0.0758% R:R=3.00 BEP:28.8% margin:+27.1%p MCC:0.144 (15 wins) | k=3.0/1.0 th=0.45 [38s]
+    [ADA] P3/12 | S1:50.2% S2:64.6% netEV:+0.3032% cost:0.0578% R:R=1.67 BEP:41.8% margin:+22.7%p MCC:0.262 (15 wins) | k=2.5/1.5 th=0.4 [59s]
+    [ADA] P4/12 | S1:51.6% S2:54.6% netEV:+0.7072% cost:0.0886% R:R=3.75 BEP:24.8% margin:+29.8%p MCC:0.131 (15 wins) | k=3.0/0.8 th=0.55 [53s]
+    [ADA] P5/12 | S1:54.6% S2:63.2% netEV:+0.3227% cost:0.0856% R:R=1.88 BEP:40.7% margin:+22.4%p MCC:0.239 (15 wins) | k=1.5/0.8 th=0.6 [30s]
+    [ADA] P6/12 | S1:51.6% S2:64.8% netEV:+0.0282% cost:0.0655% R:R=0.83 BEP:61.7% margin:+3.1%p MCC:0.267 (15 wins) | k=1.0/1.2 th=0.4 [77s]
+    [ADA] P7/12 | S1:51.0% S2:64.9% netEV:+0.4004% cost:0.0733% R:R=2.00 BEP:38.2% margin:+26.7%p MCC:0.240 (15 wins) | k=2.0/1.0 th=0.45 [89s]
+    [ADA] P8/12 | S1:47.6% S2:66.6% netEV:+0.3230% cost:0.0651% R:R=1.67 BEP:42.4% margin:+24.2%p MCC:0.235 (15 wins) | k=2.0/1.2 th=0.6 [43s]
+    [ADA] P9/12 | S1:53.2% S2:61.2% netEV:+0.6770% cost:0.0863% R:R=3.12 BEP:28.4% margin:+32.8%p MCC:0.210 (15 wins) | k=2.5/0.8 th=0.4 [110s]
+    [ADA] P10/12 | S1:47.5% S2:60.1% netEV:+0.4775% cost:0.0746% R:R=2.50 BEP:32.8% margin:+27.3%p MCC:0.200 (15 wins) | k=2.5/1.0 th=0.55 [72s]
+    [ADA] P11/12 | S1:48.3% S2:70.1% netEV:+0.0272% cost:0.0567% R:R=0.67 BEP:66.8% margin:+3.3%p MCC:0.316 (15 wins) | k=1.0/1.5 th=0.55 [79s]
+    [ADA] P12/12 | S1:56.6% S2:54.6% netEV:+0.1188% cost:0.1093% R:R=1.67 BEP:45.7% margin:+8.9%p MCC:0.117 (15 wins) | k=1.0/0.6 th=0.55 [45s]
+
+  ============================================================
+  COIN-LEVEL BEST (Round 7) -- net EV ranking
+  ============================================================
+  XRP   | netEV:+1.0059% cost:0.1322% R:R=5.00 BEP:21.1% margin:+33.5%p | S2:54.6% MCC:0.055 (15 evals)
+  DOT   | netEV:+0.9367% cost:0.1057% R:R=5.00 BEP:20.2% margin:+31.2%p | S2:51.4% MCC:0.031 (15 evals)
+  ADA   | netEV:+1.1094% cost:0.1081% R:R=5.00 BEP:20.3% margin:+37.0%p | S2:57.2% MCC:0.136 (15 evals)
+  [CHECKPOINT] data\reports\walkforward_v3_1\wf3_1_checkpoint_r7.json
+
+======================================================================
+  === Round 8 === (n_iter=12/coin, 15 windows, 16.7h remaining)
+  Objective: net EV (post-cost equity%)
+======================================================================
+
+  >> XRP (1/3)
+    [XRP] P1/12 | S1:42.8% S2:66.9% netEV:+0.1522% cost:0.1002% R:R=1.25 BEP:53.4% margin:+13.5%p MCC:0.009 (15 wins) | k=1.0/0.8 th=0.55 [91s]
+    [XRP] P2/12 | S1:46.5% S2:63.3% netEV:+0.0567% cost:0.0767% R:R=1.00 BEP:57.7% margin:+5.7%p MCC:0.201 (15 wins) | k=1.2/1.2 th=0.45 [120s]
+    [XRP] P3/12 | S1:39.3% S2:67.1% netEV:+0.2539% cost:0.0854% R:R=1.50 BEP:46.8% margin:+20.3%p MCC:0.124 (15 wins) | k=1.5/1.0 th=0.45 [54s]
+    [XRP] P4/12 | S1:41.0% S2:72.0% netEV:+0.6855% cost:0.0741% R:R=2.50 BEP:32.8% margin:+39.2%p MCC:0.014 (15 wins) | k=3.0/1.2 th=0.55 [59s]
+    [XRP] P5/12 | S1:35.3% S2:61.6% netEV:+0.0489% cost:0.0671% R:R=1.00 BEP:56.7% margin:+4.9%p MCC:-0.067 (15 wins) | k=1.5/1.5 th=0.4 [39s]
+    [XRP] P6/12 | S1:38.2% S2:58.4% netEV:-0.0421% cost:0.0678% R:R=0.80 BEP:63.1% margin:-4.7%p MCC:-0.003 (15 wins) | k=1.2/1.5 th=0.4 [69s]
+    [XRP] P7/12 | S1:49.6% S2:69.3% netEV:+0.1283% cost:0.0652% R:R=1.00 BEP:56.5% margin:+12.8%p MCC:0.291 (15 wins) | k=1.5/1.5 th=0.5 [49s]
+    [XRP] P8/12 | S1:45.2% S2:66.9% netEV:+0.5702% cost:0.1002% R:R=2.50 BEP:34.3% margin:+32.6%p MCC:0.229 (15 wins) | k=2.0/0.8 th=0.45 [55s]
+    [XRP] P9/12 | S1:48.8% S2:51.7% netEV:+0.9186% cost:0.1338% R:R=5.00 BEP:21.1% margin:+30.6%p MCC:0.023 (15 wins) | k=3.0/0.6 th=0.45 [228s]
+    [XRP] P10/12 | S1:47.8% S2:64.3% netEV:+0.3782% cost:0.0864% R:R=2.00 BEP:39.1% margin:+25.2%p MCC:0.214 (15 wins) | k=2.0/1.0 th=0.5 [115s]
+    [XRP] P11/12 | S1:45.3% S2:60.5% netEV:+0.4297% cost:0.1287% R:R=2.50 BEP:35.9% margin:+24.6%p MCC:0.125 (15 wins) | k=1.5/0.6 th=0.5 [51s]
+    [XRP] P12/12 | S1:40.5% S2:58.5% netEV:+0.2484% cost:0.1298% R:R=2.00 BEP:42.0% margin:+16.6%p MCC:0.048 (15 wins) | k=1.2/0.6 th=0.5 [73s]
+
+  >> DOT (2/3)
+    [DOT] P1/12 | S1:49.2% S2:56.5% netEV:+0.4043% cost:0.0843% R:R=2.50 BEP:33.4% margin:+23.1%p MCC:0.132 (15 wins) | k=2.0/0.8 th=0.4 [106s]
+    [DOT] P2/12 | S1:47.0% S2:57.6% netEV:+0.6448% cost:0.1030% R:R=3.33 BEP:27.8% margin:+29.8%p MCC:0.117 (15 wins) | k=2.0/0.6 th=0.4 [68s]
+    [DOT] P3/12 | S1:53.0% S2:63.1% netEV:+0.2179% cost:0.0710% R:R=1.50 BEP:45.7% margin:+17.4%p MCC:0.245 (15 wins) | k=1.5/1.0 th=0.55 [27s]
+    [DOT] P4/12 | S1:53.7% S2:63.2% netEV:+0.2195% cost:0.0709% R:R=1.50 BEP:45.7% margin:+17.6%p MCC:0.237 (15 wins) | k=1.5/1.0 th=0.45 [85s]
+    [DOT] P5/12 | S1:48.2% S2:62.6% netEV:+0.0702% cost:0.0562% R:R=1.00 BEP:55.6% margin:+7.0%p MCC:0.139 (15 wins) | k=1.5/1.5 th=0.5 [33s]
+    [DOT] P6/12 | S1:52.0% S2:60.3% netEV:+0.0912% cost:0.0717% R:R=1.20 BEP:52.0% margin:+8.3%p MCC:0.237 (15 wins) | k=1.2/1.0 th=0.6 [43s]
+    [DOT] P7/12 | S1:48.9% S2:56.7% netEV:+0.1247% cost:0.0842% R:R=1.50 BEP:46.7% margin:+10.0%p MCC:0.095 (15 wins) | k=1.2/0.8 th=0.4 [58s]
+    [DOT] P8/12 | S1:51.3% S2:55.0% netEV:+0.2212% cost:0.1042% R:R=2.00 BEP:40.3% margin:+14.7%p MCC:0.117 (15 wins) | k=1.2/0.6 th=0.55 [94s]
+    [DOT] P9/12 | S1:48.5% S2:53.5% netEV:+0.0162% cost:0.0852% R:R=1.25 BEP:52.0% margin:+1.4%p MCC:0.092 (15 wins) | k=1.0/0.8 th=0.6 [79s]
+    [DOT] P10/12 | S1:47.2% S2:57.2% netEV:+0.6362% cost:0.1032% R:R=3.33 BEP:27.8% margin:+29.4%p MCC:0.124 (15 wins) | k=2.0/0.6 th=0.4 [65s]
+    [DOT] P11/12 | S1:48.5% S2:53.2% netEV:+0.6780% cost:0.0853% R:R=3.75 BEP:24.6% margin:+28.5%p MCC:-0.003 (15 wins) | k=3.0/0.8 th=0.45 [52s]
+    [DOT] P12/12 | S1:48.6% S2:54.5% netEV:+0.3801% cost:0.0732% R:R=2.50 BEP:32.8% margin:+21.7%p MCC:0.093 (15 wins) | k=2.5/1.0 th=0.5 [57s]
+
+  >> ADA (3/3)
+    [ADA] P1/12 | S1:54.7% S2:63.4% netEV:+0.2192% cost:0.0737% R:R=1.50 BEP:45.9% margin:+17.5%p MCC:0.247 (15 wins) | k=1.5/1.0 th=0.5 [55s]
+    [ADA] P2/12 | S1:53.7% S2:60.4% netEV:+0.6327% cost:0.0746% R:R=3.00 BEP:28.7% margin:+31.6%p MCC:0.237 (15 wins) | k=3.0/1.0 th=0.45 [57s]
+    [ADA] P3/12 | S1:48.7% S2:57.4% netEV:+0.7752% cost:0.0876% R:R=3.75 BEP:24.7% margin:+32.6%p MCC:0.110 (15 wins) | k=3.0/0.8 th=0.5 [86s]
+    [ADA] P4/12 | S1:47.5% S2:72.9% netEV:+0.4155% cost:0.0562% R:R=1.67 BEP:41.7% margin:+31.2%p MCC:0.264 (15 wins) | k=2.5/1.5 th=0.5 [31s]
+    [ADA] P5/12 | S1:54.8% S2:60.1% netEV:+0.6958% cost:0.1067% R:R=3.33 BEP:28.0% margin:+32.1%p MCC:0.191 (15 wins) | k=2.0/0.6 th=0.5 [29s]
+    [ADA] P6/12 | S1:53.4% S2:61.3% netEV:+1.2318% cost:0.1062% R:R=5.00 BEP:20.2% margin:+41.1%p MCC:0.158 (15 wins) | k=3.0/0.6 th=0.5 [67s]
+    [ADA] P7/12 | S1:62.6% S2:63.6% netEV:+0.5076% cost:0.1051% R:R=2.50 BEP:34.6% margin:+29.0%p MCC:0.276 (15 wins) | k=1.5/0.6 th=0.45 [74s]
+    [ADA] P8/12 | S1:57.9% S2:59.2% netEV:+0.4290% cost:0.1072% R:R=2.50 BEP:34.7% margin:+24.5%p MCC:0.239 (15 wins) | k=1.5/0.6 th=0.4 [47s]
+    [ADA] P9/12 | S1:48.3% S2:72.6% netEV:+0.2903% cost:0.0563% R:R=1.33 BEP:47.7% margin:+24.9%p MCC:0.309 (15 wins) | k=2.0/1.5 th=0.55 [38s]
+    [ADA] P10/12 | S1:54.3% S2:62.2% netEV:+0.3086% cost:0.0859% R:R=1.88 BEP:40.8% margin:+21.5%p MCC:0.236 (15 wins) | k=1.5/0.8 th=0.4 [18s]
+    [ADA] P11/12 | S1:48.9% S2:72.5% netEV:+0.4024% cost:0.0637% R:R=1.67 BEP:42.3% margin:+30.2%p MCC:0.315 (15 wins) | k=2.0/1.2 th=0.45 [31s]
+    [ADA] P12/12 | S1:52.0% S2:59.8% netEV:+0.2729% cost:0.0868% R:R=1.88 BEP:40.8% margin:+19.0%p MCC:0.195 (15 wins) | k=1.5/0.8 th=0.4 [51s]
+
+  ============================================================
+  COIN-LEVEL BEST (Round 8) -- net EV ranking
+  ============================================================
+  XRP   | netEV:+1.0059% cost:0.1322% R:R=5.00 BEP:21.1% margin:+33.5%p | S2:54.6% MCC:0.055 (15 evals)
+  DOT   | netEV:+0.9367% cost:0.1057% R:R=5.00 BEP:20.2% margin:+31.2%p | S2:51.4% MCC:0.031 (15 evals)
+  ADA   | netEV:+1.2318% cost:0.1062% R:R=5.00 BEP:20.2% margin:+41.1%p | S2:61.3% MCC:0.158 (15 evals)
+  [CHECKPOINT] data\reports\walkforward_v3_1\wf3_1_checkpoint_r8.json
+
+======================================================================
+  === Round 9 === (n_iter=12/coin, 15 windows, 16.1h remaining)
+  Objective: net EV (post-cost equity%)
+======================================================================
+
+  >> XRP (1/3)
+    [XRP] P1/12 | S1:32.8% S2:67.3% netEV:+0.4243% cost:0.0853% R:R=2.00 BEP:39.0% margin:+28.3%p MCC:0.015 (15 wins) | k=2.0/1.0 th=0.6 [77s]
+    [XRP] P2/12 | S1:41.3% S2:62.5% netEV:+0.6626% cost:0.0871% R:R=3.00 BEP:29.4% margin:+33.1%p MCC:0.035 (15 wins) | k=3.0/1.0 th=0.5 [62s]
+    [XRP] P3/12 | S1:41.6% S2:62.8% netEV:+0.3558% cost:0.0869% R:R=2.00 BEP:39.1% margin:+23.7%p MCC:0.124 (15 wins) | k=2.0/1.0 th=0.5 [60s]
+    [XRP] P4/12 | S1:47.5% S2:70.9% netEV:+0.1445% cost:0.0649% R:R=1.00 BEP:56.5% margin:+14.4%p MCC:0.240 (15 wins) | k=1.5/1.5 th=0.55 [49s]
+    [XRP] P5/12 | S1:57.4% S2:60.5% netEV:+0.0770% cost:0.1031% R:R=1.25 BEP:53.6% margin:+6.8%p MCC:0.189 (15 wins) | k=1.0/0.8 th=0.45 [55s]
+    [XRP] P6/12 | S1:45.2% S2:59.9% netEV:+0.8189% cost:0.1034% R:R=3.75 BEP:25.4% margin:+34.5%p MCC:0.030 (15 wins) | k=3.0/0.8 th=0.4 [28s]
+    [XRP] P7/12 | S1:36.3% S2:68.2% netEV:+0.1922% cost:0.0753% R:R=1.25 BEP:51.1% margin:+17.1%p MCC:0.066 (15 wins) | k=1.5/1.2 th=0.55 [90s]
+    [XRP] P8/12 | S1:49.6% S2:66.4% netEV:+0.3194% cost:0.0659% R:R=1.67 BEP:42.4% margin:+24.0%p MCC:0.211 (15 wins) | k=2.5/1.5 th=0.5 [56s]
+    [XRP] P9/12 | S1:45.4% S2:58.0% netEV:+0.6259% cost:0.1301% R:R=3.33 BEP:29.1% margin:+28.9%p MCC:0.058 (15 wins) | k=2.0/0.6 th=0.45 [37s]
+    [XRP] P10/12 | S1:48.7% S2:69.2% netEV:+0.1272% cost:0.0653% R:R=1.00 BEP:56.5% margin:+12.7%p MCC:0.242 (15 wins) | k=1.5/1.5 th=0.45 [88s]
+    [XRP] P11/12 | S1:50.6% S2:69.6% netEV:+0.4787% cost:0.0652% R:R=2.00 BEP:37.7% margin:+31.9%p MCC:0.229 (15 wins) | k=3.0/1.5 th=0.45 [58s]
+    [XRP] P12/12 | S1:48.0% S2:61.7% netEV:+0.5025% cost:0.0772% R:R=2.50 BEP:33.0% margin:+28.7%p MCC:0.157 (15 wins) | k=3.0/1.2 th=0.5 [89s]
+
+  >> DOT (2/3)
+    [DOT] P1/12 | S1:51.1% S2:52.0% netEV:+0.0875% cost:0.1055% R:R=1.67 BEP:45.4% margin:+6.6%p MCC:0.076 (15 wins) | k=1.0/0.6 th=0.55 [63s]
+    [DOT] P2/12 | S1:47.9% S2:59.6% netEV:+0.6897% cost:0.1021% R:R=3.33 BEP:27.8% margin:+31.8%p MCC:0.184 (15 wins) | k=2.0/0.6 th=0.45 [54s]
+    [DOT] P3/12 | S1:49.7% S2:57.1% netEV:+0.2840% cost:0.0725% R:R=2.00 BEP:38.2% margin:+18.9%p MCC:0.151 (15 wins) | k=2.0/1.0 th=0.5 [52s]
+    [DOT] P4/12 | S1:48.6% S2:61.8% netEV:+0.2675% cost:0.0564% R:R=1.67 BEP:41.7% margin:+20.1%p MCC:0.118 (15 wins) | k=2.5/1.5 th=0.4 [90s]
+    [DOT] P5/12 | S1:48.2% S2:56.6% netEV:+0.5823% cost:0.0842% R:R=3.12 BEP:28.3% margin:+28.2%p MCC:0.093 (15 wins) | k=2.5/0.8 th=0.4 [40s]
+    [DOT] P6/12 | S1:45.9% S2:59.9% netEV:+0.2419% cost:0.0567% R:R=1.67 BEP:41.8% margin:+18.1%p MCC:0.096 (15 wins) | k=2.5/1.5 th=0.6 [84s]
+    [DOT] P7/12 | S1:50.3% S2:59.3% netEV:+0.0286% cost:0.0644% R:R=1.00 BEP:56.4% margin:+2.9%p MCC:0.225 (15 wins) | k=1.2/1.2 th=0.4 [73s]
+    [DOT] P8/12 | S1:48.0% S2:51.5% netEV:+0.9391% cost:0.1057% R:R=5.00 BEP:20.2% margin:+31.3%p MCC:0.102 (15 wins) | k=3.0/0.6 th=0.4 [41s]
+    [DOT] P9/12 | S1:51.2% S2:55.0% netEV:+0.1292% cost:0.1042% R:R=1.67 BEP:45.3% margin:+9.7%p MCC:0.110 (15 wins) | k=1.0/0.6 th=0.45 [173s]
+    [DOT] P10/12 | S1:49.5% S2:65.5% netEV:+0.0988% cost:0.0557% R:R=1.00 BEP:55.6% margin:+9.9%p MCC:0.247 (15 wins) | k=1.5/1.5 th=0.5 [69s]
+    [DOT] P11/12 | S1:50.7% S2:57.3% netEV:+0.1990% cost:0.0648% R:R=1.67 BEP:42.4% margin:+14.9%p MCC:0.161 (15 wins) | k=2.0/1.2 th=0.6 [45s]
+    [DOT] P12/12 | S1:50.7% S2:64.8% netEV:+0.1662% cost:0.0632% R:R=1.25 BEP:50.1% margin:+14.8%p MCC:0.277 (15 wins) | k=1.5/1.2 th=0.55 [80s]
+
+  >> ADA (3/3)
+    [ADA] P1/12 | S1:52.2% S2:64.1% netEV:+0.4224% cost:0.0657% R:R=2.08 BEP:36.7% margin:+27.4%p MCC:0.273 (15 wins) | k=2.5/1.2 th=0.55 [72s]
+    [ADA] P2/12 | S1:55.3% S2:60.4% netEV:+0.4703% cost:0.0866% R:R=2.50 BEP:33.5% margin:+26.9%p MCC:0.262 (15 wins) | k=2.0/0.8 th=0.6 [93s]
+    [ADA] P3/12 | S1:50.3% S2:60.2% netEV:+0.3278% cost:0.0746% R:R=2.00 BEP:38.3% margin:+21.9%p MCC:0.222 (15 wins) | k=2.0/1.0 th=0.45 [56s]
+    [ADA] P4/12 | S1:52.7% S2:65.0% netEV:+0.2389% cost:0.0733% R:R=1.50 BEP:45.9% margin:+19.1%p MCC:0.308 (15 wins) | k=1.5/1.0 th=0.5 [106s]
+    [ADA] P5/12 | S1:47.4% S2:72.6% netEV:+0.4040% cost:0.0637% R:R=1.67 BEP:42.3% margin:+30.3%p MCC:0.293 (15 wins) | k=2.0/1.2 th=0.55 [39s]
+    [ADA] P6/12 | S1:46.9% S2:74.3% netEV:+0.3106% cost:0.0559% R:R=1.33 BEP:47.7% margin:+26.6%p MCC:0.362 (15 wins) | k=2.0/1.5 th=0.45 [62s]
+    [ADA] P7/12 | S1:51.9% S2:60.1% netEV:+0.0865% cost:0.0746% R:R=1.20 BEP:52.2% margin:+7.9%p MCC:0.173 (15 wins) | k=1.2/1.0 th=0.6 [120s]
+    [ADA] P8/12 | S1:56.0% S2:68.4% netEV:+0.2823% cost:0.0723% R:R=1.50 BEP:45.8% margin:+22.6%p MCC:0.329 (15 wins) | k=1.5/1.0 th=0.55 [47s]
+    [ADA] P9/12 | S1:58.2% S2:65.9% netEV:+0.3622% cost:0.0847% R:R=1.88 BEP:40.7% margin:+25.2%p MCC:0.311 (15 wins) | k=1.5/0.8 th=0.45 [75s]
+    [ADA] P10/12 | S1:54.5% S2:62.1% netEV:+0.1122% cost:0.0860% R:R=1.25 BEP:52.1% margin:+10.0%p MCC:0.103 (15 wins) | k=1.0/0.8 th=0.4 [54s]
+    [ADA] P11/12 | S1:48.0% S2:67.2% netEV:+0.4351% cost:0.0727% R:R=2.00 BEP:38.2% margin:+29.0%p MCC:0.262 (15 wins) | k=2.0/1.0 th=0.6 [66s]
+    [ADA] P12/12 | S1:50.6% S2:70.2% netEV:+0.3723% cost:0.0642% R:R=1.67 BEP:42.3% margin:+27.9%p MCC:0.337 (15 wins) | k=2.0/1.2 th=0.4 [41s]
+
+  ============================================================
+  COIN-LEVEL BEST (Round 9) -- net EV ranking
+  ============================================================
+  XRP   | netEV:+1.0059% cost:0.1322% R:R=5.00 BEP:21.1% margin:+33.5%p | S2:54.6% MCC:0.055 (15 evals)
+  DOT   | netEV:+0.9367% cost:0.1057% R:R=5.00 BEP:20.2% margin:+31.2%p | S2:51.4% MCC:0.031 (15 evals)
+  ADA   | netEV:+1.2318% cost:0.1062% R:R=5.00 BEP:20.2% margin:+41.1%p | S2:61.3% MCC:0.158 (15 evals)
+  [CHECKPOINT] data\reports\walkforward_v3_1\wf3_1_checkpoint_r9.json
+
+======================================================================
+  === Round 10 === (n_iter=12/coin, 15 windows, 15.4h remaining)
+  Objective: net EV (post-cost equity%)
+======================================================================
+
+  >> XRP (1/3)
+    [XRP] P1/12 | S1:42.2% S2:66.1% netEV:+0.5704% cost:0.0858% R:R=2.50 BEP:33.5% margin:+32.6%p MCC:0.149 (15 wins) | k=2.5/1.0 th=0.45 [20s]
+    [XRP] P2/12 | S1:58.6% S2:59.5% netEV:+0.0654% cost:0.1036% R:R=1.25 BEP:53.6% margin:+5.8%p MCC:0.194 (15 wins) | k=1.0/0.8 th=0.4 [84s]
+    [XRP] P3/12 | S1:38.6% S2:64.2% netEV:+1.2982% cost:0.1265% R:R=5.00 BEP:20.9% margin:+43.3%p MCC:0.027 (15 wins) | k=3.0/0.6 th=0.6 [35s]
+    [XRP] P4/12 | S1:44.2% S2:68.5% netEV:+0.4621% cost:0.0654% R:R=2.00 BEP:37.7% margin:+30.8%p MCC:0.083 (15 wins) | k=3.0/1.5 th=0.55 [60s]
+    [XRP] P5/12 | S1:46.2% S2:56.1% netEV:+0.2106% cost:0.1312% R:R=2.00 BEP:42.1% margin:+14.0%p MCC:0.051 (15 wins) | k=1.2/0.6 th=0.45 [39s]
+    [XRP] P6/12 | S1:45.1% S2:63.4% netEV:+0.1104% cost:0.0867% R:R=1.20 BEP:53.3% margin:+10.0%p MCC:0.185 (15 wins) | k=1.2/1.0 th=0.45 [53s]
+    [XRP] P7/12 | S1:43.6% S2:63.7% netEV:+0.2091% cost:0.0866% R:R=1.50 BEP:46.9% margin:+16.7%p MCC:0.136 (15 wins) | k=1.5/1.0 th=0.45 [53s]
+    [XRP] P8/12 | S1:49.1% S2:65.5% netEV:+0.2330% cost:0.0860% R:R=1.50 BEP:46.9% margin:+18.6%p MCC:0.252 (15 wins) | k=1.5/1.0 th=0.45 [60s]
+    [XRP] P9/12 | S1:43.0% S2:60.0% netEV:+0.6343% cost:0.1033% R:R=3.12 BEP:29.3% margin:+30.8%p MCC:0.096 (15 wins) | k=2.5/0.8 th=0.45 [72s]
+    [XRP] P10/12 | S1:49.2% S2:57.4% netEV:+0.5587% cost:0.0889% R:R=3.00 BEP:29.4% margin:+27.9%p MCC:0.112 (15 wins) | k=3.0/1.0 th=0.4 [181s]
+    [XRP] P11/12 | S1:39.4% S2:67.6% netEV:+0.6074% cost:0.0754% R:R=2.50 BEP:32.9% margin:+34.7%p MCC:0.028 (15 wins) | k=3.0/1.2 th=0.45 [62s]
+    [XRP] P12/12 | S1:40.2% S2:64.4% netEV:+0.5411% cost:0.0864% R:R=2.50 BEP:33.5% margin:+30.9%p MCC:0.082 (15 wins) | k=2.5/1.0 th=0.5 [70s]
+
+  >> DOT (2/3)
+    [DOT] P1/12 | S1:50.0% S2:56.2% netEV:+0.3795% cost:0.1036% R:R=2.50 BEP:34.5% margin:+21.7%p MCC:0.103 (15 wins) | k=1.5/0.6 th=0.5 [70s]
+    [DOT] P2/12 | S1:50.4% S2:64.6% netEV:+0.2365% cost:0.0706% R:R=1.50 BEP:45.6% margin:+18.9%p MCC:0.200 (15 wins) | k=1.5/1.0 th=0.45 [56s]
+    [DOT] P3/12 | S1:51.1% S2:54.9% netEV:+0.3880% cost:0.0731% R:R=2.50 BEP:32.7% margin:+22.2%p MCC:0.141 (15 wins) | k=2.5/1.0 th=0.6 [47s]
+    [DOT] P4/12 | S1:53.0% S2:63.2% netEV:+0.2083% cost:0.0820% R:R=1.50 BEP:46.6% margin:+16.7%p MCC:0.085 (15 wins) | k=1.2/0.8 th=0.4 [34s]
+    [DOT] P5/12 | S1:49.0% S2:58.3% netEV:+0.4551% cost:0.0646% R:R=2.50 BEP:32.3% margin:+26.0%p MCC:0.126 (15 wins) | k=3.0/1.2 th=0.55 [51s]
+    [DOT] P6/12 | S1:49.3% S2:56.6% netEV:+0.1235% cost:0.0842% R:R=1.50 BEP:46.7% margin:+9.9%p MCC:0.074 (15 wins) | k=1.2/0.8 th=0.5 [102s]
+    [DOT] P7/12 | S1:47.6% S2:58.8% netEV:+0.4652% cost:0.0645% R:R=2.50 BEP:32.3% margin:+26.6%p MCC:0.090 (15 wins) | k=3.0/1.2 th=0.5 [29s]
+    [DOT] P8/12 | S1:49.5% S2:61.3% netEV:+0.3482% cost:0.0714% R:R=2.00 BEP:38.1% margin:+23.2%p MCC:0.225 (15 wins) | k=2.0/1.0 th=0.4 [121s]
+    [DOT] P9/12 | S1:49.6% S2:60.9% netEV:+0.5024% cost:0.0640% R:R=2.50 BEP:32.2% margin:+28.7%p MCC:0.131 (15 wins) | k=3.0/1.2 th=0.6 [52s]
+    [DOT] P10/12 | S1:54.5% S2:61.5% netEV:+0.4742% cost:0.1013% R:R=2.50 BEP:34.4% margin:+27.1%p MCC:0.056 (15 wins) | k=1.5/0.6 th=0.6 [46s]
+    [DOT] P11/12 | S1:61.2% S2:61.7% netEV:+0.1887% cost:0.0825% R:R=1.50 BEP:46.6% margin:+15.1%p MCC:0.187 (15 wins) | k=1.2/0.8 th=0.5 [68s]
+    [DOT] P12/12 | S1:51.7% S2:58.3% netEV:+0.1447% cost:0.0837% R:R=1.50 BEP:46.7% margin:+11.6%p MCC:0.191 (15 wins) | k=1.2/0.8 th=0.55 [54s]
+
+  >> ADA (3/3)
+    [ADA] P1/12 | S1:48.5% S2:71.0% netEV:+0.5307% cost:0.0641% R:R=2.08 BEP:36.6% margin:+34.4%p MCC:0.297 (15 wins) | k=2.5/1.2 th=0.45 [54s]
+    [ADA] P2/12 | S1:46.6% S2:70.3% netEV:+0.2636% cost:0.0567% R:R=1.33 BEP:47.7% margin:+22.6%p MCC:0.281 (15 wins) | k=2.0/1.5 th=0.5 [49s]
+    [ADA] P3/12 | S1:56.5% S2:65.6% netEV:+0.0903% cost:0.0653% R:R=1.00 BEP:56.5% margin:+9.0%p MCC:0.270 (15 wins) | k=1.2/1.2 th=0.4 [47s]
+    [ADA] P4/12 | S1:53.3% S2:57.9% netEV:+0.7875% cost:0.0875% R:R=3.75 BEP:24.7% margin:+33.2%p MCC:0.164 (15 wins) | k=3.0/0.8 th=0.6 [41s]
+    [ADA] P5/12 | S1:51.1% S2:61.5% netEV:+0.4903% cost:0.0862% R:R=2.50 BEP:33.5% margin:+28.0%p MCC:0.236 (15 wins) | k=2.0/0.8 th=0.55 [33s]
+    [ADA] P6/12 | S1:52.2% S2:70.6% netEV:+0.5031% cost:0.0566% R:R=2.00 BEP:37.1% margin:+33.5%p MCC:0.253 (15 wins) | k=3.0/1.5 th=0.55 [45s]
+    [ADA] P7/12 | S1:50.7% S2:60.1% netEV:+0.0893% cost:0.0867% R:R=1.25 BEP:52.2% margin:+7.9%p MCC:0.125 (15 wins) | k=1.0/0.8 th=0.4 [85s]
+    [ADA] P8/12 | S1:53.4% S2:59.3% netEV:+0.0180% cost:0.0749% R:R=1.00 BEP:57.5% margin:+1.8%p MCC:0.190 (15 wins) | k=1.0/1.0 th=0.5 [39s]
+    [ADA] P9/12 | S1:48.4% S2:58.7% netEV:+0.6645% cost:0.1074% R:R=3.33 BEP:28.0% margin:+30.7%p MCC:0.107 (15 wins) | k=2.0/0.6 th=0.55 [78s]
+    [ADA] P10/12 | S1:51.1% S2:63.4% netEV:+0.4115% cost:0.0658% R:R=2.08 BEP:36.7% margin:+26.7%p MCC:0.276 (15 wins) | k=2.5/1.2 th=0.45 [54s]
+    [ADA] P11/12 | S1:50.5% S2:58.7% netEV:+0.1469% cost:0.0872% R:R=1.50 BEP:47.0% margin:+11.8%p MCC:0.123 (15 wins) | k=1.2/0.8 th=0.5 [85s]
+    [ADA] P12/12 | S1:56.2% S2:68.4% netEV:+0.2821% cost:0.0723% R:R=1.50 BEP:45.8% margin:+22.6%p MCC:0.320 (15 wins) | k=1.5/1.0 th=0.55 [34s]
+
+  ============================================================
+  COIN-LEVEL BEST (Round 10) -- net EV ranking
+  ============================================================
+  XRP   | netEV:+1.2982% cost:0.1265% R:R=5.00 BEP:20.9% margin:+43.3%p | S2:64.2% MCC:0.027 (15 evals)
+  DOT   | netEV:+0.9367% cost:0.1057% R:R=5.00 BEP:20.2% margin:+31.2%p | S2:51.4% MCC:0.031 (15 evals)
+  ADA   | netEV:+1.2318% cost:0.1062% R:R=5.00 BEP:20.2% margin:+41.1%p | S2:61.3% MCC:0.158 (15 evals)
+  [CHECKPOINT] data\reports\walkforward_v3_1\wf3_1_checkpoint_r10.json
+
+======================================================================
+  === Round 11 === (n_iter=11/coin, 15 windows, 14.8h remaining)
+  Objective: net EV (post-cost equity%)
+======================================================================
+
+  >> XRP (1/3)
+    [XRP] P1/11 | S1:44.0% S2:66.2% netEV:+0.5728% cost:0.0857% R:R=2.50 BEP:33.5% margin:+32.7%p MCC:0.160 (15 wins) | k=2.5/1.0 th=0.55 [36s]
+    [XRP] P2/11 | S1:46.4% S2:61.2% netEV:+0.3307% cost:0.0875% R:R=2.00 BEP:39.2% margin:+22.0%p MCC:0.053 (15 wins) | k=2.0/1.0 th=0.6 [92s]
+    [XRP] P3/11 | S1:50.8% S2:59.6% netEV:+0.0077% cost:0.0881% R:R=1.00 BEP:58.8% margin:+0.8%p MCC:0.163 (15 wins) | k=1.0/1.0 th=0.55 [76s]
+    [XRP] P4/11 | S1:44.2% S2:55.3% netEV:+0.7971% cost:0.1317% R:R=4.17 BEP:24.5% margin:+30.9%p MCC:0.038 (15 wins) | k=2.5/0.6 th=0.45 [55s]
+    [XRP] P5/11 | S1:45.4% S2:52.6% netEV:+0.9443% cost:0.1333% R:R=5.00 BEP:21.1% margin:+31.5%p MCC:-0.004 (15 wins) | k=3.0/0.6 th=0.6 [57s]
+    [XRP] P6/11 | S1:43.8% S2:62.0% netEV:+0.0953% cost:0.0872% R:R=1.20 BEP:53.4% margin:+8.7%p MCC:0.045 (15 wins) | k=1.2/1.0 th=0.5 [41s]
+    [XRP] P7/11 | S1:44.3% S2:54.6% netEV:+0.5504% cost:0.1322% R:R=3.33 BEP:29.2% margin:+25.4%p MCC:-0.003 (15 wins) | k=2.0/0.6 th=0.45 [69s]

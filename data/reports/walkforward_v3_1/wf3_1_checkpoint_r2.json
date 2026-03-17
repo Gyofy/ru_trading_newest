@@ -1,0 +1,79 @@
+{
+  "version": "v3.1",
+  "round": 2,
+  "timestamp": "2026-03-17T09:00:15.247167",
+  "total_evaluations": 1073,
+  "active_coins": [
+    "XRP",
+    "DOT",
+    "ADA"
+  ],
+  "coin_best": {
+    "DOT": {
+      "stability": 0.4191,
+      "mean_s1": 0.5184,
+      "mean_s2": 0.581,
+      "mean_combined": 0.4201,
+      "std_combined": 0.0423,
+      "mean_mcc": 0.201,
+      "n_evals": 25,
+      "params": {
+        "colsample": 0.7,
+        "k_lower": 1.0,
+        "k_upper": 1.2,
+        "learning_rate": 0.02,
+        "max_depth_tree": 10,
+        "max_features": 80,
+        "min_child_samples": 20,
+        "n_estimators": 400,
+        "num_leaves": 31,
+        "stage1_threshold": 0.4,
+        "subsample": 0.8
+      }
+    },
+    "XRP": {
+      "stability": 0.4457,
+      "mean_s1": 0.5252,
+      "mean_s2": 0.7,
+      "mean_combined": 0.4568,
+      "std_combined": 0.0709,
+      "mean_mcc": 0.2431,
+      "n_evals": 25,
+      "params": {
+        "colsample": 0.9,
+        "k_lower": 1.5,
+        "k_upper": 2.0,
+        "learning_rate": 0.1,
+        "max_depth_tree": 10,
+        "max_features": 150,
+        "min_child_samples": 20,
+        "n_estimators": 200,
+        "num_leaves": 31,
+        "stage1_threshold": 0.5,
+        "subsample": 0.8
+      }
+    },
+    "ADA": {
+      "stability": 0.4272,
+      "mean_s1": 0.5013,
+      "mean_s2": 0.6135,
+      "mean_combined": 0.4267,
+      "std_combined": 0.0446,
+      "mean_mcc": 0.2282,
+      "n_evals": 25,
+      "params": {
+        "colsample": 0.6,
+        "k_lower": 1.5,
+        "k_upper": 0.8,
+        "learning_rate": 0.08,
+        "max_depth_tree": 8,
+        "max_features": 120,
+        "min_child_samples": 20,
+        "n_estimators": 300,
+        "num_leaves": 15,
+        "stage1_threshold": 0.4,
+        "subsample": 0.9
+      }
+    }
+  }
+}

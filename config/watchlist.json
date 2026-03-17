@@ -1,0 +1,57 @@
+{
+  "active": [
+    {
+      "coin": "SOL",
+      "activated_at": "2026-03-12T14:01:49.969081",
+      "reason": "Top3 from universe report 2026-03-12 (SOL 84.4, AAVE 83.5, FIL 82.1)"
+    },
+    {
+      "coin": "AAVE",
+      "activated_at": "2026-03-12T14:01:49.969081",
+      "reason": "Top3 from universe report 2026-03-12 (SOL 84.4, AAVE 83.5, FIL 82.1)"
+    },
+    {
+      "coin": "FIL",
+      "activated_at": "2026-03-12T14:01:49.969081",
+      "reason": "Top3 from universe report 2026-03-12 (SOL 84.4, AAVE 83.5, FIL 82.1)"
+    }
+  ],
+  "history": [
+    {
+      "coin": "SOL",
+      "activated_at": "2026-03-12T14:01:36.322034",
+      "reason": "Top3 from universe report 2026-03-12",
+      "deactivated_at": "2026-03-12T14:01:45.028774",
+      "deactivated_reason": "replaced"
+    },
+    {
+      "coin": "AAVE",
+      "activated_at": "2026-03-12T14:01:36.322034",
+      "reason": "Top3 from universe report 2026-03-12",
+      "deactivated_at": "2026-03-12T14:01:45.028774",
+      "deactivated_reason": "replaced"
+    },
+    {
+      "coin": "FIL",
+      "activated_at": "2026-03-12T14:01:36.322034",
+      "reason": "Top3 from universe report 2026-03-12",
+      "deactivated_at": "2026-03-12T14:01:45.028774",
+      "deactivated_reason": "replaced"
+    },
+    {
+      "coin": "SOL",
+      "activated_at": "2026-03-12T14:01:45.028774",
+      "reason": "Replaced FIL with AVAX (neutral direction, diversification)",
+      "deactivated_at": "2026-03-12T14:01:49.969081",
+      "deactivated_reason": "replaced"
+    },
+    {
+      "coin": "AVAX",
+      "activated_at": "2026-03-12T14:01:45.028774",
+      "reason": "Replaced FIL with AVAX (neutral direction, diversification)",
+      "deactivated_at": "2026-03-12T14:01:49.969081",
+      "deactivated_reason": "replaced"
+    }
+  ],
+  "updated_at": "2026-03-12T14:01:49.969081"
+}

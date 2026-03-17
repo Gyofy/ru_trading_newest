@@ -1,0 +1,243 @@
+# === CLAUDE_CRYPTO_AGENT Configuration ===
+
+mode: paper  # paper | live
+
+# 대상 코인
+universe:
+  type: crypto_top10
+  coins:
+    - BTC
+    - ETH
+    - SOL
+    - XRP
+    - ADA
+    - DOGE
+    - AVAX
+    - DOT
+    - LINK
+    - BNB
+  data_source: yfinance  # 방화벽으로 거래소 API 차단, yfinance 대체
+
+# 거래시간 (크립토 = 24시간)
+market_hours:
+  type: 24h  # 장 시간 제한 없음
+  timezone: "UTC"
+
+# ============================================================
+# 2-Tier 시간축 (strategic / tactical / execution)
+# ============================================================
+# 모든 시간 관련 하드코딩은 여기서 단일 정의.
+# 각 모듈은 자기 tier의 설정만 참조.
+#
+#   strategic (1h) : Scanner, Regime, Discussion
+#   tactical  (4h) : ML/DL 모델, 라벨링, 피처 엔지니어링 (1h fetch → 4h resample)
+#   execution (4h) : 시그널 정책, 포지션 관리, 주문
+
+timeframes:
+  # --- 전략적 판단: 추세/레짐/기회 탐색 ---
+  strategic:
+    interval: "1h"
+    lookback_days: 30
+    min_bars: 100           # 최소 필요 바 수 (레짐 감지 등)
+    regime:
+      ema_fast: 20          # 20h
+      ema_slow: 50          # 50h (~2일)
+      adx_period: 14
+      lookback: 100         # 100h (~4일)
+
+  # --- 전술적 실행: 모델 학습, 정확한 타이밍 ---
+  tactical:
+    interval: "1h"            # fetch 1h from yfinance, resample to 4h in code
+    resample_to: "4h"         # 실제 모델링 타임프레임
+    bar_minutes: 240          # 4h = 240 min
+    lookback_days: 365        # 1h data available up to 730 days
+    seq_len: 42               # 42 × 4h = 7 days input window
+    horizons: [1, 3, 6, 18]   # 4h, 12h, 24h, 72h(3일) prediction horizons
+    max_horizon: 18            # max(horizons) — CV gap 등에 사용
+    patch_len: 6              # 6 × 4h = 24h = 1일 패치
+    patch_stride: 3           # 50% overlap → 13 patches
+    decomposition_period: 42  # 42 × 4h ≈ 7 days (크립토 주간 패턴)
+
+  # --- 주문 실행: 시그널→액션 변환 ---
+  execution:
+    bar_minutes: 240        # tactical과 동일 (명시적 재선언)
+    default_ttl_bars: 6     # 6 × 4h = 24h
+    cost_bps: 20            # 편도 비용 (bps)
+    walk_forward:
+      window_hours: 168     # 7일
+      step_hours: 24        # 1일
+      purge_hours: 12       # 12h (max_horizon x 4h 이상)
+
+# 데이터
+data:
+  stale_threshold_minutes: 5
+  feature_selection:
+    method: mutual_information
+    max_features: 150       # MI 기반 top N (신호분석 피처 추가로 확대)
+
+# 리스크 한도
+risk:
+  max_per_coin_pct: 0.05        # 코인당 계좌의 5%
+  max_total_exposure_pct: 0.80  # 총 노출 80%
+  stop_loss_per_coin_pct: 0.03  # 코인당 손절 3%
+  daily_loss_limit_pct: 0.02    # 당일 손실 한도 2%
+  weekly_loss_limit_pct: 0.05   # 주간 손실 한도 5%
+
+# 거래비용 (크립토)
+costs:
+  maker_fee_pct: 0.001     # 0.1% (업비트/바이낸스 기본)
+  taker_fee_pct: 0.001     # 0.1%
+  slippage_pct: 0.0005     # 0.05%
+  buffer_pct: 0.0005       # 0.05%
+  # fee_threshold = (maker + taker) / 2 + slippage + buffer = 0.2%
+  # 세금: 크립토 거래에는 미적용
+
+# 라벨링 — horizons는 timeframes.tactical.horizons 참조
+labeling:
+  method: triple_barrier    # triple_barrier | fee_aware_dynamic
+  # Triple Barrier 설정
+  atr_period: 14            # ATR 계산 윈도우
+  k_upper: 1.5              # take-profit = entry + k_upper * ATR
+  k_lower: 1.5              # stop-loss  = entry - k_lower * ATR
+  min_barrier_pct: 0.002    # 최소 배리어 = fee threshold (0.2%)
+  # Fixed threshold 설정 (fallback)
+  up_threshold: 0.01        # +1.0%
+  down_threshold: -0.01     # -1.0%
+  # 2-Stage Binary 분류
+  two_stage: true            # true: Trade/NoTrade → Long/Short
+  stage1_threshold: 0.50     # Trade 판정 확률 임계값
+
+# 평가
+evaluation:
+  cv_method: TimeSeriesSplit
+  cv_splits: 3
+  # cv_gap = timeframes.tactical.max_horizon (12 bars)
+  primary_metric: balanced_accuracy
+  metrics:
+    - balanced_accuracy
+    - mcc
+    - f1_macro
+    - brier_score
+    - pr_auc
+    - confusion_matrix
+
+# 신호 필터
+signal:
+  min_direction_prob: 0.60
+  max_uncertainty: 0.05
+  kelly_fraction: 0.5  # half-Kelly
+  min_expected_return_over_cost: true
+
+# 모델 (v3)
+models:
+  deep_learning:
+    architecture: MOMENT_OLinear_RevIN
+    pretrain_epochs: 30
+    finetune_epochs: 80
+    batch_size: 512
+    # patch_len, patch_stride → timeframes.tactical 참조
+    masking: selective  # random → hard-mining → curriculum
+    amp: true           # FP16 mixed precision
+    compile_backend: eager  # Triton 미지원 (Windows)
+  ml_ensemble:
+    models:
+      - lightgbm    # GPU (device=gpu)
+      - xgboost     # GPU (device=cuda)
+      - catboost    # GPU (task_type=GPU)
+      - randomforest  # CPU (n_jobs=6)
+      - extratrees    # CPU (n_jobs=6)
+    ensemble_method: balanced_accuracy_weighted
+    iterations: 7
+
+# 팀 디스커션 (Claude 내부 분석 + Gemini 최종 검증)
+ai_team:
+  enabled: true
+  architecture: claude_internal_plus_gemini_verify
+  internal_roles:
+    strategy_lead:
+      weight: 0.55
+    risk_manager:
+      weight: 0.45
+      veto_enabled: true
+  gemini:
+    enabled: true
+    model: "gemini-2.5-pro"
+    max_tokens: 512
+    role: external_verifier
+    adjust_factors:
+      agree: 1.0
+      partial: 0.85
+      disagree: 0.6
+  disabled_apis:
+    - openai
+    - anthropic
+  discussion:
+    consensus_threshold: 0.5
+    risk_veto_enabled: true
+    trigger_on:
+      - signal_confidence_below: 0.70
+      - position_size_above_pct: 0.03
+      - daily_loss_above_pct: 0.01
+
+# 하드웨어
+hardware:
+  gpu: RTX_3090_24GB
+  num_workers: 6    # DataLoader workers
+  n_jobs: 6         # sklearn parallel jobs (n_jobs=-1 → CPU 100% 이슈)
+
+# paper→live 전환 조건
+live_promotion:
+  min_paper_days: 20
+  min_sharpe: 0.5
+  max_mdd_pct: 0.05
+
+# ============================================================
+# Live Execution Layer (Bybit + ccxt)
+# ============================================================
+execution_live:
+  mode: demo                    # sandbox | demo | live
+  exchange: bybit
+
+  symbols:
+    - DOT
+    - DOGE
+    - BTC
+    - XRP
+    - ADA
+
+  # Risk — stop-distance 기반 (증거금 아닌 손실 한도)
+  risk_frac: 0.005              # 0.5% equity per trade
+  max_notional_usdt: 500        # per-position notional cap
+  daily_drawdown_pct: 0.02      # -2% daily halt
+  weekly_drawdown_pct: 0.05     # -5% weekly halt
+  consecutive_loss_limit: 3     # kill switch
+  alt_bucket_loss_pct: 0.01     # alt total loss 1%
+  funding_rate_block: 0.001     # 0.1% per 8h = block
+  funding_rate_warn: 0.0005     # 0.05% per 8h = warn
+  entry_spread_max_bps: 50      # skip if spread > 50bps
+  min_prob_threshold: 0.40      # entry filter ONLY (not sizing!)
+  leverage: 1.0                 # 1x (no leverage initially)
+
+  # Barriers (학습과 동일해야 함 — model artifact에서 override)
+  atr_period: 14
+  k_upper: 1.5                  # per-coin override from v3 best params
+  k_lower: 1.5
+  min_barrier_pct: 0.002
+
+  # Timing
+  bar_minutes: 240              # 4h bars
+  ttl_bars: 6                   # 6 × 4h = 24h
+  entry_timeout_seconds: 20     # post-only fill timeout
+  no_trade_after_bar_seconds: 300  # bar close 후 5분 대기
+  poll_interval_seconds: 30     # main loop interval
+
+  # Entry/Exit 전략
+  entry_method: post_only       # maker-first
+  exit_sl_method: reduce_only_market  # certainty-first
+  exit_tp_method: reduce_only_limit   # 수수료 우선
+  max_reprices: 1               # 진입 실패 시 1회 재가격, chase 금지
+
+  # Paths
+  model_artifact_dir: data/models/production
+  ledger_db: data/ledger.db
+  heartbeat_file: data/heartbeat.json

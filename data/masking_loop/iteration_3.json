@@ -1,0 +1,1138 @@
+{
+  "iteration": 3,
+  "accuracy": 0.3814,
+  "f1_macro": 0.3649,
+  "class_report": {},
+  "sharpe_estimate": -0.494,
+  "media_weights": {
+    "google_news": 0.0102,
+    "reddit": 0.0204,
+    "x_twitter": 0.0305,
+    "youtube": 0.0204,
+    "tiktok": 0.0163,
+    "instagram": 0.0102,
+    "coindesk": 0.0163,
+    "cointelegraph": 0.0102,
+    "theblock": 0.0102,
+    "decrypt": 0.0082,
+    "coinness": 0.0102,
+    "glassnode": 0.0102,
+    "messari": 0.0102,
+    "tiger_research": 0.0102,
+    "onchain": 0.0102,
+    "technical": 0.7961
+  },
+  "noise_sources": [],
+  "feature_importance": {
+    "volatility_12h": 0.14993835092764635,
+    "svd_factor_1": 0.06988724184049872,
+    "svd_explained_ratio": 0.05613703029255138,
+    "returns_4h": 0.05227294512990286,
+    "macro_gold_close": 0.05188454342818096,
+    "momentum_3": 0.051406477077997656,
+    "gk_volatility": 0.04906157036842422,
+    "macro_fear_greed_sma7": 0.03844511383640907,
+    "macro_usd_index_vol_24h": 0.03035519353998416,
+    "sma_20": 0.024522236496222653,
+    "trend_slope": 0.023921624639551685,
+    "decomp_trend": 0.020823967588803872,
+    "volatility_24h": 0.019375128257512992,
+    "bb_lower": 0.01813131585218329,
+    "atr_14": 0.01799543029175788,
+    "macd_hist": 0.014724822400952192,
+    "corr_btc": 0.013421027835099766,
+    "macro_us_10y_close": 0.012950604564448872,
+    "macro_sp500_vol_24h": 0.010661244710978545,
+    "bb_width": 0.00992206026565883
+  },
+  "predictions": {
+    "BTC": {
+      "direction": "UP",
+      "confidence": 0.35,
+      "probabilities": {
+        "DOWN": 0,
+        "HOLD": 0,
+        "UP": 0
+      },
+      "expected_return": 0.7,
+      "horizon_predictions": {
+        "240min": {
+          "accuracy": 0.8876,
+          "balanced_accuracy": 0.3333,
+          "f1": 0.3135,
+          "mcc": 0.0,
+          "brier": null,
+          "stage1_acc": 0.5351,
+          "stage2_acc": null,
+          "trade_ratio": 0.10091743119266056,
+          "direction": "HOLD",
+          "confidence": 1.0,
+          "model_scores": {
+            "LGB": 0.5289,
+            "XGB": 0.5619,
+            "CB": 0.5594,
+            "RF": 0.5578,
+            "ET": 0.5967
+          },
+          "class_distribution": {
+            "DOWN": 0.06,
+            "HOLD": 0.888,
+            "UP": 0.053
+          }
+        },
+        "720min": {
+          "accuracy": 0.5069,
+          "balanced_accuracy": 0.3748,
+          "f1": 0.3748,
+          "mcc": 0.0699,
+          "brier": null,
+          "stage1_acc": 0.5387,
+          "stage2_acc": 0.5485,
+          "trade_ratio": 0.3348623853211009,
+          "direction": "HOLD",
+          "confidence": 0.595,
+          "model_scores": {
+            "LGB": 0.5463,
+            "XGB": 0.5482,
+            "CB": 0.5545,
+            "RF": 0.5648,
+            "ET": 0.5277
+          },
+          "class_distribution": {
+            "DOWN": 0.216,
+            "HOLD": 0.603,
+            "UP": 0.181
+          }
+        },
+        "1440min": {
+          "accuracy": 0.4151,
+          "balanced_accuracy": 0.4347,
+          "f1": 0.3865,
+          "mcc": 0.1573,
+          "brier": null,
+          "stage1_acc": 0.5377,
+          "stage2_acc": 0.6044,
+          "trade_ratio": 0.9151376146788991,
+          "direction": "DOWN",
+          "confidence": 0.404,
+          "model_scores": {
+            "LGB": 0.5091,
+            "XGB": 0.5746,
+            "CB": 0.5639,
+            "RF": 0.5466,
+            "ET": 0.551
+          },
+          "class_distribution": {
+            "DOWN": 0.374,
+            "HOLD": 0.362,
+            "UP": 0.264
+          }
+        },
+        "4320min": {
+          "accuracy": 0.4197,
+          "balanced_accuracy": 0.3907,
+          "f1": 0.3718,
+          "mcc": 0.0361,
+          "brier": null,
+          "stage1_acc": 0.5858,
+          "stage2_acc": 0.5017,
+          "trade_ratio": 0.9197247706422018,
+          "direction": "UP",
+          "confidence": 0.35,
+          "model_scores": {
+            "LGB": 0.5901,
+            "XGB": 0.5749,
+            "CB": 0.552,
+            "RF": 0.5338,
+            "ET": 0.5
+          },
+          "class_distribution": {
+            "DOWN": 0.553,
+            "HOLD": 0.087,
+            "UP": 0.36
+          }
+        }
+      }
+    },
+    "ETH": {
+      "direction": "UP",
+      "confidence": 0.577,
+      "probabilities": {
+        "DOWN": 0,
+        "HOLD": 0,
+        "UP": 0
+      },
+      "expected_return": 1.154,
+      "horizon_predictions": {
+        "240min": {
+          "accuracy": 0.8945,
+          "balanced_accuracy": 0.3333,
+          "f1": 0.3148,
+          "mcc": 0.0,
+          "brier": null,
+          "stage1_acc": 0.5575,
+          "stage2_acc": null,
+          "trade_ratio": 0.07110091743119266,
+          "direction": "HOLD",
+          "confidence": 1.0,
+          "model_scores": {
+            "LGB": 0.5332,
+            "XGB": 0.5434,
+            "CB": 0.5626,
+            "RF": 0.5702,
+            "ET": 0.5356
+          },
+          "class_distribution": {
+            "DOWN": 0.053,
+            "HOLD": 0.894,
+            "UP": 0.053
+          }
+        },
+        "720min": {
+          "accuracy": 0.4381,
+          "balanced_accuracy": 0.3244,
+          "f1": 0.3222,
+          "mcc": 0.0024,
+          "brier": null,
+          "stage1_acc": 0.5238,
+          "stage2_acc": 0.4183,
+          "trade_ratio": 0.4105504587155963,
+          "direction": "UP",
+          "confidence": 0.318,
+          "model_scores": {
+            "LGB": 0.5218,
+            "XGB": 0.5378,
+            "CB": 0.4889,
+            "RF": 0.5328,
+            "ET": 0.5187
+          },
+          "class_distribution": {
+            "DOWN": 0.209,
+            "HOLD": 0.603,
+            "UP": 0.188
+          }
+        },
+        "1440min": {
+          "accuracy": 0.2706,
+          "balanced_accuracy": 0.2926,
+          "f1": 0.2463,
+          "mcc": -0.0655,
+          "brier": null,
+          "stage1_acc": 0.4978,
+          "stage2_acc": 0.4376,
+          "trade_ratio": 0.9174311926605505,
+          "direction": "UP",
+          "confidence": 0.459,
+          "model_scores": {
+            "LGB": 0.5075,
+            "XGB": 0.4937,
+            "CB": 0.5045,
+            "RF": 0.5374,
+            "ET": 0.5573
+          },
+          "class_distribution": {
+            "DOWN": 0.342,
+            "HOLD": 0.374,
+            "UP": 0.284
+          }
+        },
+        "4320min": {
+          "accuracy": 0.3761,
+          "balanced_accuracy": 0.2977,
+          "f1": 0.2596,
+          "mcc": -0.0905,
+          "brier": null,
+          "stage1_acc": 0.4987,
+          "stage2_acc": 0.448,
+          "trade_ratio": 0.9977064220183486,
+          "direction": "UP",
+          "confidence": 0.577,
+          "model_scores": {
+            "LGB": 0.4987,
+            "XGB": 0.4896,
+            "CB": 0.5,
+            "RF": 0.5005,
+            "ET": 0.4805
+          },
+          "class_distribution": {
+            "DOWN": 0.486,
+            "HOLD": 0.119,
+            "UP": 0.394
+          }
+        }
+      }
+    },
+    "SOL": {
+      "direction": "DOWN",
+      "confidence": 0.541,
+      "probabilities": {
+        "DOWN": 0,
+        "HOLD": 0,
+        "UP": 0
+      },
+      "expected_return": -1.082,
+      "horizon_predictions": {
+        "240min": {
+          "accuracy": 0.8945,
+          "balanced_accuracy": 0.3333,
+          "f1": 0.3148,
+          "mcc": 0.0,
+          "brier": null,
+          "stage1_acc": 0.5178,
+          "stage2_acc": null,
+          "trade_ratio": 0.09862385321100918,
+          "direction": "HOLD",
+          "confidence": 1.0,
+          "model_scores": {
+            "LGB": 0.5293,
+            "XGB": 0.5229,
+            "CB": 0.5382,
+            "RF": 0.5222,
+            "ET": 0.5487
+          },
+          "class_distribution": {
+            "DOWN": 0.05,
+            "HOLD": 0.894,
+            "UP": 0.055
+          }
+        },
+        "720min": {
+          "accuracy": 0.5505,
+          "balanced_accuracy": 0.4177,
+          "f1": 0.4135,
+          "mcc": 0.1566,
+          "brier": null,
+          "stage1_acc": 0.5802,
+          "stage2_acc": 0.5958,
+          "trade_ratio": 0.28440366972477066,
+          "direction": "HOLD",
+          "confidence": 0.66,
+          "model_scores": {
+            "LGB": 0.5774,
+            "XGB": 0.5836,
+            "CB": 0.5435,
+            "RF": 0.5659,
+            "ET": 0.5499
+          },
+          "class_distribution": {
+            "DOWN": 0.218,
+            "HOLD": 0.573,
+            "UP": 0.209
+          }
+        },
+        "1440min": {
+          "accuracy": 0.3991,
+          "balanced_accuracy": 0.3943,
+          "f1": 0.3941,
+          "mcc": 0.0958,
+          "brier": null,
+          "stage1_acc": 0.5077,
+          "stage2_acc": 0.6054,
+          "trade_ratio": 0.5940366972477065,
+          "direction": "DOWN",
+          "confidence": 0.437,
+          "model_scores": {
+            "LGB": 0.5469,
+            "XGB": 0.4837,
+            "CB": 0.4881,
+            "RF": 0.5104,
+            "ET": 0.5081
+          },
+          "class_distribution": {
+            "DOWN": 0.383,
+            "HOLD": 0.303,
+            "UP": 0.314
+          }
+        },
+        "4320min": {
+          "accuracy": 0.5757,
+          "balanced_accuracy": 0.4714,
+          "f1": 0.4756,
+          "mcc": 0.2233,
+          "brier": null,
+          "stage1_acc": 0.5933,
+          "stage2_acc": 0.6083,
+          "trade_ratio": 0.9403669724770642,
+          "direction": "DOWN",
+          "confidence": 0.541,
+          "model_scores": {
+            "LGB": 0.5982,
+            "XGB": 0.4196,
+            "CB": 0.592,
+            "RF": 0.592,
+            "ET": 0.5
+          },
+          "class_distribution": {
+            "DOWN": 0.53,
+            "HOLD": 0.069,
+            "UP": 0.401
+          }
+        }
+      }
+    },
+    "XRP": {
+      "direction": "DOWN",
+      "confidence": 0.626,
+      "probabilities": {
+        "DOWN": 0,
+        "HOLD": 0,
+        "UP": 0
+      },
+      "expected_return": -1.252,
+      "horizon_predictions": {
+        "240min": {
+          "accuracy": 0.8624,
+          "balanced_accuracy": 0.3333,
+          "f1": 0.3087,
+          "mcc": 0.0,
+          "brier": null,
+          "stage1_acc": 0.5074,
+          "stage2_acc": null,
+          "trade_ratio": 0.020642201834862386,
+          "direction": "HOLD",
+          "confidence": 1.0,
+          "model_scores": {
+            "LGB": 0.5113,
+            "XGB": 0.542,
+            "CB": 0.5227,
+            "RF": 0.5017,
+            "ET": 0.5707
+          },
+          "class_distribution": {
+            "DOWN": 0.067,
+            "HOLD": 0.862,
+            "UP": 0.071
+          }
+        },
+        "720min": {
+          "accuracy": 0.5436,
+          "balanced_accuracy": 0.3562,
+          "f1": 0.3203,
+          "mcc": 0.0784,
+          "brier": null,
+          "stage1_acc": 0.5505,
+          "stage2_acc": 0.4339,
+          "trade_ratio": 0.14220183486238533,
+          "direction": "HOLD",
+          "confidence": 0.733,
+          "model_scores": {
+            "LGB": 0.5238,
+            "XGB": 0.5397,
+            "CB": 0.5432,
+            "RF": 0.5417,
+            "ET": 0.5602
+          },
+          "class_distribution": {
+            "DOWN": 0.222,
+            "HOLD": 0.562,
+            "UP": 0.216
+          }
+        },
+        "1440min": {
+          "accuracy": 0.3945,
+          "balanced_accuracy": 0.3982,
+          "f1": 0.3799,
+          "mcc": 0.1006,
+          "brier": null,
+          "stage1_acc": 0.4898,
+          "stage2_acc": 0.6017,
+          "trade_ratio": 0.805045871559633,
+          "direction": "DOWN",
+          "confidence": 0.402,
+          "model_scores": {
+            "LGB": 0.4825,
+            "XGB": 0.5052,
+            "CB": 0.4792,
+            "RF": 0.474,
+            "ET": 0.5616
+          },
+          "class_distribution": {
+            "DOWN": 0.351,
+            "HOLD": 0.353,
+            "UP": 0.296
+          }
+        },
+        "4320min": {
+          "accuracy": 0.5894,
+          "balanced_accuracy": 0.4447,
+          "f1": 0.4208,
+          "mcc": 0.2712,
+          "brier": null,
+          "stage1_acc": 0.4817,
+          "stage2_acc": 0.6804,
+          "trade_ratio": 0.9678899082568807,
+          "direction": "DOWN",
+          "confidence": 0.626,
+          "model_scores": {
+            "LGB": 0.4846,
+            "XGB": 0.4637,
+            "CB": 0.4669,
+            "RF": 0.4935,
+            "ET": 0.5
+          },
+          "class_distribution": {
+            "DOWN": 0.528,
+            "HOLD": 0.122,
+            "UP": 0.351
+          }
+        }
+      }
+    },
+    "ADA": {
+      "direction": "DOWN",
+      "confidence": 0.443,
+      "probabilities": {
+        "DOWN": 0,
+        "HOLD": 0,
+        "UP": 0
+      },
+      "expected_return": -0.886,
+      "horizon_predictions": {
+        "240min": {
+          "accuracy": 0.8899,
+          "balanced_accuracy": 0.3333,
+          "f1": 0.3139,
+          "mcc": 0.0,
+          "brier": null,
+          "stage1_acc": 0.5068,
+          "stage2_acc": null,
+          "trade_ratio": 0.05045871559633028,
+          "direction": "HOLD",
+          "confidence": 1.0,
+          "model_scores": {
+            "LGB": 0.4975,
+            "XGB": 0.5264,
+            "CB": 0.4951,
+            "RF": 0.533,
+            "ET": 0.6201
+          },
+          "class_distribution": {
+            "DOWN": 0.05,
+            "HOLD": 0.89,
+            "UP": 0.06
+          }
+        },
+        "720min": {
+          "accuracy": 0.5229,
+          "balanced_accuracy": 0.441,
+          "f1": 0.4434,
+          "mcc": 0.1554,
+          "brier": null,
+          "stage1_acc": 0.567,
+          "stage2_acc": 0.6261,
+          "trade_ratio": 0.39908256880733944,
+          "direction": "HOLD",
+          "confidence": 0.561,
+          "model_scores": {
+            "LGB": 0.5763,
+            "XGB": 0.564,
+            "CB": 0.5361,
+            "RF": 0.5443,
+            "ET": 0.5531
+          },
+          "class_distribution": {
+            "DOWN": 0.209,
+            "HOLD": 0.587,
+            "UP": 0.204
+          }
+        },
+        "1440min": {
+          "accuracy": 0.4472,
+          "balanced_accuracy": 0.4471,
+          "f1": 0.4401,
+          "mcc": 0.1751,
+          "brier": null,
+          "stage1_acc": 0.5705,
+          "stage2_acc": 0.5867,
+          "trade_ratio": 0.7775229357798165,
+          "direction": "DOWN",
+          "confidence": 0.403,
+          "model_scores": {
+            "LGB": 0.5539,
+            "XGB": 0.5604,
+            "CB": 0.5103,
+            "RF": 0.5279,
+            "ET": 0.533
+          },
+          "class_distribution": {
+            "DOWN": 0.36,
+            "HOLD": 0.317,
+            "UP": 0.323
+          }
+        },
+        "4320min": {
+          "accuracy": 0.5413,
+          "balanced_accuracy": 0.4071,
+          "f1": 0.3772,
+          "mcc": 0.1903,
+          "brier": null,
+          "stage1_acc": 0.5,
+          "stage2_acc": 0.6017,
+          "trade_ratio": 1.0,
+          "direction": "DOWN",
+          "confidence": 0.443,
+          "model_scores": {
+            "LGB": 0.5,
+            "XGB": 0.488,
+            "CB": 0.5,
+            "RF": 0.5,
+            "ET": 0.5
+          },
+          "class_distribution": {
+            "DOWN": 0.525,
+            "HOLD": 0.087,
+            "UP": 0.388
+          }
+        }
+      }
+    },
+    "DOGE": {
+      "direction": "DOWN",
+      "confidence": 0.563,
+      "probabilities": {
+        "DOWN": 0,
+        "HOLD": 0,
+        "UP": 0
+      },
+      "expected_return": -1.126,
+      "horizon_predictions": {
+        "240min": {
+          "accuracy": 0.8647,
+          "balanced_accuracy": 0.3333,
+          "f1": 0.3091,
+          "mcc": 0.0,
+          "brier": null,
+          "stage1_acc": 0.492,
+          "stage2_acc": null,
+          "trade_ratio": 0.013761467889908258,
+          "direction": "HOLD",
+          "confidence": 1.0,
+          "model_scores": {
+            "LGB": 0.5,
+            "XGB": 0.5029,
+            "CB": 0.4939,
+            "RF": 0.5005,
+            "ET": 0.5236
+          },
+          "class_distribution": {
+            "DOWN": 0.067,
+            "HOLD": 0.865,
+            "UP": 0.069
+          }
+        },
+        "720min": {
+          "accuracy": 0.4931,
+          "balanced_accuracy": 0.3597,
+          "f1": 0.3553,
+          "mcc": 0.0357,
+          "brier": null,
+          "stage1_acc": 0.5038,
+          "stage2_acc": 0.6176,
+          "trade_ratio": 0.268348623853211,
+          "direction": "HOLD",
+          "confidence": 0.679,
+          "model_scores": {
+            "LGB": 0.5165,
+            "XGB": 0.5152,
+            "CB": 0.5199,
+            "RF": 0.4945,
+            "ET": 0.5365
+          },
+          "class_distribution": {
+            "DOWN": 0.225,
+            "HOLD": 0.571,
+            "UP": 0.204
+          }
+        },
+        "1440min": {
+          "accuracy": 0.4014,
+          "balanced_accuracy": 0.4075,
+          "f1": 0.4024,
+          "mcc": 0.1066,
+          "brier": null,
+          "stage1_acc": 0.5374,
+          "stage2_acc": 0.6129,
+          "trade_ratio": 0.6192660550458715,
+          "direction": "UP",
+          "confidence": 0.364,
+          "model_scores": {
+            "LGB": 0.5174,
+            "XGB": 0.5198,
+            "CB": 0.5324,
+            "RF": 0.5557,
+            "ET": 0.5545
+          },
+          "class_distribution": {
+            "DOWN": 0.383,
+            "HOLD": 0.319,
+            "UP": 0.298
+          }
+        },
+        "4320min": {
+          "accuracy": 0.5367,
+          "balanced_accuracy": 0.4369,
+          "f1": 0.4308,
+          "mcc": 0.1731,
+          "brier": null,
+          "stage1_acc": 0.5535,
+          "stage2_acc": 0.6002,
+          "trade_ratio": 0.9380733944954128,
+          "direction": "DOWN",
+          "confidence": 0.563,
+          "model_scores": {
+            "LGB": 0.628,
+            "XGB": 0.5709,
+            "CB": 0.6814,
+            "RF": 0.4914,
+            "ET": 0.5
+          },
+          "class_distribution": {
+            "DOWN": 0.571,
+            "HOLD": 0.071,
+            "UP": 0.358
+          }
+        }
+      }
+    },
+    "AVAX": {
+      "direction": "UP",
+      "confidence": 0.4,
+      "probabilities": {
+        "DOWN": 0,
+        "HOLD": 0,
+        "UP": 0
+      },
+      "expected_return": 0.8,
+      "horizon_predictions": {
+        "240min": {
+          "accuracy": 0.8945,
+          "balanced_accuracy": 0.3333,
+          "f1": 0.3148,
+          "mcc": 0.0,
+          "brier": null,
+          "stage1_acc": 0.5134,
+          "stage2_acc": null,
+          "trade_ratio": 0.04128440366972477,
+          "direction": "HOLD",
+          "confidence": 1.0,
+          "model_scores": {
+            "LGB": 0.5153,
+            "XGB": 0.5536,
+            "CB": 0.5326,
+            "RF": 0.544,
+            "ET": 0.5738
+          },
+          "class_distribution": {
+            "DOWN": 0.057,
+            "HOLD": 0.894,
+            "UP": 0.048
+          }
+        },
+        "720min": {
+          "accuracy": 0.5298,
+          "balanced_accuracy": 0.3673,
+          "f1": 0.3641,
+          "mcc": 0.0642,
+          "brier": null,
+          "stage1_acc": 0.532,
+          "stage2_acc": 0.5802,
+          "trade_ratio": 0.2545871559633027,
+          "direction": "HOLD",
+          "confidence": 0.526,
+          "model_scores": {
+            "LGB": 0.5492,
+            "XGB": 0.5428,
+            "CB": 0.5072,
+            "RF": 0.5014,
+            "ET": 0.5303
+          },
+          "class_distribution": {
+            "DOWN": 0.218,
+            "HOLD": 0.601,
+            "UP": 0.181
+          }
+        },
+        "1440min": {
+          "accuracy": 0.406,
+          "balanced_accuracy": 0.4147,
+          "f1": 0.3907,
+          "mcc": 0.135,
+          "brier": null,
+          "stage1_acc": 0.5492,
+          "stage2_acc": 0.542,
+          "trade_ratio": 0.8440366972477065,
+          "direction": "DOWN",
+          "confidence": 0.45,
+          "model_scores": {
+            "LGB": 0.5383,
+            "XGB": 0.5389,
+            "CB": 0.5377,
+            "RF": 0.5371,
+            "ET": 0.5592
+          },
+          "class_distribution": {
+            "DOWN": 0.381,
+            "HOLD": 0.319,
+            "UP": 0.3
+          }
+        },
+        "4320min": {
+          "accuracy": 0.4771,
+          "balanced_accuracy": 0.4035,
+          "f1": 0.3644,
+          "mcc": 0.1508,
+          "brier": null,
+          "stage1_acc": 0.5299,
+          "stage2_acc": 0.5553,
+          "trade_ratio": 0.9587155963302753,
+          "direction": "UP",
+          "confidence": 0.4,
+          "model_scores": {
+            "LGB": 0.5311,
+            "XGB": 0.5227,
+            "CB": 0.4914,
+            "RF": 0.5311,
+            "ET": 0.5
+          },
+          "class_distribution": {
+            "DOWN": 0.553,
+            "HOLD": 0.071,
+            "UP": 0.376
+          }
+        }
+      }
+    },
+    "DOT": {
+      "direction": "DOWN",
+      "confidence": 0.527,
+      "probabilities": {
+        "DOWN": 0,
+        "HOLD": 0,
+        "UP": 0
+      },
+      "expected_return": -1.054,
+      "horizon_predictions": {
+        "240min": {
+          "accuracy": 0.9174,
+          "balanced_accuracy": 0.3333,
+          "f1": 0.319,
+          "mcc": 0.0,
+          "brier": null,
+          "stage1_acc": 0.5318,
+          "stage2_acc": null,
+          "trade_ratio": 0.052752293577981654,
+          "direction": "HOLD",
+          "confidence": 1.0,
+          "model_scores": {
+            "LGB": 0.4975,
+            "XGB": 0.4993,
+            "CB": 0.5421,
+            "RF": 0.5178,
+            "ET": 0.5781
+          },
+          "class_distribution": {
+            "DOWN": 0.037,
+            "HOLD": 0.917,
+            "UP": 0.046
+          }
+        },
+        "720min": {
+          "accuracy": 0.5138,
+          "balanced_accuracy": 0.43,
+          "f1": 0.41,
+          "mcc": 0.1202,
+          "brier": null,
+          "stage1_acc": 0.5504,
+          "stage2_acc": 0.6418,
+          "trade_ratio": 0.42660550458715596,
+          "direction": "UP",
+          "confidence": 0.421,
+          "model_scores": {
+            "LGB": 0.561,
+            "XGB": 0.5608,
+            "CB": 0.5476,
+            "RF": 0.505,
+            "ET": 0.4978
+          },
+          "class_distribution": {
+            "DOWN": 0.186,
+            "HOLD": 0.661,
+            "UP": 0.154
+          }
+        },
+        "1440min": {
+          "accuracy": 0.4197,
+          "balanced_accuracy": 0.429,
+          "f1": 0.4206,
+          "mcc": 0.1346,
+          "brier": null,
+          "stage1_acc": 0.5585,
+          "stage2_acc": 0.6484,
+          "trade_ratio": 0.7064220183486238,
+          "direction": "DOWN",
+          "confidence": 0.411,
+          "model_scores": {
+            "LGB": 0.532,
+            "XGB": 0.566,
+            "CB": 0.5431,
+            "RF": 0.5666,
+            "ET": 0.5538
+          },
+          "class_distribution": {
+            "DOWN": 0.342,
+            "HOLD": 0.397,
+            "UP": 0.261
+          }
+        },
+        "4320min": {
+          "accuracy": 0.5642,
+          "balanced_accuracy": 0.425,
+          "f1": 0.3978,
+          "mcc": 0.2112,
+          "brier": null,
+          "stage1_acc": 0.4893,
+          "stage2_acc": 0.6571,
+          "trade_ratio": 0.981651376146789,
+          "direction": "DOWN",
+          "confidence": 0.527,
+          "model_scores": {
+            "LGB": 0.4853,
+            "XGB": 0.484,
+            "CB": 0.488,
+            "RF": 0.4933,
+            "ET": 0.4973
+          },
+          "class_distribution": {
+            "DOWN": 0.532,
+            "HOLD": 0.14,
+            "UP": 0.328
+          }
+        }
+      }
+    },
+    "LINK": {
+      "direction": "UP",
+      "confidence": 0.42,
+      "probabilities": {
+        "DOWN": 0,
+        "HOLD": 0,
+        "UP": 0
+      },
+      "expected_return": 0.84,
+      "horizon_predictions": {
+        "240min": {
+          "accuracy": 0.8945,
+          "balanced_accuracy": 0.3333,
+          "f1": 0.3148,
+          "mcc": 0.0,
+          "brier": null,
+          "stage1_acc": 0.5307,
+          "stage2_acc": null,
+          "trade_ratio": 0.03211009174311927,
+          "direction": "HOLD",
+          "confidence": 1.0,
+          "model_scores": {
+            "LGB": 0.5153,
+            "XGB": 0.6003,
+            "CB": 0.5166,
+            "RF": 0.5728,
+            "ET": 0.5935
+          },
+          "class_distribution": {
+            "DOWN": 0.05,
+            "HOLD": 0.894,
+            "UP": 0.055
+          }
+        },
+        "720min": {
+          "accuracy": 0.5757,
+          "balanced_accuracy": 0.4016,
+          "f1": 0.3962,
+          "mcc": 0.1543,
+          "brier": null,
+          "stage1_acc": 0.5882,
+          "stage2_acc": 0.4653,
+          "trade_ratio": 0.22706422018348624,
+          "direction": "UP",
+          "confidence": 0.267,
+          "model_scores": {
+            "LGB": 0.5821,
+            "XGB": 0.5763,
+            "CB": 0.5783,
+            "RF": 0.554,
+            "ET": 0.4926
+          },
+          "class_distribution": {
+            "DOWN": 0.22,
+            "HOLD": 0.592,
+            "UP": 0.188
+          }
+        },
+        "1440min": {
+          "accuracy": 0.3853,
+          "balanced_accuracy": 0.3792,
+          "f1": 0.3812,
+          "mcc": 0.0792,
+          "brier": null,
+          "stage1_acc": 0.5322,
+          "stage2_acc": 0.5124,
+          "trade_ratio": 0.6100917431192661,
+          "direction": "UP",
+          "confidence": 0.469,
+          "model_scores": {
+            "LGB": 0.5344,
+            "XGB": 0.5188,
+            "CB": 0.511,
+            "RF": 0.5561,
+            "ET": 0.5808
+          },
+          "class_distribution": {
+            "DOWN": 0.374,
+            "HOLD": 0.339,
+            "UP": 0.287
+          }
+        },
+        "4320min": {
+          "accuracy": 0.5413,
+          "balanced_accuracy": 0.4291,
+          "f1": 0.4141,
+          "mcc": 0.2168,
+          "brier": null,
+          "stage1_acc": 0.5088,
+          "stage2_acc": 0.6182,
+          "trade_ratio": 0.9518348623853211,
+          "direction": "UP",
+          "confidence": 0.42,
+          "model_scores": {
+            "LGB": 0.5172,
+            "XGB": 0.5385,
+            "CB": 0.5042,
+            "RF": 0.4981,
+            "ET": 0.4281
+          },
+          "class_distribution": {
+            "DOWN": 0.546,
+            "HOLD": 0.108,
+            "UP": 0.346
+          }
+        }
+      }
+    },
+    "BNB": {
+      "direction": "UP",
+      "confidence": 0.454,
+      "probabilities": {
+        "DOWN": 0,
+        "HOLD": 0,
+        "UP": 0
+      },
+      "expected_return": 0.908,
+      "horizon_predictions": {
+        "240min": {
+          "accuracy": 0.8899,
+          "balanced_accuracy": 0.3333,
+          "f1": 0.3139,
+          "mcc": 0.0,
+          "brier": null,
+          "stage1_acc": 0.4923,
+          "stage2_acc": null,
+          "trade_ratio": 0.013761467889908258,
+          "direction": "HOLD",
+          "confidence": 1.0,
+          "model_scores": {
+            "LGB": 0.4871,
+            "XGB": 0.5197,
+            "CB": 0.5014,
+            "RF": 0.5041,
+            "ET": 0.5455
+          },
+          "class_distribution": {
+            "DOWN": 0.071,
+            "HOLD": 0.89,
+            "UP": 0.039
+          }
+        },
+        "720min": {
+          "accuracy": 0.5459,
+          "balanced_accuracy": 0.3685,
+          "f1": 0.3469,
+          "mcc": 0.0697,
+          "brier": null,
+          "stage1_acc": 0.529,
+          "stage2_acc": 0.4951,
+          "trade_ratio": 0.21100917431192662,
+          "direction": "HOLD",
+          "confidence": 0.608,
+          "model_scores": {
+            "LGB": 0.5215,
+            "XGB": 0.5422,
+            "CB": 0.5415,
+            "RF": 0.5117,
+            "ET": 0.526
+          },
+          "class_distribution": {
+            "DOWN": 0.204,
+            "HOLD": 0.599,
+            "UP": 0.197
+          }
+        },
+        "1440min": {
+          "accuracy": 0.3784,
+          "balanced_accuracy": 0.3716,
+          "f1": 0.3702,
+          "mcc": 0.0573,
+          "brier": null,
+          "stage1_acc": 0.457,
+          "stage2_acc": 0.6297,
+          "trade_ratio": 0.7201834862385321,
+          "direction": "DOWN",
+          "confidence": 0.377,
+          "model_scores": {
+            "LGB": 0.4464,
+            "XGB": 0.4757,
+            "CB": 0.4937,
+            "RF": 0.4684,
+            "ET": 0.4969
+          },
+          "class_distribution": {
+            "DOWN": 0.383,
+            "HOLD": 0.312,
+            "UP": 0.305
+          }
+        },
+        "4320min": {
+          "accuracy": 0.5573,
+          "balanced_accuracy": 0.4053,
+          "f1": 0.3867,
+          "mcc": 0.1914,
+          "brier": null,
+          "stage1_acc": 0.4939,
+          "stage2_acc": 0.623,
+          "trade_ratio": 0.9885321100917431,
+          "direction": "UP",
+          "confidence": 0.454,
+          "model_scores": {
+            "LGB": 0.4853,
+            "XGB": 0.4926,
+            "CB": 0.4914,
+            "RF": 0.4877,
+            "ET": 0.5
+          },
+          "class_distribution": {
+            "DOWN": 0.523,
+            "HOLD": 0.067,
+            "UP": 0.411
+          }
+        }
+      }
+    }
+  },
+  "model_scores": {
+    "LGB": 0.527,
+    "XGB": 0.5291,
+    "CB": 0.5264,
+    "RF": 0.5261,
+    "ET": 0.5335
+  },
+  "timestamp": "2026-03-13T18:32:38.100680"
+}

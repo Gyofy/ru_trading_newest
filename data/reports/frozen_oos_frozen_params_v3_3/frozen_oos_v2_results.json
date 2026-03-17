@@ -1,0 +1,380 @@
+{
+  "DOT": {
+    "A": {
+      "label": "DOT_A",
+      "trades": 8,
+      "longs": 0,
+      "shorts": 8,
+      "tp": 4,
+      "sl": 4,
+      "ts": 0,
+      "win_rate": 0.5,
+      "avg_net_pnl": 0.009097,
+      "total_net_pnl": 0.072777,
+      "total_gross_pnl": 0.08,
+      "mdd": 0.012194,
+      "sharpe": 9.06,
+      "ci_lo": -0.001413,
+      "ci_hi": 0.019607,
+      "avg_hold": 6.6,
+      "cost_total": 0.007223,
+      "cost_entry_fee": 0.000675,
+      "cost_exit_fee": 0.001348,
+      "cost_slippage": 0.002121,
+      "cost_funding": 0.00096,
+      "cost_miss_fill": 0.00212,
+      "cost_share": 0.0903,
+      "regime": {
+        "TREND_UP": {
+          "n": 1,
+          "avg": -0.005962,
+          "total": -0.005962
+        },
+        "TREND_DOWN": {
+          "n": 7,
+          "avg": 0.011248,
+          "total": 0.078739
+        }
+      },
+      "verdict": "PASS (low N)"
+    },
+    "B": {
+      "label": "DOT_B",
+      "trades": 10,
+      "longs": 1,
+      "shorts": 9,
+      "tp": 2,
+      "sl": 7,
+      "ts": 1,
+      "win_rate": 0.2,
+      "avg_net_pnl": 0.002534,
+      "total_net_pnl": 0.025342,
+      "total_gross_pnl": 0.032908,
+      "mdd": 0.022687,
+      "sharpe": 3.03,
+      "ci_lo": -0.00538,
+      "ci_hi": 0.010449,
+      "avg_hold": 6.5,
+      "cost_total": 0.007566,
+      "cost_entry_fee": 0.00058,
+      "cost_exit_fee": 0.001333,
+      "cost_slippage": 0.002021,
+      "cost_funding": 0.000987,
+      "cost_miss_fill": 0.00265,
+      "cost_share": 0.2299,
+      "regime": {
+        "RANGE_HIGH": {
+          "n": 1,
+          "avg": 0.024277,
+          "total": 0.024277
+        },
+        "TREND_UP": {
+          "n": 7,
+          "avg": 0.001826,
+          "total": 0.012783
+        },
+        "TREND_DOWN": {
+          "n": 2,
+          "avg": -0.005859,
+          "total": -0.011718
+        }
+      },
+      "verdict": "PASS (low N)"
+    },
+    "A+B": {
+      "label": "DOT_A+B",
+      "trades": 18,
+      "longs": 1,
+      "shorts": 17,
+      "tp": 6,
+      "sl": 11,
+      "ts": 1,
+      "win_rate": 0.3333,
+      "avg_net_pnl": 0.005451,
+      "total_net_pnl": 0.098119,
+      "total_gross_pnl": 0.112908,
+      "mdd": 0.034416,
+      "sharpe": 5.8,
+      "ci_lo": -0.001139,
+      "ci_hi": 0.012041,
+      "avg_hold": 6.6,
+      "cost_total": 0.014789,
+      "cost_entry_fee": 0.001255,
+      "cost_exit_fee": 0.002681,
+      "cost_slippage": 0.004142,
+      "cost_funding": 0.001947,
+      "cost_miss_fill": 0.00477,
+      "cost_share": 0.131,
+      "regime": {
+        "RANGE_HIGH": {
+          "n": 1,
+          "avg": 0.024277,
+          "total": 0.024277
+        },
+        "TREND_UP": {
+          "n": 8,
+          "avg": 0.000853,
+          "total": 0.006821
+        },
+        "TREND_DOWN": {
+          "n": 9,
+          "avg": 0.007447,
+          "total": 0.067021
+        }
+      },
+      "verdict": "PASS"
+    }
+  },
+  "ADA": {
+    "A": {
+      "label": "ADA_A",
+      "trades": 6,
+      "longs": 3,
+      "shorts": 3,
+      "tp": 3,
+      "sl": 3,
+      "ts": 0,
+      "win_rate": 0.5,
+      "avg_net_pnl": 0.006137,
+      "total_net_pnl": 0.036824,
+      "total_gross_pnl": 0.04125,
+      "mdd": 0.005797,
+      "sharpe": 7.34,
+      "ci_lo": -0.00347,
+      "ci_hi": 0.015745,
+      "avg_hold": 7.3,
+      "cost_total": 0.004426,
+      "cost_entry_fee": 0.000364,
+      "cost_exit_fee": 0.000698,
+      "cost_slippage": 0.001106,
+      "cost_funding": 0.000673,
+      "cost_miss_fill": 0.00159,
+      "cost_share": 0.1073,
+      "regime": {
+        "TREND_UP": {
+          "n": 1,
+          "avg": 0.018146,
+          "total": 0.018146
+        },
+        "TREND_DOWN": {
+          "n": 5,
+          "avg": 0.003736,
+          "total": 0.018678
+        }
+      },
+      "verdict": "PASS (low N)"
+    },
+    "B": {
+      "label": "ADA_B",
+      "trades": 6,
+      "longs": 2,
+      "shorts": 4,
+      "tp": 3,
+      "sl": 2,
+      "ts": 1,
+      "win_rate": 0.5,
+      "avg_net_pnl": 0.009302,
+      "total_net_pnl": 0.055813,
+      "total_gross_pnl": 0.060324,
+      "mdd": 0.005847,
+      "sharpe": 10.57,
+      "ci_lo": 0.000644,
+      "ci_hi": 0.01796,
+      "avg_hold": 10.0,
+      "cost_total": 0.004511,
+      "cost_entry_fee": 0.000344,
+      "cost_exit_fee": 0.000681,
+      "cost_slippage": 0.001071,
+      "cost_funding": 0.000828,
+      "cost_miss_fill": 0.00159,
+      "cost_share": 0.0748,
+      "regime": {
+        "RANGE_HIGH": {
+          "n": 1,
+          "avg": 0.018117,
+          "total": 0.018117
+        },
+        "TREND_UP": {
+          "n": 3,
+          "avg": 0.002179,
+          "total": 0.006538
+        },
+        "TREND_DOWN": {
+          "n": 2,
+          "avg": 0.015579,
+          "total": 0.031158
+        }
+      },
+      "verdict": "PASS (low N)"
+    },
+    "A+B": {
+      "label": "ADA_A+B",
+      "trades": 12,
+      "longs": 5,
+      "shorts": 7,
+      "tp": 6,
+      "sl": 5,
+      "ts": 1,
+      "win_rate": 0.5,
+      "avg_net_pnl": 0.00772,
+      "total_net_pnl": 0.092637,
+      "total_gross_pnl": 0.101574,
+      "mdd": 0.005847,
+      "sharpe": 8.84,
+      "ci_lo": 0.001191,
+      "ci_hi": 0.014248,
+      "avg_hold": 8.7,
+      "cost_total": 0.008937,
+      "cost_entry_fee": 0.000708,
+      "cost_exit_fee": 0.001379,
+      "cost_slippage": 0.002177,
+      "cost_funding": 0.001501,
+      "cost_miss_fill": 0.00318,
+      "cost_share": 0.088,
+      "regime": {
+        "RANGE_HIGH": {
+          "n": 1,
+          "avg": 0.018117,
+          "total": 0.018117
+        },
+        "TREND_UP": {
+          "n": 4,
+          "avg": 0.006171,
+          "total": 0.024684
+        },
+        "TREND_DOWN": {
+          "n": 7,
+          "avg": 0.007119,
+          "total": 0.049836
+        }
+      },
+      "verdict": "PASS"
+    }
+  },
+  "portfolio": {
+    "A": {
+      "label": "portfolio_A",
+      "trades": 14,
+      "longs": 3,
+      "shorts": 11,
+      "tp": 7,
+      "sl": 7,
+      "ts": 0,
+      "win_rate": 0.5,
+      "avg_net_pnl": 0.007829,
+      "total_net_pnl": 0.109601,
+      "total_gross_pnl": 0.12125,
+      "mdd": 0.017899,
+      "sharpe": 8.27,
+      "ci_lo": 0.000506,
+      "ci_hi": 0.015151,
+      "avg_hold": 6.9,
+      "cost_total": 0.011649,
+      "cost_entry_fee": 0.001039,
+      "cost_exit_fee": 0.002046,
+      "cost_slippage": 0.003227,
+      "cost_funding": 0.001633,
+      "cost_miss_fill": 0.00371,
+      "cost_share": 0.0961,
+      "regime": {
+        "TREND_UP": {
+          "n": 2,
+          "avg": 0.006092,
+          "total": 0.012184
+        },
+        "TREND_DOWN": {
+          "n": 12,
+          "avg": 0.008118,
+          "total": 0.097417
+        }
+      },
+      "verdict": "PASS"
+    },
+    "B": {
+      "label": "portfolio_B",
+      "trades": 16,
+      "longs": 3,
+      "shorts": 13,
+      "tp": 5,
+      "sl": 9,
+      "ts": 2,
+      "win_rate": 0.3125,
+      "avg_net_pnl": 0.005072,
+      "total_net_pnl": 0.081155,
+      "total_gross_pnl": 0.093232,
+      "mdd": 0.022687,
+      "sharpe": 5.64,
+      "ci_lo": -0.001059,
+      "ci_hi": 0.011203,
+      "avg_hold": 7.8,
+      "cost_total": 0.012077,
+      "cost_entry_fee": 0.000924,
+      "cost_exit_fee": 0.002014,
+      "cost_slippage": 0.003092,
+      "cost_funding": 0.001815,
+      "cost_miss_fill": 0.00424,
+      "cost_share": 0.1295,
+      "regime": {
+        "RANGE_HIGH": {
+          "n": 2,
+          "avg": 0.021197,
+          "total": 0.042394
+        },
+        "TREND_UP": {
+          "n": 10,
+          "avg": 0.001932,
+          "total": 0.019321
+        },
+        "TREND_DOWN": {
+          "n": 4,
+          "avg": 0.00486,
+          "total": 0.01944
+        }
+      },
+      "verdict": "PASS"
+    },
+    "A+B": {
+      "label": "portfolio_A+B",
+      "trades": 30,
+      "longs": 6,
+      "shorts": 24,
+      "tp": 12,
+      "sl": 16,
+      "ts": 2,
+      "win_rate": 0.4,
+      "avg_net_pnl": 0.006359,
+      "total_net_pnl": 0.190756,
+      "total_gross_pnl": 0.214482,
+      "mdd": 0.034416,
+      "sharpe": 6.84,
+      "ci_lo": 0.001604,
+      "ci_hi": 0.011113,
+      "avg_hold": 7.4,
+      "cost_total": 0.023726,
+      "cost_entry_fee": 0.001963,
+      "cost_exit_fee": 0.00406,
+      "cost_slippage": 0.006319,
+      "cost_funding": 0.003448,
+      "cost_miss_fill": 0.00795,
+      "cost_share": 0.1106,
+      "regime": {
+        "RANGE_HIGH": {
+          "n": 2,
+          "avg": 0.021197,
+          "total": 0.042394
+        },
+        "TREND_UP": {
+          "n": 12,
+          "avg": 0.002625,
+          "total": 0.031505
+        },
+        "TREND_DOWN": {
+          "n": 16,
+          "avg": 0.007304,
+          "total": 0.116857
+        }
+      },
+      "verdict": "PASS"
+    }
+  }
+}

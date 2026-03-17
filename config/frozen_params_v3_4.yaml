@@ -1,0 +1,76 @@
+# Frozen Parameters v3.4 -- 2026-03-17
+# v3.3 + coin-specific regime policy
+#   DOT: RANGE_LOW only (UNKNOWN allowed -- profitable in UNKNOWN)
+#   ADA: RANGE_LOW + UNKNOWN (Block B SL cluster in UNKNOWN)
+#   XRP: suspended
+
+version: "v3.4"
+frozen_date: "2026-03-17"
+source: "v3.3 + per-coin regime policy (OOS v2.1 validated)"
+
+common:
+  k_upper: 3.0
+  k_lower: 0.6
+  risk_frac: 0.005
+  max_horizon: 18
+  bar_minutes: 240
+  min_barrier_pct: 0.002
+
+cost_model:
+  maker_fee: 0.0002
+  taker_fee: 0.00055
+  slippage_entry: 0.0003
+  slippage_exit_limit: 0.0001
+  slippage_exit_market: 0.0005
+  funding_interval_hours: 8.0
+  funding_default_rate: 0.0001
+  miss_fill_reject_prob: 0.15
+  miss_fill_missed_ev: 0.0015
+
+excluded_feature_keywords:
+  - macro_gold
+  - macro_vix
+  - macro_usd_index
+  - macro_us_10y
+  - macro_sp500
+  - macro_fear_greed
+  - macro_defi_tvl
+  - hilbert
+  - inst_phase
+  - inst_freq
+  - inst_amp
+
+# Global blocked (applied to all coins unless overridden)
+blocked_regimes:
+  - RANGE_LOW
+
+coins:
+  DOT:
+    stage1_threshold: 0.50
+    max_features: 80
+    num_leaves: 47
+    learning_rate: 0.1
+    n_estimators: 300
+    max_depth_tree: 8
+    subsample: 0.7
+    colsample: 0.8
+    min_child_samples: 10
+    # DOT: RANGE_LOW only (UNKNOWN allowed)
+    blocked_regimes_override:
+      - RANGE_LOW
+
+  ADA:
+    stage1_threshold: 0.52
+    max_features: 120
+    num_leaves: 15
+    learning_rate: 0.02
+    n_estimators: 400
+    max_depth_tree: 8
+    subsample: 0.7
+    colsample: 0.9
+    min_child_samples: 5
+    k_lower_override: 0.8
+    # ADA: RANGE_LOW + UNKNOWN
+    blocked_regimes_override:
+      - RANGE_LOW
+      - UNKNOWN

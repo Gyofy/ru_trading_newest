@@ -1,0 +1,29 @@
+{
+  "total_iterations": 3,
+  "best_accuracy": 0.3813625,
+  "best_f1": 0.36486999999999997,
+  "current_weights": {
+    "google_news": 0.0102,
+    "reddit": 0.0204,
+    "x_twitter": 0.0305,
+    "youtube": 0.0204,
+    "tiktok": 0.0163,
+    "instagram": 0.0102,
+    "coindesk": 0.0163,
+    "cointelegraph": 0.0102,
+    "theblock": 0.0102,
+    "decrypt": 0.0082,
+    "coinness": 0.0102,
+    "glassnode": 0.0102,
+    "messari": 0.0102,
+    "tiger_research": 0.0102,
+    "onchain": 0.0102,
+    "technical": 0.7961
+  },
+  "best_params": {
+    "learning_rate": 0.03,
+    "min_child_samples": 5,
+    "num_leaves": 15
+  },
+  "saved_at": "2026-03-13T18:32:38.121475"
+}

@@ -1,0 +1,23 @@
+{
+  "$schema": "https://raw.githubusercontent.com/anthropics/claude-code/main/.mcp.schema.json",
+  "mcpServers": {
+    "kis-trading": {
+      "command": "python",
+      "args": ["src/execution/kis_mcp_server.py"],
+      "env": {
+        "KIS_APP_KEY": "${KIS_APP_KEY}",
+        "KIS_APP_SECRET": "${KIS_APP_SECRET}",
+        "KIS_ACCOUNT_NO": "${KIS_ACCOUNT_NO}",
+        "KIS_MODE": "paper"
+      }
+    },
+    "market-data": {
+      "command": "python",
+      "args": ["src/data/market_data_mcp_server.py"],
+      "env": {
+        "KIS_APP_KEY": "${KIS_APP_KEY}",
+        "KIS_APP_SECRET": "${KIS_APP_SECRET}"
+      }
+    }
+  }
+}

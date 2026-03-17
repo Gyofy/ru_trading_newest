@@ -1,0 +1,72 @@
+# Frozen Parameters v3.3 -- 2026-03-17
+# ADA optimization: A-1 + A-2 + A-3
+#   A-1: threshold 0.50 -> 0.52
+#   A-2: UNKNOWN regime blocked
+#   A-3: k_lower 0.6 -> 0.8 (R:R 5.0 -> 3.75)
+# XRP: suspended (insufficient signal quality)
+# DOT: unchanged from v3.2
+
+version: "v3.3"
+frozen_date: "2026-03-17"
+source: "v3.2 + ADA diagnosis optimization"
+
+common:
+  k_upper: 3.0
+  k_lower: 0.6
+  risk_frac: 0.005
+  max_horizon: 18
+  bar_minutes: 240
+  min_barrier_pct: 0.002
+
+cost_model:
+  maker_fee: 0.0002
+  taker_fee: 0.00055
+  slippage_entry: 0.0003
+  slippage_exit_limit: 0.0001
+  slippage_exit_market: 0.0005
+  funding_interval_hours: 8.0
+  funding_default_rate: 0.0001
+  miss_fill_reject_prob: 0.15
+  miss_fill_missed_ev: 0.0015
+
+excluded_feature_keywords:
+  - macro_gold
+  - macro_vix
+  - macro_usd_index
+  - macro_us_10y
+  - macro_sp500
+  - macro_fear_greed
+  - macro_defi_tvl
+  - hilbert
+  - inst_phase
+  - inst_freq
+  - inst_amp
+
+blocked_regimes:
+  - RANGE_LOW
+  - UNKNOWN
+
+coins:
+  DOT:
+    stage1_threshold: 0.50
+    max_features: 80
+    num_leaves: 47
+    learning_rate: 0.1
+    n_estimators: 300
+    max_depth_tree: 8
+    subsample: 0.7
+    colsample: 0.8
+    min_child_samples: 10
+
+  ADA:
+    stage1_threshold: 0.52
+    max_features: 120
+    num_leaves: 15
+    learning_rate: 0.02
+    n_estimators: 400
+    max_depth_tree: 8
+    subsample: 0.7
+    colsample: 0.9
+    min_child_samples: 5
+    # ADA override: k_lower 0.8 (common 0.6 override)
+    k_lower_override: 0.8

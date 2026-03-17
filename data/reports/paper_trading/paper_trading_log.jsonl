@@ -1,0 +1,3 @@
+{"event": "INIT", "coins": ["DOT", "XRP"], "initial_equity": 10000, "timestamp": "2026-03-17T12:12:56.813283", "equity": 10000}
+{"event": "INIT", "coins": ["DOT", "XRP"], "initial_equity": 10000, "timestamp": "2026-03-17T13:06:08.031408", "equity": 10000}
+{"event": "OPEN", "coin": "XRP", "side": "SELL", "entry": 1.543579339981079, "tp": 1.470586, "sl": 1.558178, "s1_prob": 0.792225437120345, "s2_prob": 0.33170961091450113, "timestamp": "2026-03-17T13:06:08.273773", "equity": 10000}

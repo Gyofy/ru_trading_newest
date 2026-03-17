@@ -1,0 +1,31 @@
+# Live Promotion Criteria -- v3.4
+# Paper/Demo 2주 후 live 승급 판단 기준
+# 사전 고정 -- 결과 본 뒤 수정 금지
+
+version: "v3.4"
+set_date: "2026-03-17"
+
+# 최소 거래 수
+min_trades_total: 15
+min_trades_per_coin: 5
+
+# 수익성
+net_ev_per_trade_min: 0.0  # > 0 필수
+net_ev_per_trade_target: 0.003  # +0.3% 이상이면 양호
+
+# 리스크
+max_mdd_pct: 0.03  # 3% 이하
+max_consecutive_losses: 5
+
+# 비용
+max_cost_share: 0.20  # 20% 이하 (백테스트 DOT 13%, ADA 9%)
+
+# 집중도
+max_single_trade_contribution: 0.40  # 단일 거래가 총 PnL의 40% 이상이면 불합격
+
+# 레짐
+min_regime_diversity: 2  # 최소 2개 이상 레짐에서 거래 발생
+
+# 실행 품질
+max_reject_rate: 0.30  # Post-Only reject 30% 이하
+max_slippage_vs_backtest: 2.0  # 백테스트 대비 2배 이내

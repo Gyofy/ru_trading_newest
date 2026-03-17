@@ -1,0 +1,81 @@
+# Frozen Parameters v3.2 -- 2026-03-17
+# Strategy Diagnosis 결과 반영 (XRP threshold 조정, 피처 정리, 레짐 필터)
+# 이 파일 수정 금지. 수정 시 새 버전 파일 생성.
+
+version: "v3.2"
+frozen_date: "2026-03-17"
+source: "v3.1_netev R38 + strategy diagnosis"
+
+# 공통 설정
+common:
+  k_upper: 3.0
+  k_lower: 0.6
+  risk_frac: 0.005
+  max_horizon: 18
+  bar_minutes: 240
+  min_barrier_pct: 0.002
+
+# 비용 모델 (Bybit VIP0 Perpetual)
+cost_model:
+  maker_fee: 0.0002
+  taker_fee: 0.00055
+  slippage_entry: 0.0003
+  slippage_exit_limit: 0.0001
+  slippage_exit_market: 0.0005
+  funding_interval_hours: 8.0
+  funding_default_rate: 0.0001
+  miss_fill_reject_prob: 0.15
+  miss_fill_missed_ev: 0.0015
+
+# 제거 피처 (MI=0 확인, strategy diagnosis 2026-03-17)
+excluded_feature_keywords:
+  - macro_gold
+  - macro_vix
+  - macro_usd_index
+  - macro_us_10y
+  - macro_sp500
+  - macro_fear_greed
+  - macro_defi_tvl
+  - hilbert
+  - inst_phase
+  - inst_freq
+  - inst_amp
+
+# 레짐 필터
+blocked_regimes:
+  - RANGE_LOW
+
+# 코인별 ML 하이퍼파라미터
+coins:
+  XRP:
+    stage1_threshold: 0.46
+    max_features: 120
+    num_leaves: 47
+    learning_rate: 0.02
+    n_estimators: 100
+    max_depth_tree: 6
+    subsample: 0.8
+    colsample: 0.6
+    min_child_samples: 30
+
+  DOT:
+    stage1_threshold: 0.50
+    max_features: 80
+    num_leaves: 47
+    learning_rate: 0.1
+    n_estimators: 300
+    max_depth_tree: 8
+    subsample: 0.7
+    colsample: 0.8
+    min_child_samples: 10
+
+  ADA:
+    stage1_threshold: 0.50
+    max_features: 120
+    num_leaves: 15
+    learning_rate: 0.02
+    n_estimators: 400
+    max_depth_tree: 8
+    subsample: 0.7
+    colsample: 0.9
+    min_child_samples: 5
