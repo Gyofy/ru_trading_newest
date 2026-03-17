@@ -61,24 +61,38 @@ def _add_cvd(df: pd.DataFrame) -> pd.DataFrame:
     vd       = buy_vol - sell_vol        # Volume Delta (단일 바)
     cvd      = np.cumsum(vd)             # Cumulative VD
 
+    # BVC 기반 CVD
     df["vd"]       = vd
     df["cvd"]      = cvd
-    df["buy_frac"] = buy_frac            # BVC buy fraction
+    df["buy_frac"] = buy_frac
 
-    s_vd = pd.Series(vd, index=df.index)
-    s_close = df["close"]
-    s_vol   = df["volume"]
+    # Tick-rule 기반 CVD (보조 — 가격 변화 방향만으로 판단)
+    tick_sign  = np.sign(np.diff(close, prepend=close[0]))
+    tick_vd    = tick_sign * vol
+    df["cvd_tick"] = np.cumsum(tick_vd)
+
+    s_vd      = pd.Series(vd, index=df.index)
+    s_tick_vd = pd.Series(tick_vd, index=df.index)
+    s_close   = df["close"]
+    s_vol     = df["volume"]
 
     for w in WINDOWS:
-        df[f"cvd_{w}"]        = s_vd.rolling(w).sum()                        # 구간 VD 합
-        df[f"cvd_ma_{w}"]     = s_vd.rolling(w).mean()                       # 구간 VD 평균
-        df[f"cvd_ratio_{w}"]  = (
+        df[f"cvd_{w}"]       = s_vd.rolling(w).sum()
+        df[f"cvd_tick_{w}"]  = s_tick_vd.rolling(w).sum()          # tick-rule 버전
+        df[f"cvd_ma_{w}"]    = s_vd.rolling(w).mean()
+        df[f"cvd_ratio_{w}"] = (
             s_vd.rolling(w).sum() / (s_vol.rolling(w).sum() + 1e-10)
-        )                                                                      # 정규화 VD 비율
-        # CVD vs 가격 다이버전스: cvd 방향 - close 방향 부호 불일치
+        )
+        # 다이버전스: cvd 방향 ≠ close 방향
         cvd_sign   = np.sign(df[f"cvd_{w}"])
         price_sign = np.sign(s_close.diff(w))
         df[f"cvd_div_{w}"] = (cvd_sign != price_sign).astype(float)
+        # cvd slope / price slope 비율 (연속형 divergence 강도)
+        cvd_slope   = s_vd.rolling(w).mean()
+        price_slope = s_close.pct_change(w)
+        df[f"cvd_divstrength_{w}"] = (
+            cvd_slope / (s_vol.rolling(w).mean() + 1e-10)
+        ) - price_slope
 
     return df
 
@@ -160,20 +174,44 @@ def _add_vpin(df: pd.DataFrame,
         VPIN 급등 → 정보 비대칭 확대 → 방향성 돌파 임박
         VPIN > 0.7 + CVD 상승 → 강한 매수 압력
     """
-    buy_frac = df.get("buy_frac", (df["close"] - df["low"]) / (df["high"] - df["low"] + 1e-10))
-    buy_frac = buy_frac.clip(0, 1)
-    vol      = df["volume"]
-    vd       = (2 * buy_frac - 1) * vol   # [-vol, +vol]
+    # BVC 기반 buy fraction (이미 _add_cvd에서 계산됨)
+    bvc_frac = df.get("buy_frac", (df["close"] - df["low"]) / (df["high"] - df["low"] + 1e-10))
+    bvc_frac = bvc_frac.clip(0, 1)
+
+    # Easley et al. (2012) — 정규분포 CDF 기반 buy fraction
+    dp    = df["close"].diff().fillna(0)
+    sigma = dp.rolling(20, min_periods=5).std().replace(0, np.nan).ffill().fillna(0.001)
+    z     = dp / (sigma + 1e-10)
+    # erf 기반 CDF (scipy 불필요)
+    cdf_frac = 0.5 * (1.0 + np.sign(z) * (1 - np.exp(-0.7071 * z.abs())))
+    cdf_frac = cdf_frac.clip(0, 1).fillna(0.5)
+
+    vol = df["volume"]
 
     for w in [12, 24, 48]:
         vol_sum = vol.rolling(w).sum()
-        vd_sum  = vd.rolling(w).sum().abs()
-        df[f"vpin_{w}"]        = (vd_sum / (vol_sum + 1e-10)).clip(0, 1)
+
+        # BVC 기반 VPIN
+        vd_bvc = (2 * bvc_frac - 1) * vol
+        df[f"vpin_{w}"] = (
+            vd_bvc.rolling(w).sum().abs() / (vol_sum + 1e-10)
+        ).clip(0, 1)
+
+        # CDF 기반 VPIN (Easley et al. 원본 근사)
+        vd_cdf = (2 * cdf_frac - 1) * vol
+        df[f"vpin_cdf_{w}"] = (
+            vd_cdf.rolling(w).sum().abs() / (vol_sum + 1e-10)
+        ).clip(0, 1)
+
         # VPIN 변화율
-        df[f"vpin_chg_{w}"]    = df[f"vpin_{w}"].diff(3)
-        # VPIN vs 가격 변동 비율
-        price_move = df["close"].pct_change(w).abs()
-        df[f"vpin_price_ratio_{w}"] = df[f"vpin_{w}"] / (price_move + 1e-4)
+        df[f"vpin_chg_{w}"]  = df[f"vpin_{w}"].diff(3)
+
+        # 레짐 플래그 (75th percentile 초과)
+        pct75 = df[f"vpin_{w}"].rolling(72, min_periods=12).quantile(0.75)
+        df[f"vpin_regime_{w}"] = (df[f"vpin_{w}"] > pct75).astype(float)
+
+        # 방향성 정보 — buy fraction 평균
+        df[f"vpin_buyfrac_{w}"] = bvc_frac.rolling(w).mean()
 
     return df
 
@@ -206,16 +244,23 @@ def _add_roll_spread(df: pd.DataFrame, windows: list[int] = None) -> pd.DataFram
     lag_ret = log_ret.shift(1)
 
     for w in windows:
-        # Rolling covariance
         cov = log_ret.rolling(w).cov(lag_ret)
-        roll_sq = (-cov).clip(lower=0)
-        df[f"roll_spread_{w}"] = 2.0 * np.sqrt(roll_sq)
-        # 정규화 (close 대비 bps)
-        df[f"roll_spread_bps_{w}"] = df[f"roll_spread_{w}"] * 10000
+        # cov < 0: mean-reversion (bid-ask bounce) → spread 계산 가능
+        # cov > 0: trending market → Roll estimator 무의미 → NaN 후 ffill
+        trending = cov >= 0
+        roll_sq  = (-cov).clip(lower=0)
+        spread   = 2.0 * np.sqrt(roll_sq)
+        spread   = spread.where(~trending, other=np.nan).ffill()
+        df[f"roll_spread_{w}"]     = spread
+        df[f"roll_spread_bps_{w}"] = spread * 10000
+        # 공분산 부호: +1=추세(모멘텀), -1=평균회귀
+        df[f"roll_cov_sign_{w}"]   = np.sign(cov)
 
-    # 단기/장기 spread 비율
+    # 단기/장기 spread 비율 (유동성 충격 지수)
     if "roll_spread_12" in df.columns and "roll_spread_48" in df.columns:
-        df["roll_spread_ratio"] = df["roll_spread_12"] / (df["roll_spread_48"] + 1e-10)
+        df["roll_spread_ratio"] = (
+            df["roll_spread_12"] / (df["roll_spread_48"] + 1e-10)
+        )
 
     return df
 
