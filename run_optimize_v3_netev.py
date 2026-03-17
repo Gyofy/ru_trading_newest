@@ -693,17 +693,17 @@ class CoinOptimizer:
                 mean_tl_trades = np.mean(tl_trades) if tl_trades else 0
 
                 # Fallback to summary if trade-level unavailable
+                ev_info = compute_net_ev_score(
+                    s2_accuracy=mean_s2,
+                    k_upper=params["k_upper"],
+                    k_lower=params["k_lower"],
+                    coin=coin,
+                    std_combined=std_c,
+                    mcc=mean_mcc,
+                )
                 if mean_tl_trades > 0:
                     score = mean_tl_score
                 else:
-                    ev_info = compute_net_ev_score(
-                        s2_accuracy=mean_s2,
-                        k_upper=params["k_upper"],
-                        k_lower=params["k_lower"],
-                        coin=coin,
-                        std_combined=std_c,
-                        mcc=mean_mcc,
-                    )
                     score = ev_info.get("score", 0)
 
                 rankings.append({
