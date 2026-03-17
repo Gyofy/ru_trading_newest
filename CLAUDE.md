@@ -2,7 +2,8 @@
 
 ## Agent Memory (ALWAYS READ FIRST)
 - **Development Index**: `docs/INDEX.md` -- devlog, checkpoints, brainstorm
-- **Current Config**: `config/frozen_params_v3_4.yaml` (FROZEN, DO NOT MODIFY)
+- **Current Config**: `config/frozen_params_v4_0.yaml` (v4.0 — WF 444eval 반영, th 하향)
+- **Previous Config**: `config/frozen_params_v3_4.yaml` (보존)
 - **Live Criteria**: `config/live_promotion_criteria.yaml`
 - **Active Coins**: DOT, ADA (XRP suspended)
 

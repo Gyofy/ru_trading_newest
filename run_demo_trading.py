@@ -53,7 +53,7 @@ from sklearn.feature_selection import mutual_info_classif
 
 # ── 설정 ──────────────────────────────────────────────────────
 PROJECT_ROOT  = Path(__file__).parent
-YAML_PATH     = PROJECT_ROOT / "config" / "frozen_params_v3_4.yaml"
+YAML_PATH     = PROJECT_ROOT / "config" / "frozen_params_v4_0.yaml"
 REPORT_DIR    = PROJECT_ROOT / "data" / "reports" / "demo_trading"
 REPORT_DIR.mkdir(parents=True, exist_ok=True)
 LOG_FILE      = REPORT_DIR / "demo_log.jsonl"
@@ -332,6 +332,7 @@ def generate_signal(coin: str, df: pd.DataFrame, models: dict) -> dict | None:
     s1_prob = float(s1p[0, 1])
 
     if s1_prob < params["stage1_threshold"]:
+        log.info(f"[{coin}] S1 미달: s1_prob={s1_prob:.3f} < threshold={params['stage1_threshold']} regime={regime}")
         return None
 
     # Regime block

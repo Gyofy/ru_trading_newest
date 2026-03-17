@@ -1,0 +1,93 @@
+# Frozen Parameters v4.0 -- 2026-03-18
+# v3.4 + Walk-Forward v3.1 net EV 최적화 결과 반영 (444 evals)
+#
+# 핵심 변경:
+#   1. DOT stage1_threshold: 0.50 → 0.45 (th=0.45가 최적, avg netEV +0.434%)
+#   2. ADA stage1_threshold: 0.52 → 0.40 (과도하게 보수적 → 신호 빈도 정상화)
+#   3. ADA k_lower_override 제거 → common 0.6 적용 (k_lower 작을수록 높은 EV)
+#   4. CVD 마이크로스트럭처 필터 파라미터 추가 (v4.2 적용 준비)
+#
+# 최적화 근거:
+#   R:R 4.5~6.0: avg netEV +1.083% (R:R 0~1.5 대비 16배)
+#   k_lower=0.6:  avg netEV +0.554% (k_lower=1.5 대비 3.5배)
+#   th=0.45:      avg netEV +0.434% (전체 최적)
+
+version: "v4.0"
+frozen_date: "2026-03-18"
+source: "v3.4 + WF-v3.1 net-EV optimization (444 evals, LGB CPU 4-worker parallel)"
+
+common:
+  k_upper: 3.0
+  k_lower: 0.6
+  risk_frac: 0.005
+  max_horizon: 18
+  bar_minutes: 240
+  min_barrier_pct: 0.002
+
+cost_model:
+  maker_fee: 0.0002
+  taker_fee: 0.00055
+  slippage_entry: 0.0003
+  slippage_exit_limit: 0.0001
+  slippage_exit_market: 0.0005
+  funding_interval_hours: 8.0
+  funding_default_rate: 0.0001
+  miss_fill_reject_prob: 0.15
+  miss_fill_missed_ev: 0.0015
+
+excluded_feature_keywords:
+  - macro_gold
+  - macro_vix
+  - macro_usd_index
+  - macro_us_10y
+  - macro_sp500
+  - macro_fear_greed
+  - macro_defi_tvl
+  - hilbert
+  - inst_phase
+  - inst_freq
+  - inst_amp
+
+# Global blocked (applied to all coins unless overridden)
+blocked_regimes:
+  - RANGE_LOW
+
+# v4.2 마이크로스트럭처 필터 파라미터 (준비)
+microstructure:
+  cvd_filter_enabled: false    # v4.2에서 true로 전환
+  cvd_long_mult_high: 0.6      # cvd > Q75 시 LONG 사이즈 배수
+  cvd_long_mult_low: 1.2       # cvd < Q25 시 LONG 사이즈 배수
+  ofi_timing_enabled: false    # v4.2에서 true로 전환
+  ofi_timing_mult: 1.1         # ofi_sum_3 > Q67 시 배수
+  flow_pressure_weight: 0.3    # OrderFlowCollector flow_pressure → sizing
+
+coins:
+  DOT:
+    stage1_threshold: 0.45   # v3.4: 0.50 → 0.45 (WF opt 근거)
+    max_features: 80
+    num_leaves: 47
+    learning_rate: 0.1
+    n_estimators: 300
+    max_depth_tree: 8
+    subsample: 0.7
+    colsample: 0.8
+    min_child_samples: 10
+    # DOT: RANGE_LOW only (UNKNOWN allowed -- profitable in UNKNOWN)
+    blocked_regimes_override:
+      - RANGE_LOW
+
+  ADA:
+    stage1_threshold: 0.40   # v3.4: 0.52 → 0.40 (WF opt 근거, 큰 개선)
+    max_features: 120
+    num_leaves: 15
+    learning_rate: 0.02
+    n_estimators: 400
+    max_depth_tree: 8
+    subsample: 0.7
+    colsample: 0.9
+    min_child_samples: 5
+    # k_lower_override 제거 → common 0.6 사용 (v3.4: 0.8이었음)
+    # ADA: RANGE_LOW + UNKNOWN 차단 유지
+    blocked_regimes_override:
+      - RANGE_LOW
+      - UNKNOWN
