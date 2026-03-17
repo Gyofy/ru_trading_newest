@@ -644,6 +644,17 @@ def add_signal_features(df: pd.DataFrame, verbose: bool = True) -> pd.DataFrame:
     df = _add_multi_timeframe(df)
     if verbose:
         print(f"  [+] Multi-TF: {len(df.columns) - n8} new")
+    n9 = len(df.columns)
+
+    # 10. Microstructure Roll-up: CVD + OFI + VPIN + Roll + Amihud (~71 features)
+    try:
+        from src.data.crawlers.microstructure_rollup import add_microstructure_rollup
+        df = add_microstructure_rollup(df, verbose=False)
+        if verbose:
+            print(f"  [+] Microstructure Roll-up (CVD/OFI/VPIN/Roll/Amihud): {len(df.columns) - n9} new")
+    except Exception as _ms_e:
+        if verbose:
+            print(f"  [!] Microstructure Roll-up skipped: {_ms_e}")
 
     # NaN 정리
     df.ffill(inplace=True)

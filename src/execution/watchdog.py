@@ -17,7 +17,7 @@ from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
-PROJECT_ROOT = Path("C:/Users/RJ/Desktop/CLAUDE_CRYPTO_AGENT")
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
 HEARTBEAT_PATH = PROJECT_ROOT / "data" / "heartbeat.json"
 KILL_SWITCH_PATH = PROJECT_ROOT / "data" / "kill_switch.json"
 ALERTS_DIR = PROJECT_ROOT / "data" / "alerts"
@@ -29,7 +29,7 @@ class WatchdogConfig:
     heartbeat_stale_sec: float = 300     # 5분
     max_daily_drawdown_pct: float = 0.03  # 3% (watchdog은 더 보수적)
     max_consecutive_failures: int = 3
-    bybit_ping_url: str = "https://api.bybit.com/v5/market/time"
+    binance_ping_url: str = "https://testnet.binancefuture.com/fapi/v1/ping"
 
 
 class Watchdog:
@@ -37,7 +37,7 @@ class Watchdog:
 
     Checks:
       1. Heartbeat freshness (LiveEngine alive?)
-      2. Network connectivity (Bybit reachable?)
+      2. Network connectivity (Binance Testnet reachable?)
       3. Drawdown monitoring (SQLite 직접 읽기)
       4. Kill switch management
     """
@@ -119,11 +119,11 @@ class Watchdog:
             return False
 
     def _check_network(self) -> bool:
-        """Bybit API reachability."""
+        """Binance Futures Testnet reachability."""
         try:
             import urllib.request
             req = urllib.request.Request(
-                self.config.bybit_ping_url,
+                self.config.binance_ping_url,
                 method="GET",
             )
             req.add_header("User-Agent", "watchdog/1.0")

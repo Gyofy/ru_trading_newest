@@ -16,7 +16,7 @@ import joblib
 
 logger = logging.getLogger(__name__)
 
-PROJECT_ROOT = Path("C:/Users/RJ/Desktop/CLAUDE_CRYPTO_AGENT")
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_ARTIFACT_DIR = PROJECT_ROOT / "data" / "models" / "production"
 
 

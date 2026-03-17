@@ -28,7 +28,7 @@ from src.models.model_store import load_artifact
 
 logger = logging.getLogger(__name__)
 
-PROJECT_ROOT = Path("C:/Users/RJ/Desktop/CLAUDE_CRYPTO_AGENT")
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
 HEARTBEAT_PATH = PROJECT_ROOT / "data" / "heartbeat.json"
 
 
@@ -58,6 +58,7 @@ class LiveEngineConfig:
         self.ledger_db: str = s.get("ledger_db", "data/ledger.db")
 
         # API
+        self.exchange: str = s.get("exchange", "binance")
         self.api_key: str = s.get("api_key", "")
         self.api_secret: str = s.get("api_secret", "")
 
@@ -83,6 +84,7 @@ class LiveEngine:
             ledger=self.ledger,
         )
         self.exchange = ExchangeAdapter(
+            exchange=self.config.exchange,
             mode=self.config.mode,
             api_key=self.config.api_key,
             secret=self.config.api_secret,

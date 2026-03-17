@@ -192,11 +192,11 @@ live_promotion:
   max_mdd_pct: 0.05
 
 # ============================================================
-# Live Execution Layer (Bybit + ccxt)
+# Live Execution Layer (Binance USDT-M Futures + ccxt)
 # ============================================================
 execution_live:
-  mode: demo                    # sandbox | demo | live
-  exchange: bybit
+  mode: sandbox                 # sandbox=testnet(가상) | live=실거래
+  exchange: binance
 
   symbols:
     - DOT

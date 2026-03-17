@@ -21,7 +21,7 @@ import pandas as pd
 warnings.filterwarnings("ignore")
 logger = logging.getLogger(__name__)
 
-PROJECT_ROOT = Path("C:/Users/RJ/Desktop/CLAUDE_CRYPTO_AGENT")
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
 # 4h bar boundaries (UTC)
 BAR_HOURS = [0, 4, 8, 12, 16, 20]

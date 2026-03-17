@@ -306,7 +306,6 @@ class EnhancedEnsemble:
         self.stacker_ = LogisticRegression(
             C=1.0, max_iter=500, class_weight="balanced",
             random_state=self.random_state, solver="lbfgs",
-            multi_class="multinomial" if self.n_classes > 2 else "auto",
         )
         self.stacker_.fit(X_meta, y_meta)
 

@@ -1,12 +1,17 @@
-"""Exchange Adapter — Bybit + ccxt 통합 인터페이스.
+"""Exchange Adapter — Binance USDT-M Futures ccxt 인터페이스.
 
 설계 원칙:
-  - Entry: Post-Only (maker fee only)
-  - Exit SL: reduceOnly + closeOnTrigger (체결 보장)
-  - Exit TP: reduceOnly conditional (수수료 우선)
+  - Entry: Post-Only (maker fee only, GTX TIF)
+  - Exit SL: reduceOnly STOP_MARKET (체결 보장)
+  - Exit TP: reduceOnly TAKE_PROFIT_MARKET
   - Single exchange instance 재사용
-  - orderLinkId로 idempotency 보장
+  - newClientOrderId로 idempotency 보장
   - Precision: load_markets() 후 amount/price 자동 반올림
+
+거래소:
+  - binance: USDT-M Futures (binanceusdm)
+      sandbox/demo → testnet.binancefuture.com
+      live         → fapi.binance.com
 """
 
 from __future__ import annotations
@@ -27,7 +32,7 @@ except ImportError:
 logger = logging.getLogger(__name__)
 
 
-# Internal symbol → ccxt symbol mapping (linear perpetual)
+# Internal symbol → ccxt symbol mapping (linear perpetual / USDT-M futures)
 SYMBOL_MAP = {
     "BTC": "BTC/USDT:USDT",
     "ETH": "ETH/USDT:USDT",
@@ -41,86 +46,130 @@ SYMBOL_MAP = {
     "BNB": "BNB/USDT:USDT",
 }
 
-
 class ExchangeAdapter:
-    """Bybit unified interface via ccxt.
+    """Binance USDT-M Futures 인터페이스 via ccxt.
 
     Modes:
-        sandbox — ccxt sandbox (set_sandbox_mode)
-        demo    — Bybit demo trading (별도 API key/도메인)
-        live    — 실거래
+        sandbox / demo — testnet.binancefuture.com (가상 자금)
+        live           — fapi.binance.com (실거래)
 
     Usage:
-        adapter = ExchangeAdapter(mode="demo", api_key="...", secret="...")
+        adapter = ExchangeAdapter(mode="sandbox", api_key="...", secret="...")
         await adapter.initialize()
-        result = await adapter.place_post_only_entry("BTC", "BUY", 0.001, 60000, "oid-1")
+        result = await adapter.place_post_only_entry("DOT", "BUY", 10, 8.5, "oid-1")
     """
 
     def __init__(
         self,
-        mode: str = "demo",
+        mode: str = "sandbox",
         api_key: str = "",
         secret: str = "",
+        exchange: str = "binance",  # 하위 호환용, 무시됨
     ):
         if not HAS_CCXT:
             raise ImportError("ccxt is required: pip install ccxt")
 
+        self.exchange_name = "binance"
         self.mode = mode
-        self._exchange: ccxt_async.bybit | None = None
-        self._sync_exchange: ccxt_sync.bybit | None = None
+        self._exchange: object | None = None
+        self._sync_exchange: object | None = None
         self._markets_loaded = False
 
-        # Exchange config
+        self._exchange, self._sync_exchange = self._build_binance(mode, api_key, secret)
+
+    # ── Factory ─────────────────────────────────────────────
+
+    def _build_binance(self, mode: str, api_key: str, secret: str):
+        """Binance USDT-M Futures (binanceusdm).
+
+        sandbox/demo: testnet.binancefuture.com 수동 지정
+          (ccxt 4.4+ 에서 set_sandbox_mode deprecated — 직접 URL 오버라이드)
+        """
+        # Binance USDT-M Futures testnet base URL
+        TESTNET_BASE = "https://testnet.binancefuture.com"
+
         config = {
             "apiKey": api_key,
             "secret": secret,
             "enableRateLimit": True,
             "options": {
-                "defaultType": "swap",        # linear perpetual
+                "defaultType": "future",
                 "adjustForTimeDifference": True,
+                # Testnet에서 fetchCurrencies 엔드포인트 미지원 → 스킵
+                "fetchCurrencies": False,
             },
         }
 
-        if mode == "demo":
-            # Bybit demo trading uses separate endpoints
-            config["options"]["testnet"] = True
+        if mode in ("sandbox", "demo"):
             config["urls"] = {
                 "api": {
-                    "public": "https://api-demo.bybit.com",
-                    "private": "https://api-demo.bybit.com",
-                },
+                    "fapiPublic":         f"{TESTNET_BASE}/fapi/v1",
+                    "fapiPublicV2":       f"{TESTNET_BASE}/fapi/v2",
+                    "fapiPrivate":        f"{TESTNET_BASE}/fapi/v1",
+                    "fapiPrivateV2":      f"{TESTNET_BASE}/fapi/v2",
+                    "fapiPrivateV3":      f"{TESTNET_BASE}/fapi/v3",
+                    "public":             f"{TESTNET_BASE}/fapi/v1",
+                    "private":            f"{TESTNET_BASE}/fapi/v1",
+                }
             }
 
-        self._exchange = ccxt_async.bybit(config)
-        self._sync_exchange = ccxt_sync.bybit(config)
+        async_ex = ccxt_async.binanceusdm(config)
+        sync_ex = ccxt_sync.binanceusdm(config)
+        return async_ex, sync_ex
 
-        if mode == "sandbox":
-            self._exchange.set_sandbox_mode(True)
-            self._sync_exchange.set_sandbox_mode(True)
+    # ── Order param helpers (Binance USDT-M) ────────────────
+
+    def _client_id_key(self) -> str:
+        return "newClientOrderId"
+
+    def _fetch_by_client_id_key(self) -> str:
+        return "origClientOrderId"
+
+    def _post_only_params(self, order_id: str) -> dict:
+        """Post-Only 진입 파라미터. ccxt가 postOnly=True → GTX TIF 자동 변환."""
+        return {
+            "postOnly": True,
+            "newClientOrderId": order_id,
+        }
+
+    def _stop_loss_params(self, stop_price: float, side: str, order_id: str) -> tuple[str, dict]:
+        """STOP_MARKET + reduceOnly."""
+        return "stop_market", {
+            "stopPrice": stop_price,
+            "reduceOnly": True,
+            "newClientOrderId": order_id,
+        }
+
+    def _take_profit_params(self, tp_price: float, side: str, order_id: str) -> tuple[str, dict]:
+        """TAKE_PROFIT_MARKET + reduceOnly."""
+        return "take_profit_market", {
+            "stopPrice": tp_price,
+            "reduceOnly": True,
+            "newClientOrderId": order_id,
+        }
+
+    # ── Lifecycle ───────────────────────────────────────────
 
     async def initialize(self) -> None:
         """Load markets (must call once before any order)."""
         await self._exchange.load_markets()
         self._markets_loaded = True
         logger.info(
-            f"Exchange initialized ({self.mode}): "
+            f"Exchange initialized ({self.exchange_name}/{self.mode}): "
             f"{len(self._exchange.markets)} markets loaded"
         )
 
     def _ccxt_symbol(self, symbol: str) -> str:
-        """Internal symbol → ccxt symbol."""
         return SYMBOL_MAP.get(symbol, f"{symbol}/USDT:USDT")
 
     # ── Precision ───────────────────────────────────────────
 
     def round_qty(self, symbol: str, qty: float) -> float:
-        """Round quantity to exchange precision."""
         return float(self._exchange.amount_to_precision(
             self._ccxt_symbol(symbol), qty
         ))
 
     def round_price(self, symbol: str, price: float) -> float:
-        """Round price to exchange precision."""
         return float(self._exchange.price_to_precision(
             self._ccxt_symbol(symbol), price
         ))
@@ -128,7 +177,6 @@ class ExchangeAdapter:
     def round_all(
         self, symbol: str, qty: float, entry: float, sl: float, tp: float,
     ) -> tuple[float, float, float, float]:
-        """Round all values to exchange precision."""
         ccxt_sym = self._ccxt_symbol(symbol)
         return (
             float(self._exchange.amount_to_precision(ccxt_sym, qty)),
@@ -138,13 +186,11 @@ class ExchangeAdapter:
         )
 
     def get_min_qty(self, symbol: str) -> float:
-        """Get minimum order quantity."""
         ccxt_sym = self._ccxt_symbol(symbol)
         market = self._exchange.market(ccxt_sym)
         return market.get("limits", {}).get("amount", {}).get("min", 0)
 
     def get_tick_size(self, symbol: str) -> float:
-        """Get price tick size."""
         ccxt_sym = self._ccxt_symbol(symbol)
         market = self._exchange.market(ccxt_sym)
         return market.get("precision", {}).get("price", 0.01)
@@ -159,10 +205,7 @@ class ExchangeAdapter:
         price: float,
         order_link_id: str,
     ) -> dict:
-        """Post-Only limit entry. 즉시 체결될 상황이면 자동 취소.
-
-        Returns: {success, order_id, exchange_order_id, status, error}
-        """
+        """Post-Only limit entry. 즉시 체결될 상황이면 자동 취소."""
         ccxt_sym = self._ccxt_symbol(symbol)
         qty = self.round_qty(symbol, qty)
         price = self.round_price(symbol, price)
@@ -174,11 +217,7 @@ class ExchangeAdapter:
                 side=side.lower(),
                 amount=qty,
                 price=price,
-                params={
-                    "postOnly": True,
-                    "orderLinkId": order_link_id,
-                    "timeInForce": "PostOnly",
-                },
+                params=self._post_only_params(order_link_id),
             )
             return {
                 "success": True,
@@ -189,13 +228,9 @@ class ExchangeAdapter:
             }
         except Exception as e:
             logger.error(f"[Entry] {symbol} {side} failed: {e}")
-            return {
-                "success": False,
-                "order_id": order_link_id,
-                "error": str(e),
-            }
+            return {"success": False, "order_id": order_link_id, "error": str(e)}
 
-    # ── Protective Stop Loss (Certainty-First) ──────────────
+    # ── Protective Stop Loss ─────────────────────────────────
 
     async def place_protective_stop(
         self,
@@ -206,28 +241,20 @@ class ExchangeAdapter:
         order_link_id: str,
         parent_id: str = "",
     ) -> dict:
-        """reduceOnly + closeOnTrigger stop loss.
-
-        Trigger 시 market order로 실행 → 체결 보장.
-        """
+        """reduceOnly stop loss. Trigger 시 market 체결 보장."""
         ccxt_sym = self._ccxt_symbol(symbol)
         qty = self.round_qty(symbol, qty)
         stop_price = self.round_price(symbol, stop_price)
 
+        order_type, params = self._stop_loss_params(stop_price, side, order_link_id)
+
         try:
             order = await self._exchange.create_order(
                 symbol=ccxt_sym,
-                type="market",
+                type=order_type,
                 side=side.lower(),
                 amount=qty,
-                params={
-                    "stopPrice": stop_price,
-                    "triggerPrice": stop_price,
-                    "triggerDirection": 2 if side.upper() == "SELL" else 1,
-                    "reduceOnly": True,
-                    "closeOnTrigger": True,
-                    "orderLinkId": order_link_id,
-                },
+                params=params,
             )
             return {
                 "success": True,
@@ -238,13 +265,9 @@ class ExchangeAdapter:
             }
         except Exception as e:
             logger.error(f"[SL] {symbol} {side} @ {stop_price} failed: {e}")
-            return {
-                "success": False,
-                "order_id": order_link_id,
-                "error": str(e),
-            }
+            return {"success": False, "order_id": order_link_id, "error": str(e)}
 
-    # ── Take Profit (Separate Conditional) ──────────────────
+    # ── Take Profit ──────────────────────────────────────────
 
     async def place_take_profit(
         self,
@@ -255,25 +278,21 @@ class ExchangeAdapter:
         order_link_id: str,
         parent_id: str = "",
     ) -> dict:
-        """reduceOnly conditional TP. Trigger 시 limit order."""
+        """reduceOnly take-profit."""
         ccxt_sym = self._ccxt_symbol(symbol)
         qty = self.round_qty(symbol, qty)
         tp_price = self.round_price(symbol, tp_price)
 
+        order_type, params = self._take_profit_params(tp_price, side, order_link_id)
+
         try:
             order = await self._exchange.create_order(
                 symbol=ccxt_sym,
-                type="limit",
+                type=order_type,
                 side=side.lower(),
                 amount=qty,
-                price=tp_price,
-                params={
-                    "stopPrice": tp_price,
-                    "triggerPrice": tp_price,
-                    "triggerDirection": 1 if side.upper() == "SELL" else 2,
-                    "reduceOnly": True,
-                    "orderLinkId": order_link_id,
-                },
+                price=tp_price if order_type == "limit" else None,
+                params=params,
             )
             return {
                 "success": True,
@@ -284,13 +303,9 @@ class ExchangeAdapter:
             }
         except Exception as e:
             logger.error(f"[TP] {symbol} {side} @ {tp_price} failed: {e}")
-            return {
-                "success": False,
-                "order_id": order_link_id,
-                "error": str(e),
-            }
+            return {"success": False, "order_id": order_link_id, "error": str(e)}
 
-    # ── Market Close (Emergency / Time Stop) ────────────────
+    # ── Market Close ─────────────────────────────────────────
 
     async def market_close(
         self,
@@ -311,7 +326,7 @@ class ExchangeAdapter:
                 amount=qty,
                 params={
                     "reduceOnly": True,
-                    "orderLinkId": order_link_id,
+                    self._client_id_key(): order_link_id,
                 },
             )
             return {
@@ -324,13 +339,9 @@ class ExchangeAdapter:
             }
         except Exception as e:
             logger.error(f"[MKT_CLOSE] {symbol} {side} failed: {e}")
-            return {
-                "success": False,
-                "order_id": order_link_id,
-                "error": str(e),
-            }
+            return {"success": False, "order_id": order_link_id, "error": str(e)}
 
-    # ── Order Management ────────────────────────────────────
+    # ── Order Management ─────────────────────────────────────
 
     async def cancel_order(
         self,
@@ -338,31 +349,55 @@ class ExchangeAdapter:
         order_link_id: str | None = None,
         exchange_order_id: str | None = None,
     ) -> dict:
-        """Cancel by orderLinkId or exchange ID."""
+        """주문 취소. 일반 주문 → Algo 조건부 주문 순으로 시도.
+
+        Binance Futures Testnet은 SL/TP를 Algo 조건부 주문으로 처리하므로
+        일반 cancel_order 실패 시 fapiPrivateDeleteAlgoFuturesOrder 로 재시도.
+        """
         ccxt_sym = self._ccxt_symbol(symbol)
-        try:
-            if order_link_id:
+        mkt_id = self._exchange.market(ccxt_sym)["id"]  # e.g. "DOTUSDT"
+
+        # ── 시도 1: 일반 주문 취소 (origClientOrderId) ────────
+        if order_link_id:
+            try:
                 result = await self._exchange.cancel_order(
-                    id=None,
+                    id=order_link_id,
                     symbol=ccxt_sym,
-                    params={"orderLinkId": order_link_id},
+                    params={"origClientOrderId": order_link_id},
                 )
-            elif exchange_order_id:
+                return {"success": True, "raw": result}
+            except Exception as e1:
+                logger.debug(f"[Cancel] regular cancel failed ({e1}), trying algo...")
+
+        # ── 시도 2: exchange_order_id로 일반 취소 ─────────────
+        if exchange_order_id:
+            try:
                 result = await self._exchange.cancel_order(
                     id=exchange_order_id,
                     symbol=ccxt_sym,
                 )
-            else:
-                return {"success": False, "error": "No order ID provided"}
+                return {"success": True, "raw": result}
+            except Exception as e2:
+                logger.debug(f"[Cancel] orderId cancel failed ({e2}), trying algo...")
 
-            return {"success": True, "raw": result}
-        except Exception as e:
-            # OrderNotFound is idempotent (already cancelled or filled)
-            if "OrderNotFound" in str(type(e).__name__) or "order not found" in str(e).lower():
-                logger.info(f"[Cancel] {symbol} order already gone: {e}")
-                return {"success": True, "already_gone": True}
-            logger.error(f"[Cancel] {symbol} failed: {e}")
-            return {"success": False, "error": str(e)}
+        # ── 시도 3: Algo 조건부 주문 취소 (fapiPrivateDeleteAlgoOrder) ──
+        if exchange_order_id:
+            try:
+                result = await self._exchange.fapiPrivateDeleteAlgoOrder({
+                    "symbol": mkt_id,
+                    "algoId": int(exchange_order_id),
+                })
+                logger.info(f"[Cancel] {symbol} algo order cancelled: {exchange_order_id}")
+                return {"success": True, "raw": result}
+            except Exception as e3:
+                err_str = str(e3).lower()
+                if "not found" in err_str or "unknown order" in err_str or "-2011" in err_str:
+                    logger.info(f"[Cancel] {symbol} order already gone")
+                    return {"success": True, "already_gone": True}
+                logger.error(f"[Cancel] {symbol} algo cancel failed: {e3}")
+                return {"success": False, "error": str(e3)}
+
+        return {"success": False, "error": "No order ID provided"}
 
     async def wait_fill_or_cancel(
         self,
@@ -372,20 +407,17 @@ class ExchangeAdapter:
         max_reprices: int = 1,
         poll_interval: float = 2.0,
     ) -> dict | None:
-        """Wait for fill, reprice once, or cancel and return None."""
+        """Wait for fill, or cancel and return None."""
         ccxt_sym = self._ccxt_symbol(symbol)
         start = time.time()
-        reprices = 0
 
         while time.time() - start < ttl_sec:
             try:
                 orders = await self._exchange.fetch_open_orders(
                     symbol=ccxt_sym,
-                    params={"orderLinkId": order_link_id},
+                    params={self._client_id_key(): order_link_id},
                 )
-                # If no open orders, check if filled
                 if not orders:
-                    # Check order history
                     order = await self._fetch_order_by_link_id(symbol, order_link_id)
                     if order and order.get("status") == "closed":
                         return {
@@ -394,18 +426,10 @@ class ExchangeAdapter:
                             "fill_qty": order.get("filled", 0),
                             "fee": order.get("fee", {}).get("cost", 0),
                         }
-                    # Order was rejected or cancelled externally
                     if order and order.get("status") in ("canceled", "cancelled", "rejected"):
                         return None
-                    # May still be processing
                     await asyncio.sleep(poll_interval)
                     continue
-
-                # Order still open — reprice?
-                if reprices < max_reprices and time.time() - start > ttl_sec * 0.5:
-                    # Could implement reprice logic here
-                    # For now, just wait
-                    pass
 
                 await asyncio.sleep(poll_interval)
 
@@ -413,15 +437,13 @@ class ExchangeAdapter:
                 logger.warning(f"[WaitFill] {symbol} poll error: {e}")
                 await asyncio.sleep(poll_interval)
 
-        # Timeout — cancel
         logger.info(f"[WaitFill] {symbol} timeout ({ttl_sec}s), cancelling")
         await self.cancel_order(symbol, order_link_id=order_link_id)
         return None
 
-    # ── Market Data ─────────────────────────────────────────
+    # ── Market Data ──────────────────────────────────────────
 
     async def fetch_ticker(self, symbol: str) -> dict:
-        """Get current bid/ask/last."""
         ccxt_sym = self._ccxt_symbol(symbol)
         ticker = await self._exchange.fetch_ticker(ccxt_sym)
         bid = ticker.get("bid", 0)
@@ -435,7 +457,6 @@ class ExchangeAdapter:
         }
 
     async def fetch_balance(self) -> dict:
-        """Get USDT equity."""
         balance = await self._exchange.fetch_balance()
         usdt = balance.get("USDT", {})
         return {
@@ -445,7 +466,6 @@ class ExchangeAdapter:
         }
 
     async def fetch_position(self, symbol: str) -> dict | None:
-        """Get current position for symbol."""
         ccxt_sym = self._ccxt_symbol(symbol)
         try:
             positions = await self._exchange.fetch_positions([ccxt_sym])
@@ -464,7 +484,6 @@ class ExchangeAdapter:
         return None
 
     async def fetch_funding_rate(self, symbol: str) -> float:
-        """Current funding rate."""
         ccxt_sym = self._ccxt_symbol(symbol)
         try:
             funding = await self._exchange.fetch_funding_rate(ccxt_sym)
@@ -473,15 +492,14 @@ class ExchangeAdapter:
             logger.warning(f"[Funding] {symbol} fetch failed: {e}")
             return 0.0
 
-    # ── Internal ────────────────────────────────────────────
+    # ── Internal ─────────────────────────────────────────────
 
     async def _fetch_order_by_link_id(self, symbol: str, order_link_id: str) -> dict | None:
-        """Fetch order by orderLinkId from closed orders."""
         ccxt_sym = self._ccxt_symbol(symbol)
         try:
             orders = await self._exchange.fetch_closed_orders(
                 symbol=ccxt_sym,
-                params={"orderLinkId": order_link_id},
+                params={self._fetch_by_client_id_key(): order_link_id},
             )
             if orders:
                 return orders[0]
@@ -489,20 +507,13 @@ class ExchangeAdapter:
             pass
         return None
 
-    # ── Maker Price ─────────────────────────────────────────
+    # ── Maker Price ──────────────────────────────────────────
 
     async def get_maker_entry_price(self, symbol: str, side: str) -> float:
-        """Get best maker price (bid for BUY, ask for SELL).
-
-        Post-Only 주문에 적합한 가격. 상대호가 기준.
-        """
         ticker = await self.fetch_ticker(symbol)
-        if side.upper() == "BUY":
-            return ticker["bid"]  # bid에 걸어야 maker
-        else:
-            return ticker["ask"]  # ask에 걸어야 maker
+        return ticker["bid"] if side.upper() == "BUY" else ticker["ask"]
 
-    # ── ID Generation ───────────────────────────────────────
+    # ── ID Generation ────────────────────────────────────────
 
     @staticmethod
     def make_order_id(
@@ -511,15 +522,15 @@ class ExchangeAdapter:
         seq: int = 1,
         prefix: str = "wf3",
     ) -> str:
-        """Generate orderLinkId (max 36 chars, unique).
+        """Generate client order ID (max 36 chars, unique).
 
-        Format: wf3-xrp-0315-1830-b-0001
+        Format: wf3-dot-0315-1830-b-0001
         """
         now = datetime.now(timezone.utc)
-        s = side[0].lower()  # b or s
+        s = side[0].lower()
         return f"{prefix}-{symbol.lower()}-{now.strftime('%m%d-%H%M')}-{s}-{seq:04d}"
 
-    # ── Lifecycle ───────────────────────────────────────────
+    # ── Lifecycle ────────────────────────────────────────────
 
     async def close(self) -> None:
         if self._exchange:

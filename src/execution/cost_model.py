@@ -30,21 +30,22 @@ class ExitType(str, Enum):
 
 @dataclass
 class FeeSchedule:
-    """Bybit VIP0 Perpetual & Futures 기본 수수료.
+    """Binance USDT-M Futures 기본 수수료 (Regular user).
 
     실제 운영 시 My Fee Rate에서 확인하여 override.
+    maker 0.02% / taker 0.05% (BNB 할인 미적용 기준)
     """
     maker_fee: float = 0.0002     # 0.02%
-    taker_fee: float = 0.00055    # 0.055%
+    taker_fee: float = 0.0005     # 0.05%
     slippage_entry: float = 0.0003  # 0.03% (Post-Only → 낮음)
-    slippage_exit_limit: float = 0.0001  # TP limit → 미미
+    slippage_exit_limit: float = 0.0001  # TP → 미미
     slippage_exit_market: float = 0.0005  # SL market → 높음
 
 
 @dataclass
 class FundingConfig:
     """Funding rate 설정."""
-    interval_hours: float = 8.0   # Bybit 기본 8h (심볼별 상이 가능)
+    interval_hours: float = 8.0   # Binance 기본 8h
     default_rate: float = 0.0001  # 0.01% per interval (시장 평균)
 
 
