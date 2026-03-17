@@ -13,7 +13,7 @@ v3.1_netev 최종 파라미터를 완전 동결하고,
 """
 
 import sys
-sys.path.insert(0, "C:/Users/RJ/Desktop/CLAUDE_CRYPTO_AGENT")
+sys.path.insert(0, str(__import__("pathlib").Path(__file__).resolve().parent))
 sys.stdout.reconfigure(line_buffering=True) if hasattr(sys.stdout, 'reconfigure') else None
 
 import json

@@ -10,7 +10,7 @@ v3 대비 변경:
 """
 
 import sys
-sys.path.insert(0, "C:/Users/RJ/Desktop/CLAUDE_CRYPTO_AGENT")
+sys.path.insert(0, str(__import__("pathlib").Path(__file__).resolve().parent))
 sys.stdout.reconfigure(line_buffering=True) if hasattr(sys.stdout, 'reconfigure') else None
 
 import json
@@ -43,7 +43,7 @@ from src.utils.config import load_settings, bar_minutes as cfg_bar_minutes
 from src.utils.feature_policy import is_excluded_feature
 
 # ==================== 설정 ====================
-DEADLINE = datetime(2026, 3, 17, 10, 30, 0)  # 내일 오전 10시 30분
+DEADLINE = datetime(2026, 3, 19, 2, 0, 0)   # 2026-03-19 11:00 KST = 02:00 UTC
 REPORT_DIR = Path("data/reports/walkforward_v3_1")
 REPORT_DIR.mkdir(parents=True, exist_ok=True)
 
