@@ -16,6 +16,7 @@ Data (Binance 4h OHLCV, 500 bars)
   -> RL Meta-Gate (LinUCB Contextual Bandit, 31-dim state)
        accept/reject + sizing [0.75x, 1.0x, 1.25x]
        cycle-level candidate ranking
+  -> Confidence-Tiered Sizing (0.5% / 1.0% / 1.5% + DD brake)
   -> Risk Engine (9-gate pre-trade check)
   -> Execution (Post-Only entry, STOP_MARKET SL, TAKE_PROFIT_MARKET TP)
   -> SL/TP/TTL Monitor (30s background polling, MFE/MAE tracking)
@@ -25,14 +26,24 @@ Data (Binance 4h OHLCV, 500 bars)
 
 | Coin | Trades | Win Rate | Avg PnL | Total PnL | Max DD |
 |------|:------:|:--------:|:-------:|:---------:|:------:|
-| DOT  | 19     | 95%      | +2.36%  | +44.8%    | 1.39%  |
+| DOT  | 18     | 94%      | +2.13%  | +38.3%    | 1.39%  |
 | ADA  | 32     | 97%      | +1.96%  | +62.6%    | 1.32%  |
-| XRP  | 26     | 92%      | +1.75%  | +45.4%    | 1.08%  |
+| XRP  | 26     | 96%      | +1.81%  | +47.1%    | 1.08%  |
 | SOL  | 25     | 100%     | +2.72%  | +68.0%    | 0.00%  |
-| LINK | 25     | 100%     | +2.25%  | +56.3%    | 0.00%  |
-| **Total** | **127** | **97%** | **+2.18%** | **+277%** | - |
+| LINK | 25     | 96%      | +2.17%  | +54.2%    | 1.23%  |
+| **Total** | **126** | **97%** | **+2.16%** | **+270%** | - |
 
-Initial equity $10,000 -> $22,094. Cost-adjusted (0.2% round-trip deducted per trade).
+**$10,000 -> $85,555** with confidence-tiered sizing. Cost-adjusted (0.2% round-trip per trade).
+
+### Confidence-Tiered Sizing (vs flat 0.5%)
+
+| Sizing | Flat 0.5% | Tiered |
+|--------|:---------:|:------:|
+| High confidence (>0.65) | 0.5% | **1.5%** |
+| Mid confidence (0.50-0.65) | 0.5% | **1.0%** |
+| Low confidence (<0.50) | 0.5% | 0.5% |
+| DD brake (>1.5%) | none | **halve all** |
+| Final equity | $22,094 | **$85,555** |
 
 ## Coin-Specific Model Combos (Mega Search v2)
 
@@ -121,6 +132,7 @@ python -m src.rl.offline_train --alpha 1.0 --gamma 0.995
 ## Key Safety Features
 
 - **Kill Switch:** Daily DD > 2% or Weekly DD > 5% halts all trading
+- **DD Brake:** Daily DD > 1.5% halves all position sizes before kill switch
 - **Risk Engine:** 9-gate pre-trade check (probability, spread, funding, drawdown, consecutive losses, sizing)
 - **SL/TP Monitor:** 30s polling (not 2h cycle dependent)
 - **Position Persistence:** JSON + SQLite survive process crashes
@@ -131,7 +143,7 @@ python -m src.rl.offline_train --alpha 1.0 --gamma 0.995
 
 | Version | Date | Key Change |
 |---------|------|------------|
-| v4.3 | 2026-03-18 | RL meta-layer (LinUCB), MFE/MAE tracking, 13 audit fixes |
+| v4.3 | 2026-03-18 | RL meta-layer, confidence-tiered sizing, MFE/MAE, 13 audit fixes |
 | v4.2 | 2026-03-18 | Mega Search v2 best, 2-Stage Binary, 8 critical fixes |
 | v4.1 | 2026-03-18 | 5-coin expansion, microstructure features |
 | v4.0 | 2026-03-17 | Binance Futures, walk-forward optimization |
