@@ -41,27 +41,28 @@ def compute_counterfactual(
     float or None
         Net PnL percentage, or None if insufficient data.
     """
-    if "close" not in df_future.columns or len(df_future) == 0:
+    required = {"close", "high", "low"}
+    if not required.issubset(df_future.columns) or len(df_future) == 0:
         return None
 
-    close = df_future["close"].values
-    n = min(len(close), max_horizon)
+    n = min(len(df_future), max_horizon)
 
     for i in range(n):
-        price = close[i]
+        bar_high = df_future["high"].iloc[i]
+        bar_low = df_future["low"].iloc[i]
         if side == "BUY":
-            if price >= tp_price:
+            if bar_high >= tp_price:
                 return (tp_price - entry_price) / entry_price - cost_pct
-            if price <= sl_price:
+            if bar_low <= sl_price:
                 return (sl_price - entry_price) / entry_price - cost_pct
         else:  # SELL
-            if price <= tp_price:
+            if bar_low <= tp_price:
                 return (entry_price - tp_price) / entry_price - cost_pct
-            if price >= sl_price:
+            if bar_high >= sl_price:
                 return (entry_price - sl_price) / entry_price - cost_pct
 
-    # TTL expiry — use final price
-    final = close[n - 1]
+    # TTL expiry — use final close
+    final = df_future["close"].iloc[n - 1]
     if side == "BUY":
         return (final - entry_price) / entry_price - cost_pct
     return (entry_price - final) / entry_price - cost_pct

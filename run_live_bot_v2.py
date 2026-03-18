@@ -190,8 +190,8 @@ def compute_features(raw_data: dict) -> dict:
             df = add_signal_features(df, verbose=False)
             df = add_microstructure_rollup(df, verbose=False)
             df.ffill(inplace=True)
-            df.bfill(inplace=True)
-            df.replace([np.inf, -np.inf], 0, inplace=True)
+            df.replace([np.inf, -np.inf], np.nan, inplace=True)
+            df.fillna(0, inplace=True)  # no bfill — prevents future data leakage
             cols_to_drop = [c for c in df.columns if is_excluded_feature(c)]
             if cols_to_drop:
                 df.drop(columns=cols_to_drop, inplace=True, errors="ignore")
@@ -705,6 +705,10 @@ class LiveTradingBot:
         if pred.side == "HOLD":
             return None
 
+        # SHORT disabled: R:R = 0.2:1 with current k_upper/k_lower asymmetry
+        if pred.side == "SELL":
+            return None
+
         # Build RL state
         coin_history = self._get_coin_history(coin)
         state = build_rl_state(
@@ -776,16 +780,19 @@ class LiveTradingBot:
         except Exception:
             funding = self._last_funding_cache.get(coin, 0.0)
 
-        # Dynamic risk_frac: confidence-tiered + DD brake
+        # Dynamic risk_frac: confidence-tiered + DD brake (per-coin, not shared)
         dd_pct = max(0.0, -self.dd_tracker.daily_pnl) / (self.dd_tracker.daily_start + 1e-10)
         sizing_cfg = self.config.get("sizing_tiers", {})
-        self.risk_engine.config.risk_frac = compute_risk_frac(
+        dynamic_risk_frac = compute_risk_frac(
             confidence=pred.confidence, dd_pct=dd_pct,
             tier_high=sizing_cfg.get("tier_high", 0.015),
             tier_mid=sizing_cfg.get("tier_mid", 0.010),
             tier_low=sizing_cfg.get("tier_low", 0.005),
             dd_brake_threshold=sizing_cfg.get("dd_brake_threshold", 0.015),
         )
+        # Set per-call (restored after gate check — no cross-coin contamination)
+        orig_risk_frac = self.risk_engine.config.risk_frac
+        self.risk_engine.config.risk_frac = dynamic_risk_frac
 
         check = self.risk_engine.pre_trade_gate(
             symbol=coin, side=pred.side, entry_price=entry_price,
@@ -793,6 +800,8 @@ class LiveTradingBot:
             p_trade=pred.p_trade, atr=atr,
             funding_rate=funding, spread_bps=spread_bps,
         )
+
+        self.risk_engine.config.risk_frac = orig_risk_frac  # restore shared config
 
         if not check.approved:
             logger.info(f"[Signal] {coin}: risk REJECTED ({check.reason})")
@@ -980,7 +989,8 @@ class LiveTradingBot:
                 exit_price = ticker["last"]
             except Exception:
                 # Use last tracked price from SlTpMonitor, not entry (Issue 1.4)
-                exit_price = pos.price_high if pos.side == "SELL" else pos.price_low
+                # Conservative fallback: use mid of tracked range
+                exit_price = (pos.price_high + pos.price_low) / 2
                 if exit_price <= 0:
                     exit_price = pos.entry_price
                 logger.warning(f"[Close] {coin}: using fallback price {exit_price:.4f}")
@@ -997,17 +1007,18 @@ class LiveTradingBot:
 
         if self.mode == "live":
             exit_side = "SELL" if pos.side == "BUY" else "BUY"
-            try:
-                close_oid = ExchangeAdapter.make_order_id(coin, exit_side, prefix="exit")
-                await self.exchange.market_close(coin, exit_side, pos.qty, close_oid)
-            except Exception as e:
-                logger.error(f"[Close] {coin}: {e}")
+            # Cancel SL/TP BEFORE market close to prevent exchange double-fill
             for oid in [pos.sl_order_id, pos.tp_order_id]:
                 if oid:
                     try:
                         await self.exchange.cancel_order(coin, order_link_id=oid)
                     except Exception:
                         pass
+            try:
+                close_oid = ExchangeAdapter.make_order_id(coin, exit_side, prefix="exit")
+                await self.exchange.market_close(coin, exit_side, pos.qty, close_oid)
+            except Exception as e:
+                logger.error(f"[Close] {coin}: {e}")
 
         self.pos_manager.remove_position(coin)
 

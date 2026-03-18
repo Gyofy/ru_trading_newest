@@ -98,8 +98,9 @@ def compute_features(raw_data: dict) -> dict:
             df = _add_decomposition(df, period=42)
             df = add_signal_features(df, verbose=False)
             df = add_microstructure_rollup(df, verbose=False)
-            df.ffill(inplace=True); df.bfill(inplace=True)
-            df.replace([np.inf, -np.inf], 0, inplace=True)
+            df.ffill(inplace=True)
+            df.replace([np.inf, -np.inf], np.nan, inplace=True)
+            df.fillna(0, inplace=True)  # no bfill — prevents future data leakage
             cols_drop = [c for c in df.columns if is_excluded_feature(c)]
             if cols_drop:
                 df.drop(columns=cols_drop, inplace=True, errors="ignore")
@@ -164,22 +165,28 @@ def run_simulation(equity: float = 10000.0, days: int = 90):
     featured = compute_features(raw_data)
     logger.info(f"[Step 2] Featured: {list(featured.keys())}")
 
-    # 3. Train models
+    # 3. Train models (train on first 70% ONLY — no look-ahead)
     logger.info("[Step 3] Training 2-stage models...")
     models = {}
+    train_splits = {}
     for coin in COINS:
         if coin not in featured:
             continue
-        combo = train_combo(featured[coin].copy(), coin, common, coin_cfgs.get(coin, {}))
+        df = featured[coin]
+        n = len(df)
+        test_start = int(n * 0.7)
+        train_df = df.iloc[:test_start].copy()
+        combo = train_combo(train_df, coin, common, coin_cfgs.get(coin, {}))
         if combo:
             models[coin] = combo
+            train_splits[coin] = test_start
             save_combo(combo)
-            logger.info(f"  {coin}: {combo.model_names} CV={combo.cv_score:.4f} samples={combo.train_samples}")
+            logger.info(f"  {coin}: {combo.model_names} CV={combo.cv_score:.4f} "
+                        f"samples={combo.train_samples} (train={test_start}, test={n-test_start})")
     logger.info(f"[Step 3] Trained: {list(models.keys())}")
 
-    # 4. Walk-forward simulation
+    # 4. Walk-forward simulation (test on last 30% — model never saw this data)
     logger.info("[Step 4] Running walk-forward simulation...")
-    # Use last 30% of data as test period
     results = {}
 
     for coin in COINS:
@@ -193,8 +200,9 @@ def run_simulation(equity: float = 10000.0, days: int = 90):
         coin_blocked = coin_cfg.get("blocked_regimes_override", blocked_regimes)
 
         n = len(df)
-        test_start = int(n * 0.7)
+        test_start = train_splits.get(coin, int(n * 0.7))
         max_horizon = common["max_horizon"]
+        coin_equity = equity  # independent per-coin equity (no cross-contamination)
 
         trades = []
         i = test_start
@@ -212,6 +220,11 @@ def run_simulation(equity: float = 10000.0, days: int = 90):
             # Predict
             pred = predict_2stage(combo, df_slice, s1_thresh)
             if pred.side == "HOLD":
+                i += 1
+                continue
+
+            # SHORT disabled: R:R = 0.2:1 with k_upper=3.0/k_lower=0.6
+            if pred.side == "SELL":
                 i += 1
                 continue
 
@@ -301,7 +314,7 @@ def run_simulation(equity: float = 10000.0, days: int = 90):
                 risk_f *= 0.5
 
             stop_dist = abs(entry_price - sl) / entry_price + 1e-10
-            equity += pnl_net * equity * risk_f / stop_dist
+            coin_equity += pnl_net * coin_equity * risk_f / stop_dist
 
             trades.append({
                 "bar": i, "side": pred.side, "regime": regime,
@@ -330,9 +343,9 @@ def run_simulation(equity: float = 10000.0, days: int = 90):
 
             # Skip forward past this trade
             # Re-entry on next bar after exit (matches live bot behavior)
-            i += bars_held
+            i += max(1, bars_held)
 
-        results[coin] = trades
+        results[coin] = {"trades": trades, "equity": coin_equity}
 
     # 5. Report
     logger.info(f"\n{'='*60}")
@@ -343,11 +356,14 @@ def run_simulation(equity: float = 10000.0, days: int = 90):
     total_pnl = 0.0
     report = {}
 
+    coin_equities = {}
     for coin in COINS:
-        trades = results.get(coin, [])
-        if not trades:
+        r = results.get(coin)
+        if not r or not r["trades"]:
             logger.info(f"  {coin:>5s}: no trades")
             continue
+        trades = r["trades"]
+        coin_equities[coin] = r["equity"]
 
         pnls = [t["pnl_pct"] for t in trades]
         wins = sum(1 for p in pnls if p > 0)
@@ -387,8 +403,10 @@ def run_simulation(equity: float = 10000.0, days: int = 90):
             f"TP:{coin_report['exits']['TP_HIT']} SL:{coin_report['exits']['SL_HIT']} TTL:{coin_report['exits']['TIME_STOP']}"
         )
 
+    # Portfolio equity = initial + sum of per-coin gains
+    portfolio_equity = equity + sum(ce - equity for ce in coin_equities.values())
     logger.info(f"  {'TOTAL':>5s}: {total_trades:>3d} trades | total PnL: {total_pnl:+.3%}")
-    logger.info(f"  Final equity: {equity:.2f} USDT")
+    logger.info(f"  Portfolio equity: {portfolio_equity:.2f} USDT (per-coin independent)")
     logger.info(f"  Elapsed: {time.time() - t0:.1f}s")
 
     # Save report
