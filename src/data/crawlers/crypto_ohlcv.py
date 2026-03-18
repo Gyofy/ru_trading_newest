@@ -304,7 +304,7 @@ def add_technical_indicators(df: pd.DataFrame) -> pd.DataFrame:
 
     # Forward fill로 초기 NaN 최소화
     df.ffill(inplace=True)
-    df.bfill(inplace=True)
+    df.fillna(0, inplace=True)  # no bfill: prevents future data leakage into early bars
 
     # 변동성
     df["volatility_12h"] = df["returns_1h"].rolling(12).std()
@@ -331,7 +331,7 @@ def add_technical_indicators(df: pd.DataFrame) -> pd.DataFrame:
 
     # NaN 정리
     df.ffill(inplace=True)
-    df.bfill(inplace=True)
+    df.fillna(0, inplace=True)  # no bfill: prevents future data leakage into early bars
     df.replace([np.inf, -np.inf], 0, inplace=True)
 
     return df
@@ -381,7 +381,7 @@ def add_technical_indicators_5m(df: pd.DataFrame) -> pd.DataFrame:
     df["momentum_12"] = df["close"].pct_change(12)      # 60분
 
     df.ffill(inplace=True)
-    df.bfill(inplace=True)
+    df.fillna(0, inplace=True)  # no bfill: prevents future data leakage into early bars
 
     # 변동성
     df["volatility_12bar"] = df["returns_1bar"].rolling(12).std()   # 60분 변동성
@@ -408,7 +408,7 @@ def add_technical_indicators_5m(df: pd.DataFrame) -> pd.DataFrame:
 
     # NaN 정리
     df.ffill(inplace=True)
-    df.bfill(inplace=True)
+    df.fillna(0, inplace=True)  # no bfill: prevents future data leakage into early bars
     df.replace([np.inf, -np.inf], 0, inplace=True)
 
     return df

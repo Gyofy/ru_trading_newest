@@ -656,10 +656,10 @@ def add_signal_features(df: pd.DataFrame, verbose: bool = True) -> pd.DataFrame:
         if verbose:
             print(f"  [!] Microstructure Roll-up skipped: {_ms_e}")
 
-    # NaN 정리
+    # NaN 정리 (no bfill: prevents future data leakage into early bars)
     df.ffill(inplace=True)
-    df.bfill(inplace=True)
-    df.replace([np.inf, -np.inf], 0, inplace=True)
+    df.replace([np.inf, -np.inf], np.nan, inplace=True)
+    df.fillna(0, inplace=True)
 
     n_after = len(df.columns)
     if verbose:

@@ -114,7 +114,10 @@ def detect_regime(df, lookback=24) -> str:
     if len(df) < lookback:
         return "UNKNOWN"
     adx = df["adx_14"].iloc[-1] if "adx_14" in df.columns else 20.0
-    if "plus_di_14" in df.columns and "minus_di_14" in df.columns:
+    # Consistent with live bot: check di_diff first, then fall back
+    if "di_diff" in df.columns:
+        di_diff = df["di_diff"].iloc[-1]
+    elif "plus_di_14" in df.columns and "minus_di_14" in df.columns:
         di_diff = df["plus_di_14"].iloc[-1] - df["minus_di_14"].iloc[-1]
     else:
         di_diff = 0.0
@@ -228,15 +231,34 @@ def run_simulation(equity: float = 10000.0, days: int = 90):
                 i += 1
                 continue
 
-            # RL gate
+            # RL gate — use actual per-coin equity + recent PnL
             btc_df = featured.get("BTC", df_slice)
+            recent_pnls = [t["pnl_pct"] for t in trades[-6:]]  # ~1 day of trades
+            daily_pnl_est = sum(recent_pnls) * coin_equity if recent_pnls else 0.0
+            recent_wins = sum(1 for p in recent_pnls if p > 0)
+            recent_wr = recent_wins / len(recent_pnls) if recent_pnls else 0.5
+            streak = 0
+            for p in reversed([t["pnl_pct"] for t in trades]):
+                if streak == 0:
+                    streak = 1 if p > 0 else -1
+                elif p > 0 and streak > 0:
+                    streak += 1
+                elif p <= 0 and streak < 0:
+                    streak -= 1
+                else:
+                    break
             state = build_rl_state(
                 df=df_slice, pred_side=pred.side,
                 p_trade=pred.p_trade, p_direction=pred.p_direction,
                 s1_threshold=s1_thresh, coin=coin,
-                equity=equity, daily_pnl=0, weekly_pnl=0, dd_ratio=0,
-                open_count=0, coin_win_rate_5=0.5, coin_avg_pnl_5=0,
-                coin_streak=0, bars_since_last=max_horizon,
+                equity=coin_equity, daily_pnl=daily_pnl_est,
+                weekly_pnl=daily_pnl_est,  # approx
+                dd_ratio=max(0, -sum(recent_pnls)) / 0.02 if recent_pnls else 0.0,
+                open_count=0,
+                coin_win_rate_5=recent_wr,
+                coin_avg_pnl_5=np.mean(recent_pnls) if recent_pnls else 0.0,
+                coin_streak=streak,
+                bars_since_last=trades[-1]["bars_held"] if trades else max_horizon,
                 btc_df=btc_df,
             )
             rl_action, rl_score = rl_gate.decide(state)
