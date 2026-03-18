@@ -96,6 +96,11 @@ class LinUCB:
         self.b[action] += reward * state
         self.n_updates[action] += 1
 
+        # Periodic re-regularization: prevent A_inv numerical explosion
+        if self.n_updates[action] % 500 == 0:
+            self._A_inv[action] += 1e-6 * np.eye(self.d, dtype=np.float64)
+            logger.debug(f"[LinUCB] Re-regularized action {action} at update {self.n_updates[action]}")
+
     def get_theta(self, action: int) -> np.ndarray:
         """Return learned weight vector for action (interpretable)."""
         return self._A_inv[action] @ self.b[action]

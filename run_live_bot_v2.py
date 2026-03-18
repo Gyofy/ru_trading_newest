@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Autonomous Live Trading Bot v4.2 -- Clean Architecture.
+"""Autonomous Live Trading Bot v4.3 -- Clean Architecture.
 
 Changes from v4.1 run_live_bot.py:
   1. 2-Stage Binary: S1(Trade/NoTrade) → S2(Long/Short) aligned with backtest
@@ -114,13 +114,16 @@ def write_heartbeat(path: Path, status: str, extra: dict = None) -> None:
 def detect_regime(df, lookback: int = 24) -> str:
     if len(df) < lookback:
         return "UNKNOWN"
-    adx = df["adx_14"].iloc[-1] if "adx_14" in df.columns else 20.0
+    has_adx = "adx_14" in df.columns
+    adx = df["adx_14"].iloc[-1] if has_adx else 20.0
     if "di_diff" in df.columns:
         di_diff = df["di_diff"].iloc[-1]
     elif "plus_di_14" in df.columns and "minus_di_14" in df.columns:
         di_diff = df["plus_di_14"].iloc[-1] - df["minus_di_14"].iloc[-1]
     else:
         di_diff = 0.0
+    if not has_adx:
+        logger.warning("[Regime] adx_14/di columns missing — regime detection degraded (add_signal_features may have failed)")
     if "atr_14" in df.columns:
         atr_pct = df["atr_14"].iloc[-1] / (df["close"].iloc[-1] + 1e-10)
         median_pct = (df["atr_14"].iloc[-96:] / (df["close"].iloc[-96:] + 1e-10)).median()
@@ -257,7 +260,8 @@ class DrawdownTracker:
             self._last_daily = today
             if self.killed and "Daily" in self.kill_reason:
                 self.killed = False; self.kill_reason = ""
-        if today.weekday() == 0 and self._last_weekly != today:
+        # Rolling 7-day window: reset weekly accum if oldest entry > 7 days ago
+        if self._last_weekly is None or (today - self._last_weekly).days >= 7:
             self.weekly_pnl = 0.0
             self.weekly_start = eq
             self._last_weekly = today
@@ -494,7 +498,7 @@ class LiveTradingBot:
         })
 
         logger.info(f"{'='*60}")
-        logger.info(f"  LIVE BOT v4.2 STARTED")
+        logger.info(f"  LIVE BOT v4.3 STARTED")
         logger.info(f"  Mode:      {self.mode}")
         logger.info(f"  Equity:    {self.equity.current:.2f} USDT")
         logger.info(f"  Coins:     {', '.join(COINS)}")
@@ -1060,7 +1064,7 @@ class LiveTradingBot:
 # ══════════════════════════════════════════════════════════
 
 def parse_args():
-    parser = argparse.ArgumentParser(description="CLAUDE_CRYPTO_AGENT Live Bot v4.2")
+    parser = argparse.ArgumentParser(description="CLAUDE_CRYPTO_AGENT Live Bot v4.3")
     parser.add_argument("--mode", choices=["paper", "live"], default="paper")
     parser.add_argument("--equity", type=float, default=10000.0)
     return parser.parse_args()
@@ -1078,7 +1082,8 @@ async def async_main(args):
             asyncio.ensure_future(bot.shutdown())
 
     signal.signal(signal.SIGINT, handle_sig)
-    signal.signal(signal.SIGTERM, handle_sig)
+    if hasattr(signal, "SIGTERM"):
+        signal.signal(signal.SIGTERM, handle_sig)
 
     try:
         await bot.initialize()

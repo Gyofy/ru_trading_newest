@@ -223,7 +223,7 @@ class FeatureStore:
 
                 # Join
                 df = df.join(macro_4h, how="left")
-                df = df.ffill().bfill()
+                df = df.ffill().fillna(0)  # no bfill: prevents future data leakage
 
         except Exception as e:
             logger.warning(f"[FeatureStore] Macro merge failed: {e}")

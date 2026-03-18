@@ -80,7 +80,7 @@ def run_loop(ohlcv_data, media_data, num_iterations=7, macro_aligned=None):
                 df.index = df.index.tz_localize(None)
             # 인덱스 기준으로 merge (시간 정렬)
             merged = df.join(macro_aligned, how="left")
-            merged = merged.ffill().bfill().fillna(0)
+            merged = merged.ffill().fillna(0)  # no bfill: prevents future data leakage
             feature_matrices[ticker] = merged
         print(f"  => Macro features merged: +{macro_cols} columns per coin")
 
@@ -134,7 +134,7 @@ def run_loop(ohlcv_data, media_data, num_iterations=7, macro_aligned=None):
 
             valid = df.replace([np.inf, -np.inf], np.nan)
             valid.ffill(inplace=True)
-            valid.bfill(inplace=True)
+            valid.fillna(0, inplace=True)  # no bfill
             valid = valid.dropna(subset=["label"])
 
             if len(valid) < 100:

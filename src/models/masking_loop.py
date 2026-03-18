@@ -643,7 +643,7 @@ class IterativeMaskingLoop:
 
         valid = df.replace([np.inf, -np.inf], np.nan)
         valid.ffill(inplace=True)
-        valid.bfill(inplace=True)
+        valid.fillna(0, inplace=True)  # no bfill: prevents future data leakage
         valid = valid.dropna(subset=["label"])
         if len(valid) < 120:
             return None

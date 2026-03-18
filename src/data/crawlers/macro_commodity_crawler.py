@@ -206,7 +206,7 @@ def align_macro_to_5min(
                 continue
             # Merge on nearest timestamp (forward-fill)
             temp = df[[col]].reindex(crypto_index, method="ffill")
-            temp = temp.bfill()  # 첫 구간 NaN 채움
+            temp = temp.fillna(0)  # no bfill: prevents future data leakage
             aligned[col] = temp[col]
 
     # NaN이 남은 컬럼은 0으로

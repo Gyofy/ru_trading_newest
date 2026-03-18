@@ -26,7 +26,7 @@ import yaml
 PROJECT_ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from src.data.crawlers.crypto_ohlcv import add_technical_indicators, _add_decomposition
+from src.data.crawlers.crypto_ohlcv import add_technical_indicators, _add_decomposition, _add_cross_asset_correlation
 from src.data.crawlers.signal_features import add_signal_features
 from src.data.crawlers.microstructure_rollup import add_microstructure_rollup
 from src.utils.feature_policy import is_excluded_feature
@@ -107,13 +107,22 @@ def compute_features(raw_data: dict) -> dict:
             featured[coin] = df
         except Exception as e:
             logger.error(f"[Features] {coin}: {e}")
+    # Cross-asset correlation (consistent with live bot)
+    if len(featured) >= 2:
+        for coin in COINS:
+            if coin in featured:
+                try:
+                    featured[coin] = _add_cross_asset_correlation(featured, coin, window=20)
+                except Exception:
+                    pass
     return featured
 
 
 def detect_regime(df, lookback=24) -> str:
     if len(df) < lookback:
         return "UNKNOWN"
-    adx = df["adx_14"].iloc[-1] if "adx_14" in df.columns else 20.0
+    has_adx = "adx_14" in df.columns
+    adx = df["adx_14"].iloc[-1] if has_adx else 20.0
     # Consistent with live bot: check di_diff first, then fall back
     if "di_diff" in df.columns:
         di_diff = df["di_diff"].iloc[-1]
@@ -121,6 +130,8 @@ def detect_regime(df, lookback=24) -> str:
         di_diff = df["plus_di_14"].iloc[-1] - df["minus_di_14"].iloc[-1]
     else:
         di_diff = 0.0
+    if not has_adx:
+        logger.warning("[Regime] adx_14/di columns missing — regime detection degraded")
     if adx > 25:
         return "TREND_UP" if di_diff > 0 else "TREND_DOWN"
     if "atr_14" in df.columns:
@@ -232,7 +243,12 @@ def run_simulation(equity: float = 10000.0, days: int = 90):
                 continue
 
             # RL gate — use actual per-coin equity + recent PnL
-            btc_df = featured.get("BTC", df_slice)
+            btc_full = featured.get("BTC")
+            if btc_full is not None:
+                # Slice BTC data to same time window as coin (no future leakage)
+                btc_df = btc_full.iloc[:i + 1] if len(btc_full) > i else btc_full
+            else:
+                btc_df = None  # state_builder falls back to coin df for btc_ret
             recent_pnls = [t["pnl_pct"] for t in trades[-6:]]  # ~1 day of trades
             daily_pnl_est = sum(recent_pnls) * coin_equity if recent_pnls else 0.0
             recent_wins = sum(1 for p in recent_pnls if p > 0)
@@ -335,6 +351,9 @@ def run_simulation(equity: float = 10000.0, days: int = 90):
             if daily_dd > sizing_cfg.get("dd_brake_threshold", 0.015):
                 risk_f *= 0.5
 
+            # Apply RL sizing multiplier (consistent with live bot)
+            risk_f *= SIZING_MAP.get(rl_action, 1.0)
+
             stop_dist = abs(entry_price - sl) / entry_price + 1e-10
             coin_equity += pnl_net * coin_equity * risk_f / stop_dist
 
@@ -432,7 +451,7 @@ def run_simulation(equity: float = 10000.0, days: int = 90):
     logger.info(f"  Elapsed: {time.time() - t0:.1f}s")
 
     # Save report
-    report_path = LOG_DIR / f"sim_result_{datetime.now().strftime('%Y%m%d_%H%M')}.json"
+    report_path = LOG_DIR / f"sim_result_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M')}.json"
     with open(report_path, "w", encoding="utf-8") as f:
         json.dump({"report": report, "equity": round(equity, 2),
                     "total_trades": total_trades, "total_pnl": round(total_pnl, 5)},

@@ -277,7 +277,7 @@ def compute_features(
 
             # Clean NaN/inf
             df.ffill(inplace=True)
-            df.bfill(inplace=True)
+            df.fillna(0, inplace=True)  # no bfill: prevents future data leakage
             df.replace([np.inf, -np.inf], 0, inplace=True)
 
             # Drop excluded features
@@ -1513,7 +1513,8 @@ async def async_main(args: argparse.Namespace) -> None:
             asyncio.ensure_future(bot.shutdown())
 
     signal.signal(signal.SIGINT, handle_signal)
-    signal.signal(signal.SIGTERM, handle_signal)
+    if hasattr(signal, "SIGTERM"):
+        signal.signal(signal.SIGTERM, handle_signal)
 
     try:
         await bot.initialize()

@@ -139,9 +139,12 @@ class TabMWrap:
             return torch.softmax(out, dim=1).cpu().numpy()
 
     def get_params(self, deep=True):
-        return {"nf": self.nf}
+        return {"nf": self.nf, "k": self.k, "d": self.d, "nb": self.nb, "ep": self.ep}
 
     def set_params(self, **params):
+        for key, val in params.items():
+            if hasattr(self, key):
+                setattr(self, key, val)
         return self
 
 
@@ -261,17 +264,19 @@ def train_combo(
     t0 = time.time()
 
     # ── Labeling (same as backtesting pipeline) ────────────
+    # Use config max_horizon (may differ from masking_loop HORIZONS[-1])
+    label_horizon = common_cfg.get("max_horizon", HORIZONS[-1])
     # .copy() required: create_labels_triple_barrier mutates df in place
     labeled = create_labels_triple_barrier(
         df.copy(),
-        horizon=HORIZONS[-1],
+        horizon=label_horizon,
         k_upper_override=common_cfg["k_upper"],
         k_lower_override=common_cfg.get("k_lower", 0.6),
         verbose=False,
     )
 
     bm = common_cfg.get("bar_minutes", 240)
-    label_col = f"label_{HORIZONS[-1] * bm}min"
+    label_col = f"label_{label_horizon * bm}min"
     if label_col not in labeled.columns:
         label_col = "label"
     if label_col not in labeled.columns:
@@ -428,7 +433,7 @@ def predict_2stage(
 
 # ── Artifact Save/Load ─────────────────────────────────────
 
-ARTIFACT_DIR = Path("data/models/live_v4_2")
+ARTIFACT_DIR = Path("data/models/live_v4_3")
 
 
 def save_combo(combo: TrainedCombo, artifact_dir: Path = ARTIFACT_DIR) -> Path:
