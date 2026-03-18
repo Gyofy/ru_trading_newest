@@ -68,8 +68,10 @@ class SignalLogger:
     def __init__(self, log_path: Path):
         self._path = log_path
         self._path.parent.mkdir(parents=True, exist_ok=True)
-        # In-memory index for pending results: coin → SignalRecord.ts
+        # Pending results: coin → SignalRecord.ts (persisted for crash recovery)
+        self._pending_path = log_path.with_suffix(".pending.json")
         self._pending: dict[str, str] = {}
+        self._load_pending()
 
     def log(
         self,
@@ -106,6 +108,7 @@ class SignalLogger:
 
         if executed and action > 0:
             self._pending[coin] = ts
+            self._save_pending()
 
         return rec
 
@@ -124,6 +127,7 @@ class SignalLogger:
         mae_pct: Maximum Adverse Excursion (worst unrealized PnL during hold)
         """
         ts = self._pending.pop(coin, None)
+        self._save_pending()
         if ts is None:
             return
 
@@ -178,3 +182,20 @@ class SignalLogger:
                 f.write(json.dumps(data, default=str) + "\n")
         except Exception as e:
             logger.error(f"[RL Log] Write failed: {e}")
+
+    def _save_pending(self) -> None:
+        try:
+            self._pending_path.write_text(
+                json.dumps(self._pending), encoding="utf-8")
+        except Exception:
+            pass
+
+    def _load_pending(self) -> None:
+        if self._pending_path.exists():
+            try:
+                self._pending = json.loads(
+                    self._pending_path.read_text(encoding="utf-8"))
+                if self._pending:
+                    logger.info(f"[RL Log] Recovered {len(self._pending)} pending results")
+            except Exception:
+                self._pending = {}

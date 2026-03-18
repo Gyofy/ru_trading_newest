@@ -51,10 +51,15 @@ def _build_cb(n_est: int = 300, max_depth: int = 6):
 
 def _build_xgb(n_est: int = 200, max_depth: int = 6):
     import xgboost as xgb
+    try:
+        import torch
+        device = "cuda" if torch.cuda.is_available() else "cpu"
+    except ImportError:
+        device = "cpu"
     return xgb.XGBClassifier(
         n_estimators=n_est, max_depth=max_depth, learning_rate=0.05,
         subsample=0.8, colsample_bytree=0.8, tree_method="hist",
-        device="cuda", verbosity=0, random_state=42, eval_metric="logloss",
+        device=device, verbosity=0, random_state=42, eval_metric="logloss",
     )
 
 
@@ -256,8 +261,9 @@ def train_combo(
     t0 = time.time()
 
     # ── Labeling (same as backtesting pipeline) ────────────
+    # .copy() required: create_labels_triple_barrier mutates df in place
     labeled = create_labels_triple_barrier(
-        df,
+        df.copy(),
         horizon=HORIZONS[-1],
         k_upper_override=common_cfg["k_upper"],
         k_lower_override=common_cfg.get("k_lower", 0.6),
@@ -365,17 +371,16 @@ def _weighted_ensemble_proba(
     models: list, weights: list, X: np.ndarray, stage_name: str,
 ) -> Optional[np.ndarray]:
     """Run weighted ensemble prediction. Returns averaged proba or None."""
-    proba_list = []
-    for model in models:
+    pairs = []
+    for model, w in zip(models, weights):
         try:
-            proba_list.append(model.predict_proba(X)[0])
+            pairs.append((w, model.predict_proba(X)[0]))
         except Exception as e:
             logger.warning(f"[Predict] {stage_name} model error: {e}")
-    if not proba_list:
+    if not pairs:
         return None
-    wts = weights[:len(proba_list)]
-    w_sum = sum(wts)
-    return sum(w / w_sum * p for w, p in zip(wts, proba_list))
+    w_sum = sum(w for w, _ in pairs)
+    return sum(w / w_sum * p for w, p in pairs)
 
 
 def predict_2stage(

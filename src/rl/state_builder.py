@@ -44,6 +44,7 @@ def build_rl_state(
     bars_since_last: int,
     max_horizon: int = 18,
     last_funding: float = 0.0,
+    btc_df: pd.DataFrame = None,
 ) -> np.ndarray:
     """Build 30-dim + intercept state vector.
 
@@ -93,8 +94,9 @@ def build_rl_state(
 
     # Cross-market (2)
     btc_ret = 0.0
-    if "close" in df.columns and len(df) >= 6:
-        btc_ret = _clip(float(df["close"].pct_change(6).iloc[-1]), -0.10, 0.10)
+    src = btc_df if btc_df is not None else df
+    if "close" in src.columns and len(src) >= 6:
+        btc_ret = _clip(float(src["close"].pct_change(6).iloc[-1]), -0.10, 0.10)
     corr_btc = _clip(_safe_col(df, "corr_btc", 0.0), -1.0, 1.0)
 
     # Coin identity (5)

@@ -87,6 +87,8 @@ class RLGate:
             self._recent.append(DEFAULT_ACTION)
             return DEFAULT_ACTION, 0.0
 
+        if self._fallback_active:
+            logger.info("[RLGate] Accept rate recovered, resuming RL")
         self._fallback_active = False
 
         # Normal RL decision

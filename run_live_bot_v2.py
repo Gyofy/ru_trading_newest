@@ -155,11 +155,18 @@ async def fetch_ohlcv(exchange, symbol: str, limit: int = 500):
     return None
 
 
+_FETCH_SEM = asyncio.Semaphore(3)  # max 3 concurrent ccxt requests
+
+
 async def fetch_all_ohlcv(exchange, coins: list) -> dict:
-    """Fetch OHLCV for all coins concurrently."""
+    """Fetch OHLCV with rate-limited concurrency (max 3 parallel)."""
     fetch_list = list(set(coins + ["BTC", "ETH"]))
-    tasks = [fetch_ohlcv(exchange, coin) for coin in fetch_list]
-    dfs = await asyncio.gather(*tasks, return_exceptions=True)
+
+    async def _limited(coin):
+        async with _FETCH_SEM:
+            return await fetch_ohlcv(exchange, coin)
+
+    dfs = await asyncio.gather(*[_limited(c) for c in fetch_list], return_exceptions=True)
 
     results = {}
     for coin, df in zip(fetch_list, dfs):
@@ -191,13 +198,14 @@ def compute_features(raw_data: dict) -> dict:
             featured[coin] = df
         except Exception as e:
             logger.error(f"[Features] {coin}: {e}")
-    # Cross-asset correlation
+    # Cross-asset correlation (needs BTC/ETH as reference)
     if len(featured) >= 2:
-        for coin in list(featured.keys()):
-            try:
-                featured[coin] = _add_cross_asset_correlation(featured, coin, window=20)
-            except Exception:
-                pass
+        for coin in COINS:
+            if coin in featured:
+                try:
+                    featured[coin] = _add_cross_asset_correlation(featured, coin, window=20)
+                except Exception:
+                    pass
     return featured
 
 
@@ -397,10 +405,11 @@ class LiveTradingBot:
         self.rl_gate = RLGate(
             warmup=rl_cfg.get("warmup_signals", 200),
             shadow_mode=rl_cfg.get("shadow_mode", True),
-            model_path=rl_cfg.get("model_path"),
+            model_path=PROJECT_ROOT / rl_cfg["model_path"] if rl_cfg.get("model_path") else None,
         )
         self.max_new_per_cycle = rl_cfg.get("max_new_per_cycle", 3)
         self._last_funding_cache: dict[str, float] = {}
+        self._closing: set[str] = set()  # prevents double-close race condition
 
     # ── Lifecycle ──────────────────────────────────────────
 
@@ -671,8 +680,7 @@ class LiveTradingBot:
             equity=self.equity.current,
             daily_pnl=self.dd_tracker.daily_pnl,
             weekly_pnl=self.dd_tracker.weekly_pnl,
-            dd_ratio=(-self.dd_tracker.daily_pnl / (self.dd_tracker.daily_start + 1e-10)
-                      / (self.dd_tracker.daily_limit + 1e-10)),
+            dd_ratio=max(0.0, -self.dd_tracker.daily_pnl) / (self.dd_tracker.daily_start * self.dd_tracker.daily_limit + 1e-10),
             open_count=self.pos_manager.count(),
             coin_win_rate_5=coin_history["win_rate_5"],
             coin_avg_pnl_5=coin_history["avg_pnl_5"],
@@ -680,6 +688,7 @@ class LiveTradingBot:
             bars_since_last=coin_history["bars_since_last"],
             max_horizon=self.common["max_horizon"],
             last_funding=self._last_funding_cache.get(coin, 0.0),
+            btc_df=self.featured_data.get("BTC"),
         )
 
         # RL gate decision
@@ -790,62 +799,51 @@ class LiveTradingBot:
 
     def _get_coin_history(self, coin: str) -> dict:
         """Query recent trade history for a coin from ledger."""
+        default = {"win_rate_5": 0.5, "avg_pnl_5": 0.0, "streak": 0,
+                    "bars_since_last": self.common["max_horizon"]}
         try:
             transitions = self.ledger.get_transitions(coin, limit=10)
-            wins = sum(1 for t in transitions if t.get("to_state") in ("TP_HIT",))
-            losses = sum(1 for t in transitions if t.get("to_state") in ("SL_HIT",))
-            total = wins + losses
-            win_rate = wins / total if total > 0 else 0.5
+            exits = [t for t in transitions
+                     if t.get("to_state") in ("TP_HIT", "SL_HIT", "TIME_STOP")]
+            if not exits:
+                return default
 
-            # PnL from daily_pnl table
-            pnl_records = []
-            try:
-                daily = self.ledger.get_daily_pnl()
-                if coin in daily:
-                    pnl_records.append(daily[coin].get("realized_pnl", 0))
-            except Exception:
-                pass
-            avg_pnl = np.mean(pnl_records) if pnl_records else 0.0
+            recent = exits[:5]
+            wins = sum(1 for t in recent if t.get("to_state") == "TP_HIT")
+            win_rate = wins / len(recent)
 
-            # Streak
+            # Streak (from most recent)
             streak = 0
-            for t in transitions:
-                if t.get("to_state") == "TP_HIT":
-                    if streak >= 0:
-                        streak += 1
-                    else:
-                        break
-                elif t.get("to_state") == "SL_HIT":
-                    if streak <= 0:
-                        streak -= 1
-                    else:
-                        break
+            for t in exits:
+                is_win = t.get("to_state") == "TP_HIT"
+                if streak == 0:
+                    streak = 1 if is_win else -1
+                elif is_win and streak > 0:
+                    streak += 1
+                elif not is_win and streak < 0:
+                    streak -= 1
                 else:
                     break
 
-            # Bars since last trade
-            bars_since = self.common["max_horizon"]  # default: max
-            if transitions:
-                last_ts = transitions[0].get("ts", "")
-                if last_ts:
-                    from datetime import datetime, timezone
-                    try:
-                        last_dt = datetime.fromisoformat(last_ts.replace("Z", "+00:00"))
-                        now = datetime.now(timezone.utc)
-                        hours = (now - last_dt).total_seconds() / 3600
-                        bars_since = int(hours / (self.common["bar_minutes"] / 60))
-                    except Exception:
-                        pass
+            # Bars since last
+            bars_since = self.common["max_horizon"]
+            last_ts = exits[0].get("ts", "") if exits else ""
+            if last_ts:
+                try:
+                    last_dt = datetime.fromisoformat(last_ts.replace("Z", "+00:00"))
+                    hours = (datetime.now(timezone.utc) - last_dt).total_seconds() / 3600
+                    bars_since = int(hours / (self.common["bar_minutes"] / 60))
+                except Exception:
+                    pass
 
             return {
                 "win_rate_5": win_rate,
-                "avg_pnl_5": avg_pnl,
+                "avg_pnl_5": 0.0,  # PnL% not stored in transitions; use 0 until signal_log available
                 "streak": streak,
                 "bars_since_last": bars_since,
             }
         except Exception:
-            return {"win_rate_5": 0.5, "avg_pnl_5": 0.0, "streak": 0,
-                    "bars_since_last": self.common["max_horizon"]}
+            return default
 
     async def _paper_entry(self, coin, pred, qty, entry, sl, tp, oid):
         pos = OpenPosition(
@@ -918,6 +916,16 @@ class LiveTradingBot:
     # ── Close Position ─────────────────────────────────────
 
     async def _close_position(self, coin: str, reason: str, exit_price: float = 0.0):
+        # Prevent double-close from monitor + main loop race
+        if coin in self._closing:
+            return
+        self._closing.add(coin)
+        try:
+            await self._close_position_inner(coin, reason, exit_price)
+        finally:
+            self._closing.discard(coin)
+
+    async def _close_position_inner(self, coin: str, reason: str, exit_price: float):
         pos = self.pos_manager.get_position(coin)
         if not pos:
             return
@@ -926,7 +934,11 @@ class LiveTradingBot:
                 ticker = await self.exchange.fetch_ticker(coin)
                 exit_price = ticker["last"]
             except Exception:
-                exit_price = pos.entry_price
+                # Use last tracked price from SlTpMonitor, not entry (Issue 1.4)
+                exit_price = pos.price_high if pos.side == "SELL" else pos.price_low
+                if exit_price <= 0:
+                    exit_price = pos.entry_price
+                logger.warning(f"[Close] {coin}: using fallback price {exit_price:.4f}")
 
         if pos.side == "BUY":
             pnl_pct = (exit_price - pos.entry_price) / pos.entry_price

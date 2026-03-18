@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import json
 import logging
-from dataclasses import dataclass, field, asdict
+from dataclasses import dataclass, field, fields, asdict
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
@@ -115,8 +115,10 @@ class PositionManager:
     def _load(self) -> None:
         try:
             data = json.loads(self._persist_path.read_text(encoding="utf-8"))
+            known = {f.name for f in fields(OpenPosition)}
             for coin, d in data.items():
-                self.positions[coin] = OpenPosition(**d)
+                filtered = {k: v for k, v in d.items() if k in known}
+                self.positions[coin] = OpenPosition(**filtered)
             logger.info(f"[PosStore] Recovered {len(self.positions)} positions")
         except Exception as e:
-            logger.warning(f"[PosStore] Load failed: {e}")
+            logger.error(f"[PosStore] Load FAILED — positions lost: {e}")
