@@ -329,7 +329,8 @@ def run_simulation(equity: float = 10000.0, days: int = 90):
             sig_logger.update_result(coin, pnl_net, exit_reason, bars_held, mfe, mae)
 
             # Skip forward past this trade
-            i += bars_held + 1
+            # Re-entry on next bar after exit (matches live bot behavior)
+            i += bars_held
 
         results[coin] = trades
 
