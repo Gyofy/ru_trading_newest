@@ -20,10 +20,19 @@ logger = logging.getLogger("live_bot.rl.gate")
 
 # Default action = ACCEPT_1.00 (index 2)
 DEFAULT_ACTION = 2
+# Jafar 2024 inspired: limit sizing change to ±25% vs recent week
+CHANGE_CAP_RATIO = 0.25
 
 
 class RLGate:
-    """RL-based signal gate with safety fallback."""
+    """RL-based signal gate with safety fallback and change cap.
+
+    Safety features (glucose RL literature inspired):
+    - Warmup: always ACCEPT_1.00 until enough signals
+    - Fallback: if accept rate < threshold, revert to v4.2 baseline
+    - Change cap: sizing can't deviate >25% from recent week average (Jafar 2024)
+    - Shadow mode: log RL decision without applying it
+    """
 
     def __init__(
         self,
@@ -41,6 +50,7 @@ class RLGate:
         self.shadow_mode = shadow_mode
         self.total_signals = 0
         self._recent = deque(maxlen=fallback_lookback)
+        self._weekly_actions: deque = deque(maxlen=12 * 7)  # ~1 week of cycles
         self._fallback_active = False
 
         # Try loading saved model
@@ -81,7 +91,9 @@ class RLGate:
 
         # Normal RL decision
         action, score = self.bandit.score(state)
+        action = self._apply_change_cap(action)
         self._recent.append(action)
+        self._weekly_actions.append(action)
         return action, score
 
     def effective_action(self, rl_action: int) -> int:
@@ -89,6 +101,30 @@ class RLGate:
         if self.shadow_mode:
             return DEFAULT_ACTION
         return rl_action
+
+    def _apply_change_cap(self, action: int) -> int:
+        """Limit sizing deviation to ±25% vs recent week average (Jafar 2024)."""
+        recent_accepts = [a for a in self._weekly_actions if a > 0]
+        if len(recent_accepts) < 5:
+            return action
+        if action == 0:  # REJECT is always allowed
+            return action
+        avg_sizing = np.mean([SIZING_MAP[a] for a in recent_accepts])
+        new_sizing = SIZING_MAP[action]
+        if avg_sizing <= 0:
+            return action
+        if new_sizing > avg_sizing * (1 + CHANGE_CAP_RATIO):
+            # Find closest action within cap
+            cap = avg_sizing * (1 + CHANGE_CAP_RATIO)
+            for a in [2, 3, 1]:  # prefer 1.0, then 1.25, then 0.75
+                if SIZING_MAP[a] <= cap:
+                    return a
+        if new_sizing < avg_sizing * (1 - CHANGE_CAP_RATIO):
+            floor = avg_sizing * (1 - CHANGE_CAP_RATIO)
+            for a in [2, 1, 3]:
+                if SIZING_MAP[a] >= floor:
+                    return a
+        return action
 
     def _should_fallback(self) -> bool:
         """Check if accept rate is too low."""

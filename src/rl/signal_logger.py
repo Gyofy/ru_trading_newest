@@ -56,6 +56,8 @@ class SignalRecord:
     result_exit_reason: Optional[str] = None
     result_bars_held: Optional[int] = None
     result_reward: Optional[float] = None
+    result_mfe_pct: Optional[float] = None   # Maximum Favorable Excursion
+    result_mae_pct: Optional[float] = None   # Maximum Adverse Excursion
     counterfactual: bool = False
     resolved: bool = False
 
@@ -113,8 +115,14 @@ class SignalLogger:
         pnl_pct: float,
         exit_reason: str,
         bars_held: int,
+        mfe_pct: float = 0.0,
+        mae_pct: float = 0.0,
     ) -> None:
-        """Backfill result for an executed trade."""
+        """Backfill result for an executed trade.
+
+        mfe_pct: Maximum Favorable Excursion (best unrealized PnL during hold)
+        mae_pct: Maximum Adverse Excursion (worst unrealized PnL during hold)
+        """
         ts = self._pending.pop(coin, None)
         if ts is None:
             return
@@ -128,11 +136,16 @@ class SignalLogger:
             "result_exit_reason": exit_reason,
             "result_bars_held": bars_held,
             "result_reward": round(reward, 4),
+            "result_mfe_pct": round(mfe_pct, 6),
+            "result_mae_pct": round(mae_pct, 6),
             "counterfactual": False,
             "resolved": True,
         }
         self._append_raw(result)
-        logger.info(f"[RL Log] {coin} result: pnl={pnl_pct:+.2%} reward={reward:+.2f}")
+        logger.info(
+            f"[RL Log] {coin} result: pnl={pnl_pct:+.2%} mfe={mfe_pct:+.2%} "
+            f"mae={mae_pct:+.2%} reward={reward:+.2f}"
+        )
 
     def log_counterfactual(
         self,
