@@ -1,0 +1,132 @@
+# Frozen Parameters v4.3-1m -- 2026-03-18
+# 1분봉 재학습 파라미터
+# settings_1m.yaml과 함께 사용
+#
+# 변경 (v4.2 → v4.3-1m):
+#   1. bar_minutes: 240 → 1 (1분봉)
+#   2. max_horizon: 18 → 60 (1h = 60 bars)
+#   3. min_barrier_pct: 0.002 → 0.001 (1m 변동성 적합)
+#   4. 모델 combo 유지 (Mega Search v2 best)
+#   5. 아티팩트 저장: data/models/live_v4_3_1m/
+
+version: "v4.3-1m"
+frozen_date: "2026-03-18"
+source: "v4.2 + 1m bar retraining"
+
+# ── Common Parameters ──────────────────────────────────────
+common:
+  k_upper: 3.0
+  k_lower: 0.6
+  risk_frac: 0.005
+  bar_minutes: 1                  # 1분봉
+  max_horizon: 60                 # 1h = 60 × 1min bars
+  min_barrier_pct: 0.001          # 0.1% (1m 전용)
+  min_cv_score: 0.52              # 최소 CV balanced_accuracy
+
+# ── OHLCV Fetch ────────────────────────────────────────────
+data_fetch:
+  timeframe: "1m"
+  n_bars: 7200                    # 5일 × 24h × 60m = 7200 bars
+  binance_limit_per_request: 1500 # Binance max per request
+  artifact_dir: "data/models/live_v4_3_1m"
+
+# ── Cost Model (same as v4.2) ──────────────────────────────
+cost_model:
+  maker_fee: 0.0002
+  taker_fee: 0.00055
+  slippage_entry: 0.0003
+  slippage_exit_limit: 0.0001
+  slippage_exit_market: 0.0005
+
+# ── Feature Policy ─────────────────────────────────────────
+excluded_feature_keywords:
+  - macro_gold
+  - macro_vix
+  - macro_usd_index
+  - macro_us_10y
+  - macro_sp500
+  - macro_fear_greed
+  - macro_defi_tvl
+  - hilbert
+  - inst_phase
+  - inst_freq
+  - inst_amp
+
+# ── Regime Filter ──────────────────────────────────────────
+blocked_regimes:
+  - RANGE_LOW
+  - UNKNOWN
+
+# ── Coin-Specific Parameters (Mega Search v2 best combos 유지) ──
+coins:
+  BTC:
+    stage1_threshold: 0.45
+    max_features: 120
+    n_estimators: 300
+    max_depth_tree: 8
+    min_child_samples: 10
+    model_combo: "et+cb"
+    model_weights: { et: 0.5, cb: 0.5 }
+
+  ETH:
+    stage1_threshold: 0.45
+    max_features: 120
+    n_estimators: 300
+    max_depth_tree: 8
+    min_child_samples: 10
+    model_combo: "et+cb"
+    model_weights: { et: 0.5, cb: 0.5 }
+
+  DOT:
+    stage1_threshold: 0.45
+    max_features: 120
+    n_estimators: 300
+    max_depth_tree: 8
+    min_child_samples: 10
+    model_combo: "et+tabm"
+    model_weights: { et: 0.7, tabm: 0.3 }
+
+  ADA:
+    stage1_threshold: 0.40
+    max_features: 120
+    n_estimators: 300
+    max_depth_tree: 8
+    min_child_samples: 10
+    model_combo: "et+cb"
+    model_weights: { et: 0.5, cb: 0.5 }
+
+  XRP:
+    stage1_threshold: 0.45
+    max_features: 120
+    n_estimators: 300
+    max_depth_tree: 8
+    min_child_samples: 10
+    model_combo: "et+cb"
+    model_weights: { et: 0.5, cb: 0.5 }
+
+  SOL:
+    stage1_threshold: 0.45
+    max_features: 120
+    n_estimators: 300
+    max_depth_tree: 8
+    min_child_samples: 10
+    model_combo: "et+cb"
+    model_weights: { et: 0.5, cb: 0.5 }
+
+  LINK:
+    stage1_threshold: 0.45
+    max_features: 120
+    n_estimators: 300
+    max_depth_tree: 8
+    min_child_samples: 10
+    model_combo: "et+xgb"
+    model_weights: { et: 0.5, xgb: 0.5 }
+
+  DOGE:
+    stage1_threshold: 0.45
+    max_features: 120
+    n_estimators: 300
+    max_depth_tree: 8
+    min_child_samples: 10
+    model_combo: "et+cb"
+    model_weights: { et: 0.5, cb: 0.5 }

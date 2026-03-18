@@ -1,0 +1,96 @@
+# settings_1m.yaml — 1분봉 재학습 전용 설정
+# 원본 settings.yaml 기반, tactical tier만 1m 파라미터로 교체
+# 사용법: SETTINGS_YAML_PATH=config/settings_1m.yaml python scripts/retrain_1m.py
+
+mode: paper
+
+universe:
+  type: crypto_top10
+  coins: [BTC, ETH, SOL, XRP, ADA, DOT, LINK, DOGE]
+  data_source: ccxt_binance_futures
+
+market_hours:
+  type: 24h
+  timezone: "UTC"
+
+timeframes:
+  strategic:
+    interval: "1m"
+    lookback_days: 7
+    min_bars: 500
+    regime:
+      ema_fast: 20
+      ema_slow: 50
+      adx_period: 14
+      lookback: 100
+
+  # 1m tactical: 60분(1h) 예측, 30/60/120/240분 라벨 생성
+  tactical:
+    interval: "1m"
+    resample_to: "1m"
+    bar_minutes: 1                    # 1분봉
+    lookback_days: 7                  # 1m × 60 × 24 × 7 ≈ 10080 bars
+    seq_len: 120                      # 120 × 1m = 2h 입력 윈도우
+    horizons: [30, 60, 120, 240]      # 30min, 1h, 2h, 4h
+    max_horizon: 60                   # 1h — CV gap, label 기준 수평선
+    patch_len: 30
+    patch_stride: 15
+    decomposition_period: 120         # 2h 주기 패턴
+
+  execution:
+    bar_minutes: 1
+    default_ttl_bars: 60              # 60 × 1m = 1h
+    cost_bps: 20
+    walk_forward:
+      window_hours: 168
+      step_hours: 24
+      purge_hours: 2
+
+data:
+  stale_threshold_minutes: 2
+  feature_selection:
+    method: mutual_information
+    max_features: 120
+
+risk:
+  max_per_coin_pct: 0.05
+  max_total_exposure_pct: 0.80
+  stop_loss_per_coin_pct: 0.03
+  daily_loss_limit_pct: 0.02
+  weekly_loss_limit_pct: 0.05
+
+costs:
+  maker_fee_pct: 0.001
+  taker_fee_pct: 0.001
+  slippage_pct: 0.0005
+  buffer_pct: 0.0005
+
+labeling:
+  method: triple_barrier
+  atr_period: 14
+  k_upper: 3.0
+  k_lower: 0.6
+  min_barrier_pct: 0.001            # 0.1% (1m 변동성 작음 → 더 작은 임계값)
+  up_threshold: 0.001
+  down_threshold: -0.001
+  two_stage: true
+  stage1_threshold: 0.50
+
+evaluation:
+  cv_method: TimeSeriesSplit
+  cv_splits: 3
+  primary_metric: balanced_accuracy
+  metrics:
+    - balanced_accuracy
+    - mcc
+    - f1_macro
+
+signal:
+  min_direction_prob: 0.60
+  max_uncertainty: 0.05
+  kelly_fraction: 0.5
+
+hardware:
+  gpu: RTX_3090_24GB
+  num_workers: 6
+  n_jobs: 6

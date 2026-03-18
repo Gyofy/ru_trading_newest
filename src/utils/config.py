@@ -24,10 +24,17 @@ _settings_cache: dict | None = None
 
 
 def load_settings() -> dict[str, Any]:
-    """config/settings.yaml 로드 (캐싱)."""
+    """config/settings.yaml 로드 (캐싱).
+
+    SETTINGS_YAML_PATH 환경변수가 있으면 해당 경로를 사용.
+    1m 재학습 등 별도 설정이 필요할 때 사용.
+    """
+    import os
     global _settings_cache
     if _settings_cache is None:
-        with open(CONFIG_DIR / "settings.yaml", encoding="utf-8") as f:
+        override = os.environ.get("SETTINGS_YAML_PATH")
+        path = Path(override) if override else CONFIG_DIR / "settings.yaml"
+        with open(path, encoding="utf-8") as f:
             _settings_cache = yaml.safe_load(f)
     return _settings_cache
 
