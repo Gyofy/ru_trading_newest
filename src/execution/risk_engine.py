@@ -265,7 +265,7 @@ class RiskEngine:
         fee_usdt = sizing.notional * round_trip_fee_pct
         sl_loss  = sizing.qty * abs(entry_price - sl_price)  # SL 도달 시 손실
         # SL 손실 + 수수료가 risk_usdt의 150%를 초과하면 수수료 비중이 너무 큼
-        if sl_loss > 0 and fee_usdt / sl_loss > 0.5:
+        if sl_loss > 1e-10 and fee_usdt / sl_loss > 0.5:
             warnings.append(
                 f"High fee ratio: fee={fee_usdt:.4f} USDT = "
                 f"{fee_usdt/sl_loss*100:.0f}% of SL loss"

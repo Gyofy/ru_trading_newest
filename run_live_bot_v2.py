@@ -543,9 +543,16 @@ class LiveTradingBot:
         # ── 거래소에 있는데 store에 없는 포지션 복구 ──────
         for coin in ex_coins - store_coins:
             p = ex_open[coin]
-            entry  = float(p["entryPrice"])
-            qty    = float(p["contracts"])
-            side   = "BUY" if p["side"] == "long" else "SELL"
+            try:
+                entry = float(p.get("entryPrice", 0))
+                qty   = float(p.get("contracts", 0))
+            except (TypeError, ValueError) as e:
+                logger.error(f"[Sync] {coin}: invalid position data {e} — skip")
+                continue
+            if entry <= 0 or qty <= 0:
+                logger.warning(f"[Sync] {coin}: zero entry/qty, skip")
+                continue
+            side   = "BUY" if p.get("side", "") == "long" else "SELL"
 
             # SL/TP 재계산: ATR 없으므로 entry 기준 기본 비율 사용
             sl_pct = self.common["k_lower"] * 0.01   # k_lower × 1%
@@ -811,7 +818,7 @@ class LiveTradingBot:
             equity=self.equity.current,
             daily_pnl=self.dd_tracker.daily_pnl,
             weekly_pnl=self.dd_tracker.weekly_pnl,
-            dd_ratio=max(0.0, -self.dd_tracker.daily_pnl) / (self.dd_tracker.daily_start * self.dd_tracker.daily_limit + 1e-10),
+            dd_ratio=max(0.0, -self.dd_tracker.daily_pnl) / max(self.dd_tracker.daily_start * self.dd_tracker.daily_limit, 1e-10),
             open_count=self.pos_manager.count(),
             coin_win_rate_5=coin_history["win_rate_5"],
             coin_avg_pnl_5=coin_history["avg_pnl_5"],
@@ -894,18 +901,18 @@ class LiveTradingBot:
             tier_low=sizing_cfg.get("tier_low", 0.005),
             dd_brake_threshold=sizing_cfg.get("dd_brake_threshold", 0.015),
         )
-        # Set per-call (restored after gate check — no cross-coin contamination)
+        # Temporarily override risk_frac — always restore via finally
         orig_risk_frac = self.risk_engine.config.risk_frac
         self.risk_engine.config.risk_frac = dynamic_risk_frac
-
-        check = self.risk_engine.pre_trade_gate(
-            symbol=coin, side=pred.side, entry_price=entry_price,
-            sl_price=sl_price, equity_usdt=self.equity.current,
-            p_trade=pred.p_trade, atr=atr,
-            funding_rate=funding, spread_bps=spread_bps,
-        )
-
-        self.risk_engine.config.risk_frac = orig_risk_frac  # restore shared config
+        try:
+            check = self.risk_engine.pre_trade_gate(
+                symbol=coin, side=pred.side, entry_price=entry_price,
+                sl_price=sl_price, equity_usdt=self.equity.current,
+                p_trade=pred.p_trade, atr=atr,
+                funding_rate=funding, spread_bps=spread_bps,
+            )
+        finally:
+            self.risk_engine.config.risk_frac = orig_risk_frac  # always restore
 
         if not check.approved:
             logger.info(f"[Signal] {coin}: risk REJECTED ({check.reason})")

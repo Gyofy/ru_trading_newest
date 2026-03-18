@@ -77,11 +77,18 @@ class SlTpMonitor:
             return
 
         for pos in positions:
+            # Re-check before async yield — position may have been closed already
+            if not self.pos_manager.has_position(pos.coin):
+                continue
             try:
                 ticker = await self.exchange.fetch_ticker(pos.coin)
                 current_price = ticker["last"]
             except Exception as e:
                 logger.warning(f"[Monitor] {pos.coin}: price fetch failed: {e}")
+                continue
+
+            # Re-check after await — close callback may have run during fetch
+            if not self.pos_manager.has_position(pos.coin):
                 continue
 
             # Track running high/low for MFE/MAE

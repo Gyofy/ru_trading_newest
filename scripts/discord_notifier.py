@@ -1,11 +1,14 @@
 #!/usr/bin/env python3
 """Discord Webhook 리포트 — live_trading_v2/events.jsonl 모니터링"""
-import json, time, requests
+import json, os, time, requests
 from pathlib import Path
 from datetime import datetime, timezone
 from collections import defaultdict
 
-WEBHOOK_URL = "https://discord.com/api/webhooks/1483779094859481108/cUiWiOPBJQfQXRiRIPBOJ0EoGOgOIVxhzzEexFHxRxF1YkZQ6iHXIlKcNUxa3hif4fcq"
+WEBHOOK_URL = os.environ.get(
+    "DISCORD_WEBHOOK_URL",
+    "https://discord.com/api/webhooks/1483779094859481108/cUiWiOPBJQfQXRiRIPBOJ0EoGOgOIVxhzzEexFHxRxF1YkZQ6iHXIlKcNUxa3hif4fcq",
+)
 EVENTS_FILE  = Path("/home/wlsry/Ru_trading/data/reports/live_trading_v2/events.jsonl")
 POSITIONS_FILE = Path("/home/wlsry/Ru_trading/data/reports/live_trading_v2/positions.json")
 

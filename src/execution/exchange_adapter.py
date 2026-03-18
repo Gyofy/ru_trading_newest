@@ -189,7 +189,9 @@ class ExchangeAdapter:
     def get_min_qty(self, symbol: str) -> float:
         ccxt_sym = self._ccxt_symbol(symbol)
         market = self._exchange.market(ccxt_sym)
-        return market.get("limits", {}).get("amount", {}).get("min", 0)
+        limits = market.get("limits") or {}
+        amount_limits = limits.get("amount") or {}
+        return amount_limits.get("min", 0) or 0
 
     def get_tick_size(self, symbol: str) -> float:
         ccxt_sym = self._ccxt_symbol(symbol)
@@ -447,9 +449,10 @@ class ExchangeAdapter:
     async def fetch_ticker(self, symbol: str) -> dict:
         ccxt_sym = self._ccxt_symbol(symbol)
         ticker = await self._exchange.fetch_ticker(ccxt_sym)
-        bid = ticker.get("bid", 0)
-        ask = ticker.get("ask", 0)
-        spread_bps = ((ask - bid) / ((ask + bid) / 2) * 10000) if (bid and ask) else 0
+        bid = ticker.get("bid") or 0
+        ask = ticker.get("ask") or 0
+        mid = (ask + bid) / 2
+        spread_bps = ((ask - bid) / mid * 10000) if mid > 1e-10 else 0
         return {
             "bid": bid,
             "ask": ask,

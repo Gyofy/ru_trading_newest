@@ -119,25 +119,54 @@ class PositionManager:
 
     # ── Persistence ────────────────────────────────────────
 
+    @property
+    def _backup_path(self) -> Optional[Path]:
+        if self._persist_path is None:
+            return None
+        return self._persist_path.with_suffix(".bak.json")
+
     def _save(self) -> None:
         if not self._persist_path:
             return
         try:
             self._persist_path.parent.mkdir(parents=True, exist_ok=True)
             data = {coin: asdict(pos) for coin, pos in self.positions.items()}
-            self._persist_path.write_text(
-                json.dumps(data, indent=2, default=str), encoding="utf-8",
-            )
+            text = json.dumps(data, indent=2, default=str)
+            # Write primary, then backup (atomic swap not available on all FS)
+            self._persist_path.write_text(text, encoding="utf-8")
+            if self._backup_path:
+                self._backup_path.write_text(text, encoding="utf-8")
         except Exception as e:
             logger.error(f"[PosStore] Save failed: {e}")
 
     def _load(self) -> None:
-        try:
-            data = json.loads(self._persist_path.read_text(encoding="utf-8"))
-            known = {f.name for f in fields(OpenPosition)}
+        known = {f.name for f in fields(OpenPosition)}
+
+        def _parse(text: str) -> dict:
+            data = json.loads(text)
+            result = {}
             for coin, d in data.items():
                 filtered = {k: v for k, v in d.items() if k in known}
-                self.positions[coin] = OpenPosition(**filtered)
+                result[coin] = OpenPosition(**filtered)
+            return result
+
+        # Try primary file first
+        try:
+            self.positions = _parse(self._persist_path.read_text(encoding="utf-8"))
             logger.info(f"[PosStore] Recovered {len(self.positions)} positions")
+            return
         except Exception as e:
-            logger.error(f"[PosStore] Load FAILED — positions lost: {e}")
+            logger.error(f"[PosStore] Primary load FAILED: {e} — trying backup")
+
+        # Fallback to backup file
+        if self._backup_path and self._backup_path.exists():
+            try:
+                self.positions = _parse(self._backup_path.read_text(encoding="utf-8"))
+                logger.warning(
+                    f"[PosStore] Recovered {len(self.positions)} positions from backup"
+                )
+                return
+            except Exception as e2:
+                logger.error(f"[PosStore] Backup load FAILED: {e2} — positions lost")
+
+        logger.error("[PosStore] All recovery attempts failed — starting with empty positions")
