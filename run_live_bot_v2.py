@@ -52,6 +52,9 @@ from src.data.crawlers.crypto_ohlcv import (
 from src.data.crawlers.signal_features import add_signal_features
 from src.data.crawlers.microstructure_rollup import add_microstructure_rollup
 from src.utils.feature_policy import is_excluded_feature
+from src.rl.state_builder import build_rl_state
+from src.rl.signal_logger import SignalLogger, SIZING_MAP
+from src.rl.rl_gate import RLGate
 
 # ── Constants ──────────────────────────────────────────────
 COINS = ["DOT", "ADA", "XRP", "SOL", "LINK"]
@@ -339,7 +342,7 @@ class LiveTradingBot:
         self._shutdown_event = asyncio.Event()
 
         # Config
-        cfg_path = PROJECT_ROOT / "config" / "frozen_params_v4_2.yaml"
+        cfg_path = PROJECT_ROOT / "config" / "frozen_params_v4_3.yaml"
         with open(cfg_path, encoding="utf-8") as f:
             self.config = yaml.safe_load(f)
         self.common = self.config["common"]
@@ -387,6 +390,17 @@ class LiveTradingBot:
         self.featured_data: dict = {}
         self.last_train_date: date | None = None
         self.cycle_count = 0
+
+        # RL meta-layer (v4.3)
+        rl_cfg = self.config.get("rl", {})
+        self.signal_logger = SignalLogger(LOG_DIR / "signal_log.jsonl")
+        self.rl_gate = RLGate(
+            warmup=rl_cfg.get("warmup_signals", 200),
+            shadow_mode=rl_cfg.get("shadow_mode", True),
+            model_path=rl_cfg.get("model_path"),
+        )
+        self.max_new_per_cycle = rl_cfg.get("max_new_per_cycle", 3)
+        self._last_funding_cache: dict[str, float] = {}
 
     # ── Lifecycle ──────────────────────────────────────────
 
@@ -578,23 +592,59 @@ class LiveTradingBot:
         self.last_train_date = today
         logger.info(f"[Step 2] Trained: {list(self.models.keys())}")
 
-    # ── Step 3: Signals ────────────────────────────────────
+    # ── Step 3: Signals (candidate ranking) ──────────────
 
     async def _generate_signals(self):
         logger.info("[Step 3] Generating signals...")
         if self.dd_tracker.killed:
             return
+
+        # Collect candidates from all coins
+        candidates = []
         for coin in COINS:
             try:
-                await self._process_coin(coin)
+                cand = await self._evaluate_coin(coin)
+                if cand:
+                    candidates.append(cand)
             except Exception as e:
                 logger.error(f"[Signal] {coin}: {e}\n{traceback.format_exc()}")
 
-    async def _process_coin(self, coin: str):
+        if not candidates:
+            return
+
+        # RL ranking: sort by rl_score descending, REJECT filtered
+        accepted = [c for c in candidates if c["rl_effective_action"] > 0]
+        accepted.sort(key=lambda c: c["rl_score"], reverse=True)
+
+        # Portfolio limit: max new entries this cycle
+        slots = max(0, self.max_new_per_cycle - self.pos_manager.count())
+        taken = accepted[:slots]
+
+        for c in taken:
+            await self._execute_entry(c)
+
+        # Log ALL candidates (accept + reject) for RL learning
+        for c in candidates:
+            self.signal_logger.log(
+                coin=c["coin"], side=c["pred"].side, regime=c["regime"],
+                state=c["state"].tolist(),
+                p_trade=c["pred"].p_trade, p_direction=c["pred"].p_direction,
+                action=c["rl_action"], rl_score=c["rl_score"],
+                entry_price=c["entry_price"], sl_price=c["sl_price"], tp_price=c["tp_price"],
+                risk_gate_passed=c["risk_ok"],
+                executed=c["coin"] in [t["coin"] for t in taken],
+            )
+
+        if taken:
+            logger.info(f"[Step 3] Entered: {[t['coin'] for t in taken]} "
+                        f"(from {len(candidates)} candidates, {len(accepted)} accepted)")
+
+    async def _evaluate_coin(self, coin: str) -> dict | None:
+        """Evaluate one coin: prediction + RL gate + risk check. Returns candidate dict or None."""
         if self.pos_manager.has_position(coin):
-            return
+            return None
         if coin not in self.models or coin not in self.featured_data:
-            return
+            return None
 
         df = self.featured_data[coin]
         coin_cfg = self.coin_cfgs.get(coin, {})
@@ -603,79 +653,199 @@ class LiveTradingBot:
         regime = detect_regime(df)
         blocked = coin_cfg.get("blocked_regimes_override", self.blocked_regimes)
         if regime in blocked:
-            logger.info(f"[Signal] {coin}: {regime} BLOCKED")
-            return
+            return None
 
         # 2-Stage prediction
         combo = self.models[coin]
         s1_thresh = coin_cfg.get("stage1_threshold", 0.50)
         pred = predict_2stage(combo, df, s1_thresh)
-
         if pred.side == "HOLD":
-            logger.info(f"[Signal] {coin}: HOLD (p_trade={pred.p_trade:.3f})")
-            return
+            return None
 
-        logger.info(
-            f"[Signal] {coin}: {pred.side} | p_trade={pred.p_trade:.3f} "
-            f"p_dir={pred.p_direction:.3f} conf={pred.confidence:.3f} regime={regime}"
+        # Build RL state
+        coin_history = self._get_coin_history(coin)
+        state = build_rl_state(
+            df=df, pred_side=pred.side,
+            p_trade=pred.p_trade, p_direction=pred.p_direction,
+            s1_threshold=s1_thresh, coin=coin,
+            equity=self.equity.current,
+            daily_pnl=self.dd_tracker.daily_pnl,
+            weekly_pnl=self.dd_tracker.weekly_pnl,
+            dd_ratio=(-self.dd_tracker.daily_pnl / (self.dd_tracker.daily_start + 1e-10)
+                      / (self.dd_tracker.daily_limit + 1e-10)),
+            open_count=self.pos_manager.count(),
+            coin_win_rate_5=coin_history["win_rate_5"],
+            coin_avg_pnl_5=coin_history["avg_pnl_5"],
+            coin_streak=coin_history["streak"],
+            bars_since_last=coin_history["bars_since_last"],
+            max_horizon=self.common["max_horizon"],
+            last_funding=self._last_funding_cache.get(coin, 0.0),
         )
 
-        # Ticker
+        # RL gate decision
+        rl_action, rl_score = self.rl_gate.decide(state)
+        rl_effective = self.rl_gate.effective_action(rl_action)
+        sizing_mult = SIZING_MAP.get(rl_effective, 1.0)
+
+        logger.info(
+            f"[Signal] {coin}: {pred.side} p_trade={pred.p_trade:.3f} "
+            f"conf={pred.confidence:.3f} rl={rl_action}({self.rl_gate.status}) "
+            f"score={rl_score:.3f} regime={regime}"
+        )
+
+        # Ticker + barriers + risk gate (only if not rejected)
+        if rl_effective == 0:
+            # Still compute barriers for counterfactual logging
+            close_price = df["close"].iloc[-1]
+            atr = df["atr_14"].iloc[-1] if "atr_14" in df.columns else close_price * 0.01
+            sl, tp = RiskEngine.compute_barriers(
+                close_price, atr, pred.side,
+                self.common["k_upper"], self.common["k_lower"], self.common["min_barrier_pct"],
+            )
+            return {
+                "coin": coin, "pred": pred, "regime": regime, "state": state,
+                "rl_action": rl_action, "rl_effective_action": 0,
+                "rl_score": rl_score, "sizing_mult": 0.0,
+                "entry_price": close_price, "sl_price": sl, "tp_price": tp,
+                "risk_ok": False, "check": None, "atr": atr, "df": df,
+            }
+
+        # Fetch live market data
         try:
             ticker = await self.exchange.fetch_ticker(coin)
             entry_price = ticker["bid"] if pred.side == "BUY" else ticker["ask"]
             spread_bps = ticker["spread_bps"]
         except Exception as e:
             logger.error(f"[Signal] {coin}: ticker failed: {e}")
-            return
+            return None
 
-        # Barriers
         atr = df["atr_14"].iloc[-1] if "atr_14" in df.columns else entry_price * 0.01
         if np.isnan(atr) or atr < 1e-10:
             atr = entry_price * 0.01
         sl_price, tp_price = RiskEngine.compute_barriers(
             entry_price, atr, pred.side,
-            self.common["k_upper"], self.common["k_lower"],
-            self.common["min_barrier_pct"],
+            self.common["k_upper"], self.common["k_lower"], self.common["min_barrier_pct"],
         )
 
-        # Risk gate
         try:
             funding = await self.exchange.fetch_funding_rate(coin)
+            self._last_funding_cache[coin] = funding
         except Exception:
-            funding = 0.0
+            funding = self._last_funding_cache.get(coin, 0.0)
+
         check = self.risk_engine.pre_trade_gate(
             symbol=coin, side=pred.side, entry_price=entry_price,
             sl_price=sl_price, equity_usdt=self.equity.current,
             p_trade=pred.p_trade, atr=atr,
             funding_rate=funding, spread_bps=spread_bps,
         )
-        if not check.approved:
-            logger.info(f"[Signal] {coin}: REJECTED ({check.reason})")
-            return
 
-        qty = check.sizing.qty
+        if not check.approved:
+            logger.info(f"[Signal] {coin}: risk REJECTED ({check.reason})")
+            return {
+                "coin": coin, "pred": pred, "regime": regime, "state": state,
+                "rl_action": rl_action, "rl_effective_action": rl_effective,
+                "rl_score": rl_score, "sizing_mult": sizing_mult,
+                "entry_price": entry_price, "sl_price": sl_price, "tp_price": tp_price,
+                "risk_ok": False, "check": check, "atr": atr, "df": df,
+            }
+
+        return {
+            "coin": coin, "pred": pred, "regime": regime, "state": state,
+            "rl_action": rl_action, "rl_effective_action": rl_effective,
+            "rl_score": rl_score, "sizing_mult": sizing_mult,
+            "entry_price": entry_price, "sl_price": sl_price, "tp_price": tp_price,
+            "risk_ok": True, "check": check, "atr": atr, "df": df,
+            "funding": funding, "spread_bps": spread_bps,
+        }
+
+    async def _execute_entry(self, c: dict):
+        """Execute a ranked candidate entry."""
+        coin = c["coin"]
+        pred = c["pred"]
+        df = c["df"]
+
+        qty = c["check"].sizing.qty
+        qty *= c["sizing_mult"]  # RL sizing adjustment
         qty = apply_micro_sizing(qty, df, pred.side, self.micro_cfg)
         qty = self.exchange.round_qty(coin, qty)
-        entry_price = self.exchange.round_price(coin, entry_price)
-        sl_price = self.exchange.round_price(coin, sl_price)
-        tp_price = self.exchange.round_price(coin, tp_price)
+        entry_price = self.exchange.round_price(coin, c["entry_price"])
+        sl_price = self.exchange.round_price(coin, c["sl_price"])
+        tp_price = self.exchange.round_price(coin, c["tp_price"])
 
         if qty < self.exchange.get_min_qty(coin):
-            logger.info(f"[Signal] {coin}: qty too small")
             return
 
         logger.info(
             f"[Entry] {coin} {pred.side} | price={entry_price} qty={qty} "
-            f"SL={sl_price} TP={tp_price}"
+            f"SL={sl_price} TP={tp_price} rl_mult={c['sizing_mult']:.2f}"
         )
 
-        order_id = ExchangeAdapter.make_order_id(coin, pred.side, prefix="v42")
+        order_id = ExchangeAdapter.make_order_id(coin, pred.side, prefix="v43")
 
         if self.mode == "live":
             await self._live_entry(coin, pred, qty, entry_price, sl_price, tp_price, order_id)
         else:
             await self._paper_entry(coin, pred, qty, entry_price, sl_price, tp_price, order_id)
+
+    def _get_coin_history(self, coin: str) -> dict:
+        """Query recent trade history for a coin from ledger."""
+        try:
+            transitions = self.ledger.get_transitions(coin, limit=10)
+            wins = sum(1 for t in transitions if t.get("to_state") in ("TP_HIT",))
+            losses = sum(1 for t in transitions if t.get("to_state") in ("SL_HIT",))
+            total = wins + losses
+            win_rate = wins / total if total > 0 else 0.5
+
+            # PnL from daily_pnl table
+            pnl_records = []
+            try:
+                daily = self.ledger.get_daily_pnl()
+                if coin in daily:
+                    pnl_records.append(daily[coin].get("realized_pnl", 0))
+            except Exception:
+                pass
+            avg_pnl = np.mean(pnl_records) if pnl_records else 0.0
+
+            # Streak
+            streak = 0
+            for t in transitions:
+                if t.get("to_state") == "TP_HIT":
+                    if streak >= 0:
+                        streak += 1
+                    else:
+                        break
+                elif t.get("to_state") == "SL_HIT":
+                    if streak <= 0:
+                        streak -= 1
+                    else:
+                        break
+                else:
+                    break
+
+            # Bars since last trade
+            bars_since = self.common["max_horizon"]  # default: max
+            if transitions:
+                last_ts = transitions[0].get("ts", "")
+                if last_ts:
+                    from datetime import datetime, timezone
+                    try:
+                        last_dt = datetime.fromisoformat(last_ts.replace("Z", "+00:00"))
+                        now = datetime.now(timezone.utc)
+                        hours = (now - last_dt).total_seconds() / 3600
+                        bars_since = int(hours / (self.common["bar_minutes"] / 60))
+                    except Exception:
+                        pass
+
+            return {
+                "win_rate_5": win_rate,
+                "avg_pnl_5": avg_pnl,
+                "streak": streak,
+                "bars_since_last": bars_since,
+            }
+        except Exception:
+            return {"win_rate_5": 0.5, "avg_pnl_5": 0.0, "streak": 0,
+                    "bars_since_last": self.common["max_horizon"]}
 
     async def _paper_entry(self, coin, pred, qty, entry, sl, tp, oid):
         pos = OpenPosition(
@@ -783,6 +953,10 @@ class LiveTradingBot:
                         pass
 
         self.pos_manager.remove_position(coin)
+
+        # RL signal logger: backfill result
+        self.signal_logger.update_result(coin, pnl_pct, reason, pos.bars_held)
+
         log_event("position_closed", {
             "coin": coin, "reason": reason, "side": pos.side,
             "entry": pos.entry_price, "exit": exit_price,
