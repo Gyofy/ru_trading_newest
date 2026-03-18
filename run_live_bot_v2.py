@@ -954,8 +954,11 @@ class LiveTradingBot:
 
         self.pos_manager.remove_position(coin)
 
-        # RL signal logger: backfill result
-        self.signal_logger.update_result(coin, pnl_pct, reason, pos.bars_held)
+        # RL signal logger: backfill result with MFE/MAE
+        self.signal_logger.update_result(
+            coin, pnl_pct, reason, pos.bars_held,
+            mfe_pct=pos.mfe_pct, mae_pct=pos.mae_pct,
+        )
 
         log_event("position_closed", {
             "coin": coin, "reason": reason, "side": pos.side,

@@ -82,6 +82,9 @@ class SlTpMonitor:
                 logger.warning(f"[Monitor] {pos.coin}: price fetch failed: {e}")
                 continue
 
+            # Track running high/low for MFE/MAE
+            pos.update_extremes(current_price)
+
             # ── Check Stop Loss ────────────────────────────
             if pos.side == "BUY" and current_price <= pos.sl_price:
                 logger.info(

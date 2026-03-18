@@ -31,6 +31,36 @@ class OpenPosition:
     entry_order_id: str = ""
     sl_order_id: str = ""
     tp_order_id: str = ""
+    # MFE/MAE tracking (updated every 30s poll by SlTpMonitor)
+    price_high: float = 0.0  # highest price seen since entry
+    price_low: float = 0.0   # lowest price seen since entry
+
+    def __post_init__(self):
+        if self.price_high == 0.0:
+            self.price_high = self.entry_price
+        if self.price_low == 0.0:
+            self.price_low = self.entry_price
+
+    def update_extremes(self, price: float) -> None:
+        """Track running high/low for MFE/MAE calculation."""
+        if price > self.price_high:
+            self.price_high = price
+        if price < self.price_low:
+            self.price_low = price
+
+    @property
+    def mfe_pct(self) -> float:
+        """Maximum Favorable Excursion (best unrealized PnL %)."""
+        if self.side == "BUY":
+            return (self.price_high - self.entry_price) / self.entry_price
+        return (self.entry_price - self.price_low) / self.entry_price
+
+    @property
+    def mae_pct(self) -> float:
+        """Maximum Adverse Excursion (worst unrealized PnL %)."""
+        if self.side == "BUY":
+            return (self.price_low - self.entry_price) / self.entry_price
+        return (self.entry_price - self.price_high) / self.entry_price
 
 
 class PositionManager:
