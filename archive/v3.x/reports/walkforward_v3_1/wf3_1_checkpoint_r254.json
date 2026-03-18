@@ -1,0 +1,102 @@
+{
+  "version": "v3.2_trade_level",
+  "round": 254,
+  "timestamp": "2026-03-18T15:31:23.732036",
+  "total_evaluations": 126675,
+  "objective": "post-cost net EV (equity%)",
+  "cost_model": {
+    "maker_fee": 0.0002,
+    "taker_fee": 0.00055,
+    "slippage_entry": 0.0003,
+    "slippage_exit_market": 0.0005,
+    "funding_rate": 0.0001,
+    "miss_fill_prob": 0.15
+  },
+  "coin_best": {
+    "XRP": {
+      "params": {
+        "colsample": 0.6,
+        "k_lower": 1.2,
+        "k_upper": 2.5,
+        "learning_rate": 0.01,
+        "max_depth_tree": 6,
+        "max_features": 150,
+        "min_child_samples": 30,
+        "n_estimators": 200,
+        "num_leaves": 15,
+        "stage1_threshold": 0.6,
+        "subsample": 0.8
+      },
+      "mean_s1": 0.4355,
+      "mean_s2": 0.7145,
+      "mean_combined": 0.4056,
+      "std_combined": 0.0699,
+      "mean_mcc": 0.1968,
+      "tl_avg_net_pnl": 0.005124,
+      "tl_avg_trades": 15.5,
+      "tl_win_rate": 0.6363,
+      "tl_max_dd": 0.009788,
+      "ev_gross": 0.006014,
+      "cost_total": 0.000743,
+      "bep": 0.3725,
+      "score": 142.7091,
+      "n_evals": 15
+    },
+    "DOT": {
+      "params": {
+        "colsample": 0.8,
+        "k_lower": 0.6,
+        "k_upper": 3.0,
+        "learning_rate": 0.1,
+        "max_depth_tree": 8,
+        "max_features": 80,
+        "min_child_samples": 10,
+        "n_estimators": 300,
+        "num_leaves": 47,
+        "stage1_threshold": 0.5,
+        "subsample": 0.7
+      },
+      "mean_s1": 0.4798,
+      "mean_s2": 0.6004,
+      "mean_combined": 0.3811,
+      "std_combined": 0.0686,
+      "mean_mcc": 0.0796,
+      "ev_net": 0.011992,
+      "ev_gross": 0.013012,
+      "cost_total": 0.00102,
+      "bep": 0.2007,
+      "margin": 0.3997,
+      "rr": 5.0,
+      "score": 116.6078,
+      "n_evals": 15
+    },
+    "ADA": {
+      "params": {
+        "colsample": 0.9,
+        "k_lower": 0.6,
+        "k_upper": 3.0,
+        "learning_rate": 0.02,
+        "max_depth_tree": 8,
+        "max_features": 120,
+        "min_child_samples": 5,
+        "n_estimators": 400,
+        "num_leaves": 15,
+        "stage1_threshold": 0.5,
+        "subsample": 0.7
+      },
+      "mean_s1": 0.5341,
+      "mean_s2": 0.6127,
+      "mean_combined": 0.418,
+      "std_combined": 0.0855,
+      "mean_mcc": 0.1578,
+      "ev_net": 0.012318,
+      "ev_gross": 0.01338,
+      "cost_total": 0.001062,
+      "bep": 0.2021,
+      "margin": 0.4106,
+      "rr": 5.0,
+      "score": 119.4897,
+      "n_evals": 15
+    }
+  }
+}
