@@ -422,6 +422,7 @@ class LiveTradingBot:
             risk_frac=self.common["risk_frac"],
             daily_drawdown_pct=0.02,
             weekly_drawdown_pct=0.05,
+            leverage=4.0,
         ))
 
         # Components
@@ -479,12 +480,17 @@ class LiveTradingBot:
                 self.models[coin] = combo
                 logger.info(f"[Init] Loaded {coin} model (trained {combo.train_date})")
 
+        # Sync positions with exchange (live mode only)
+        if self.mode == "live":
+            await self._sync_exchange_positions()
+
         # Start SL/TP monitor
         poll_s = self.monitor_cfg.get("sl_tp_poll_seconds", 30)
         self.monitor = SlTpMonitor(
             exchange=self.exchange,
             pos_manager=self.pos_manager,
             close_callback=self._close_position,
+            partial_tp_callback=self._partial_close_position,
             poll_seconds=poll_s,
             bar_minutes=self.common["bar_minutes"],
         )
@@ -506,6 +512,84 @@ class LiveTradingBot:
         logger.info(f"  Positions: {[p.coin for p in self.pos_manager.all_positions()]}")
         logger.info(f"  SL/TP:     every {poll_s}s")
         logger.info(f"{'='*60}")
+
+    async def _sync_exchange_positions(self):
+        """봇 재시작 시 거래소 실제 포지션과 position_store 동기화.
+
+        1. 거래소에 있으나 store에 없는 포지션 → 추가 (고아 복구)
+        2. store에 있으나 거래소에 없는 포지션 → 제거 (이미 청산됨)
+        3. 포지션 없는 코인의 잔여 주문 → 취소
+        """
+        logger.info("[Sync] 거래소 포지션 동기화 시작...")
+        try:
+            ex_positions = await self.exchange._exchange.fetch_positions()
+            ex_open = {
+                p["symbol"].split("/")[0].split(":")[0]: p
+                for p in ex_positions
+                if abs(float(p.get("contracts", 0) or 0)) > 0
+            }
+        except Exception as e:
+            logger.warning(f"[Sync] 거래소 포지션 조회 실패: {e}")
+            return
+
+        store_coins = set(self.pos_manager.positions.keys())
+        ex_coins    = set(ex_open.keys())
+
+        # ── 거래소에 없는데 store에 있는 포지션 제거 ──────
+        for coin in store_coins - ex_coins:
+            logger.warning(f"[Sync] {coin}: store에 있으나 거래소에 없음 → 제거")
+            self.pos_manager.remove_position(coin)
+
+        # ── 거래소에 있는데 store에 없는 포지션 복구 ──────
+        for coin in ex_coins - store_coins:
+            p = ex_open[coin]
+            entry  = float(p["entryPrice"])
+            qty    = float(p["contracts"])
+            side   = "BUY" if p["side"] == "long" else "SELL"
+
+            # SL/TP 재계산: ATR 없으므로 entry 기준 기본 비율 사용
+            sl_pct = self.common["k_lower"] * 0.01   # k_lower × 1%
+            tp_pct = self.common["k_upper"] * 0.01   # k_upper × 1%
+            if side == "BUY":
+                sl = round(entry * (1 - sl_pct), 6)
+                tp = round(entry * (1 + tp_pct), 6)
+            else:
+                sl = round(entry * (1 + sl_pct), 6)
+                tp = round(entry * (1 - tp_pct), 6)
+
+            pos = OpenPosition(
+                coin=coin, side=side, entry_price=entry, qty=qty,
+                sl_price=sl, tp_price=tp,
+                entry_time=datetime.now(timezone.utc).isoformat(),
+                ttl_bars=self.common["max_horizon"],
+            )
+            self.pos_manager.add_position(pos)
+            logger.warning(
+                f"[Sync] {coin} 고아 포지션 복구: {side} {qty} @ {entry} "
+                f"| SL={sl:.4f} TP={tp:.4f}"
+            )
+            log_event("position_recovered", {
+                "coin": coin, "side": side, "entry": entry, "qty": qty,
+                "sl": sl, "tp": tp,
+            })
+
+        # ── 포지션 없는 코인의 잔여 주문 취소 ─────────────
+        active_coins = set(self.pos_manager.positions.keys())
+        for coin in COINS:
+            if coin in active_coins:
+                continue
+            ccxt_sym = f"{coin}/USDT:USDT"
+            try:
+                await self.exchange._exchange.cancel_all_orders(ccxt_sym)
+                logger.info(f"[Sync] {coin}: 잔여 주문 취소 완료")
+            except Exception:
+                pass
+
+        logger.info(
+            f"[Sync] 완료 — 복구: {len(ex_coins - store_coins)}개 "
+            f"| 제거: {len(store_coins - ex_coins)}개 "
+            f"| 현재 포지션: {list(self.pos_manager.positions.keys())}"
+        )
 
     async def shutdown(self):
         logger.info("[Shutdown] Starting...")
@@ -704,6 +788,15 @@ class LiveTradingBot:
 
         # 2-Stage prediction
         combo = self.models[coin]
+
+        # CV 스코어 미달 코인 차단
+        min_cv = self.common.get("min_cv_score", 0.0)
+        if min_cv > 0 and combo.cv_score < min_cv:
+            logger.info(
+                f"[Signal] {coin}: CV {combo.cv_score:.3f} < min {min_cv:.2f} — 차단"
+            )
+            return None
+
         s1_thresh = coin_cfg.get("stage1_threshold", 0.50)
         pred = predict_2stage(combo, df, s1_thresh)
         if pred.side == "HOLD":
@@ -761,13 +854,23 @@ class LiveTradingBot:
         # Fetch live market data
         try:
             ticker = await self.exchange.fetch_ticker(coin)
-            entry_price = ticker["bid"] if pred.side == "BUY" else ticker["ask"]
+            bid = ticker.get("bid")
+            ask = ticker.get("ask")
+            last = ticker.get("last")
+            entry_price = (bid if pred.side == "BUY" else ask) or last
+            if not entry_price:
+                logger.warning(f"[Signal] {coin}: bid/ask/last all None, skip")
+                return None
             spread_bps = ticker["spread_bps"]
         except Exception as e:
             logger.error(f"[Signal] {coin}: ticker failed: {e}")
             return None
 
-        atr = df["atr_14"].iloc[-1] if "atr_14" in df.columns else entry_price * 0.01
+        atr_raw = df["atr_14"].iloc[-1] if "atr_14" in df.columns else None
+        try:
+            atr = float(atr_raw)
+        except (TypeError, ValueError):
+            atr = float("nan")
         if np.isnan(atr) or atr < 1e-10:
             atr = entry_price * 0.01
         sl_price, tp_price = RiskEngine.compute_barriers(
@@ -834,8 +937,20 @@ class LiveTradingBot:
         qty = apply_micro_sizing(qty, df, pred.side, self.micro_cfg)
         qty = self.exchange.round_qty(coin, qty)
         entry_price = self.exchange.round_price(coin, c["entry_price"])
-        sl_price = self.exchange.round_price(coin, c["sl_price"])
-        tp_price = self.exchange.round_price(coin, c["tp_price"])
+        sl_price    = self.exchange.round_price(coin, c["sl_price"])
+        tp_price    = self.exchange.round_price(coin, c["tp_price"])
+
+        # 3단계 분할 익절 가격 계산
+        atr_val = c.get("atr", 0) or entry_price * 0.01
+        k_u = self.common["k_upper"]  # 3.0
+        if pred.side == "BUY":
+            tp1_price = self.exchange.round_price(coin, entry_price + atr_val * (k_u / 3))
+            tp2_price = self.exchange.round_price(coin, entry_price + atr_val * (k_u * 2 / 3))
+            tp3_price = tp_price
+        else:
+            tp1_price = self.exchange.round_price(coin, entry_price - atr_val * (k_u / 3))
+            tp2_price = self.exchange.round_price(coin, entry_price - atr_val * (k_u * 2 / 3))
+            tp3_price = tp_price
 
         if qty < self.exchange.get_min_qty(coin):
             return
@@ -848,9 +963,15 @@ class LiveTradingBot:
         order_id = ExchangeAdapter.make_order_id(coin, pred.side, prefix="v43")
 
         if self.mode == "live":
-            await self._live_entry(coin, pred, qty, entry_price, sl_price, tp_price, order_id)
+            await self._live_entry(
+                coin, pred, qty, entry_price, sl_price, tp_price, order_id,
+                tp1_price, tp2_price, tp3_price,
+            )
         else:
-            await self._paper_entry(coin, pred, qty, entry_price, sl_price, tp_price, order_id)
+            await self._paper_entry(
+                coin, pred, qty, entry_price, sl_price, tp_price, order_id,
+                tp1_price, tp2_price, tp3_price,
+            )
 
     def _get_coin_history(self, coin: str) -> dict:
         """Query recent trade history for a coin from ledger."""
@@ -900,12 +1021,14 @@ class LiveTradingBot:
         except Exception:
             return default
 
-    async def _paper_entry(self, coin, pred, qty, entry, sl, tp, oid):
+    async def _paper_entry(self, coin, pred, qty, entry, sl, tp, oid,
+                            tp1=0.0, tp2=0.0, tp3=0.0):
         pos = OpenPosition(
             coin=coin, side=pred.side, entry_price=entry, qty=qty,
             sl_price=sl, tp_price=tp,
             entry_time=datetime.now(timezone.utc).isoformat(),
             ttl_bars=self.common["max_horizon"], entry_order_id=oid,
+            tp1_price=tp1, tp2_price=tp2, tp3_price=tp3,
         )
         self.pos_manager.add_position(pos)
         self.ledger.insert_order(oid, coin, pred.side, "LIMIT", qty, price=entry,
@@ -914,12 +1037,14 @@ class LiveTradingBot:
         self.ledger.insert_fill(oid, entry, qty)
         log_event("position_opened", {
             "coin": coin, "side": pred.side, "entry": entry, "qty": qty,
-            "sl": sl, "tp": tp, "p_trade": round(pred.p_trade, 4),
+            "sl": sl, "tp": tp, "tp1": tp1, "tp2": tp2, "tp3": tp3,
+            "p_trade": round(pred.p_trade, 4),
             "p_dir": round(pred.p_direction, 4), "mode": "paper",
         })
-        logger.info(f"[Paper] {coin} {pred.side} FILLED @ {entry}")
+        logger.info(f"[Paper] {coin} {pred.side} FILLED @ {entry} | TP1={tp1} TP2={tp2} TP3={tp3}")
 
-    async def _live_entry(self, coin, pred, qty, entry, sl, tp, oid):
+    async def _live_entry(self, coin, pred, qty, entry, sl, tp, oid,
+                           tp1=0.0, tp2=0.0, tp3=0.0):
         self.ledger.insert_order(oid, coin, pred.side, "LIMIT", qty, price=entry,
                                  purpose="entry", metadata={"p_trade": pred.p_trade, "mode": "live"})
         result = await self.exchange.place_post_only_entry(coin, pred.side, qty, entry, oid)
@@ -935,7 +1060,7 @@ class LiveTradingBot:
             return
 
         fill_price = fill["fill_price"]
-        fill_qty = fill["fill_qty"]
+        fill_qty   = fill["fill_qty"]
         self.ledger.update_order_status(oid, "FILLED", result.get("exchange_order_id"))
         self.ledger.insert_fill(oid, fill_price, fill_qty, fill.get("fee", 0))
 
@@ -949,25 +1074,121 @@ class LiveTradingBot:
         sl = self.exchange.round_price(coin, sl_new)
         tp = self.exchange.round_price(coin, tp_new)
 
+        # 분할 익절 가격 재계산 (fill price 기준)
+        k_u = self.common["k_upper"]
+        if pred.side == "BUY":
+            tp1 = self.exchange.round_price(coin, fill_price + atr_val * (k_u / 3))
+            tp2 = self.exchange.round_price(coin, fill_price + atr_val * (k_u * 2 / 3))
+        else:
+            tp1 = self.exchange.round_price(coin, fill_price - atr_val * (k_u / 3))
+            tp2 = self.exchange.round_price(coin, fill_price - atr_val * (k_u * 2 / 3))
+        tp3 = tp
+
         exit_side = "SELL" if pred.side == "BUY" else "BUY"
         sl_oid = oid + "-sl"
-        tp_oid = oid + "-tp"
+        # TP는 모니터가 관리 — 거래소 TP 주문 미사용
         await self.exchange.place_protective_stop(coin, exit_side, fill_qty, sl, sl_oid, oid)
-        await self.exchange.place_take_profit(coin, exit_side, fill_qty, tp, tp_oid, oid)
 
         pos = OpenPosition(
             coin=coin, side=pred.side, entry_price=fill_price, qty=fill_qty,
-            sl_price=sl, tp_price=tp,
+            sl_price=sl, tp_price=tp3,
             entry_time=datetime.now(timezone.utc).isoformat(),
             ttl_bars=self.common["max_horizon"],
-            entry_order_id=oid, sl_order_id=sl_oid, tp_order_id=tp_oid,
+            entry_order_id=oid, sl_order_id=sl_oid,
+            tp1_price=tp1, tp2_price=tp2, tp3_price=tp3,
         )
         self.pos_manager.add_position(pos)
         log_event("position_opened", {
             "coin": coin, "side": pred.side, "entry": fill_price, "qty": fill_qty,
-            "sl": sl, "tp": tp, "mode": "live",
+            "sl": sl, "tp1": tp1, "tp2": tp2, "tp3": tp3, "mode": "live",
+            "p_trade": round(pred.p_trade, 4), "p_dir": round(pred.p_direction, 4),
         })
-        logger.info(f"[Live] {coin} {pred.side} FILLED @ {fill_price}")
+        logger.info(
+            f"[Live] {coin} {pred.side} FILLED @ {fill_price} "
+            f"| SL={sl} TP1={tp1} TP2={tp2} TP3={tp3}"
+        )
+
+    # ── Partial Close (분할 익절) ───────────────────────────
+
+    async def _partial_close_position(self, coin: str, stage: int, exit_price: float):
+        """TP1/TP2 분할 익절: 일부 청산 + SL 이동."""
+        pos = self.pos_manager.get_position(coin)
+        if not pos:
+            return
+        if stage == 1 and pos.tp1_hit:
+            return
+        if stage == 2 and pos.tp2_hit:
+            return
+
+        # 청산 수량 결정
+        original_qty = pos.qty
+        if stage in (1, 2):
+            partial_qty = self.exchange.round_qty(coin, original_qty * 0.33)
+        else:
+            partial_qty = pos.current_qty
+
+        partial_qty = max(partial_qty, self.exchange.get_min_qty(coin))
+        if partial_qty > pos.current_qty:
+            partial_qty = pos.current_qty
+
+        pnl_pct  = (exit_price - pos.entry_price) / pos.entry_price
+        if pos.side == "SELL":
+            pnl_pct = -pnl_pct
+        pnl_usdt = pnl_pct * partial_qty * pos.entry_price
+
+        logger.info(
+            f"[TP{stage}] {coin} {pos.side} 분할 청산 {partial_qty}/{pos.current_qty} @ {exit_price:.4f} "
+            f"| pnl={pnl_usdt:+.4f} USDT"
+        )
+
+        # 거래소 시장가 부분 청산 (live mode)
+        if self.mode == "live":
+            exit_side = "SELL" if pos.side == "BUY" else "BUY"
+            close_oid = ExchangeAdapter.make_order_id(coin, exit_side, prefix=f"tp{stage}")
+            try:
+                await self.exchange.market_close(coin, exit_side, partial_qty, close_oid)
+            except Exception as e:
+                logger.error(f"[TP{stage}] {coin} 부분 청산 실패: {e}")
+                return
+
+        # 포지션 상태 업데이트
+        pos.remaining_qty = round(pos.current_qty - partial_qty, 8)
+        if stage == 1:
+            pos.tp1_hit = True
+            new_sl = pos.entry_price  # BEP로 이동
+            logger.info(f"[TP1] {coin} SL → BEP {new_sl:.4f}")
+        else:  # stage == 2
+            pos.tp2_hit = True
+            new_sl = pos.tp1_price   # TP1 가격으로 이동
+            logger.info(f"[TP2] {coin} SL → TP1 {new_sl:.4f}")
+
+        # 거래소 SL 주문 갱신 (cancel + replace)
+        if self.mode == "live" and pos.sl_order_id:
+            exit_side = "SELL" if pos.side == "BUY" else "BUY"
+            try:
+                await self.exchange.cancel_order(coin, order_link_id=pos.sl_order_id)
+            except Exception:
+                pass
+            new_sl_oid = pos.sl_order_id + f"-tp{stage}"
+            await self.exchange.place_protective_stop(
+                coin, exit_side, pos.remaining_qty,
+                self.exchange.round_price(coin, new_sl), new_sl_oid, pos.entry_order_id,
+            )
+            pos.sl_order_id = new_sl_oid
+
+        pos.sl_price = new_sl
+        self.pos_manager._save()
+
+        self.dd_tracker.record(pnl_usdt)
+        self.equity.record_pnl(pnl_usdt)
+
+        log_event("partial_tp", {
+            "coin": coin, "stage": stage, "side": pos.side,
+            "entry": pos.entry_price, "exit": exit_price,
+            "partial_qty": partial_qty, "remaining_qty": pos.remaining_qty,
+            "pnl_pct": round(pnl_pct, 6), "pnl_usdt": round(pnl_usdt, 4),
+            "new_sl": new_sl,
+        })
 
     # ── Close Position ─────────────────────────────────────
 

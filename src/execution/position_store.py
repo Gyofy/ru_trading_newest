@@ -31,6 +31,13 @@ class OpenPosition:
     entry_order_id: str = ""
     sl_order_id: str = ""
     tp_order_id: str = ""
+    # 3-stage partial TP (0.0 = single TP 하위호환)
+    tp1_price: float = 0.0   # ATR×1.0 — 33% 청산, SL→BEP
+    tp2_price: float = 0.0   # ATR×2.0 — 33% 청산, SL→TP1
+    tp3_price: float = 0.0   # ATR×3.0 — 나머지 청산 (= tp_price)
+    tp1_hit: bool = False
+    tp2_hit: bool = False
+    remaining_qty: float = 0.0  # 0 = 원래 qty 그대로
     # MFE/MAE tracking (updated every 30s poll by SlTpMonitor)
     price_high: float = 0.0  # highest price seen since entry
     price_low: float = 0.0   # lowest price seen since entry
@@ -40,6 +47,18 @@ class OpenPosition:
             self.price_high = self.entry_price
         if self.price_low == 0.0:
             self.price_low = self.entry_price
+        if self.remaining_qty == 0.0:
+            self.remaining_qty = self.qty
+
+    @property
+    def current_qty(self) -> float:
+        """현재 남아있는 수량."""
+        return self.remaining_qty if self.remaining_qty > 0 else self.qty
+
+    @property
+    def partial_tp_enabled(self) -> bool:
+        """3단계 분할 익절 활성화 여부."""
+        return self.tp1_price > 0 and self.tp2_price > 0 and self.tp3_price > 0
 
     def update_extremes(self, price: float) -> None:
         """Track running high/low for MFE/MAE calculation."""

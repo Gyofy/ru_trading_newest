@@ -425,7 +425,7 @@ class ExchangeAdapter:
                             "filled": True,
                             "fill_price": order.get("average", order.get("price", 0)),
                             "fill_qty": order.get("filled", 0),
-                            "fee": order.get("fee", {}).get("cost", 0),
+                            "fee": (order.get("fee") or {}).get("cost", 0),
                         }
                     if order and order.get("status") in ("canceled", "cancelled", "rejected"):
                         return None

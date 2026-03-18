@@ -22,12 +22,14 @@ class SlTpMonitor:
         exchange,
         pos_manager,
         close_callback,
+        partial_tp_callback=None,
         poll_seconds: float = 30.0,
         bar_minutes: int = 240,
     ):
         self.exchange = exchange
         self.pos_manager = pos_manager
-        self._close = close_callback   # async def close(coin, reason, price)
+        self._close = close_callback          # async def close(coin, reason, price)
+        self._partial_tp = partial_tp_callback  # async def partial_tp(coin, stage, price)
         self.poll_seconds = poll_seconds
         self.bar_minutes = bar_minutes
         self._task: asyncio.Task | None = None
@@ -100,20 +102,22 @@ class SlTpMonitor:
                 await self._close(pos.coin, "SL_HIT", current_price)
                 continue
 
-            # ── Check Take Profit ──────────────────────────
-            if pos.side == "BUY" and current_price >= pos.tp_price:
-                logger.info(
-                    f"[Monitor] {pos.coin} TP HIT: {current_price:.4f} >= {pos.tp_price:.4f}"
-                )
-                await self._close(pos.coin, "TP_HIT", current_price)
-                continue
-
-            if pos.side == "SELL" and current_price <= pos.tp_price:
-                logger.info(
-                    f"[Monitor] {pos.coin} TP HIT: {current_price:.4f} <= {pos.tp_price:.4f}"
-                )
-                await self._close(pos.coin, "TP_HIT", current_price)
-                continue
+            # ── Check Take Profit (3단계 분할 or 단일) ───────
+            if pos.partial_tp_enabled and self._partial_tp:
+                await self._check_partial_tp(pos, current_price)
+                # TP3 후 포지션 제거됐으면 continue
+                if not self.pos_manager.has_position(pos.coin):
+                    continue
+            else:
+                # 하위호환: 단일 TP
+                tp_hit = (pos.side == "BUY" and current_price >= pos.tp_price) or \
+                         (pos.side == "SELL" and current_price <= pos.tp_price)
+                if tp_hit:
+                    logger.info(
+                        f"[Monitor] {pos.coin} TP HIT: {current_price:.4f}"
+                    )
+                    await self._close(pos.coin, "TP_HIT", current_price)
+                    continue
 
             # ── Check TTL (time-based) ─────────────────────
             if pos.ttl_bars > 0 and pos.bars_held >= pos.ttl_bars:
@@ -122,6 +126,45 @@ class SlTpMonitor:
                 )
                 await self._close(pos.coin, "TIME_STOP", current_price)
                 continue
+
+    async def _check_partial_tp(self, pos, current_price: float) -> None:
+        """3단계 분할 익절 체크."""
+        is_buy = pos.side == "BUY"
+
+        # TP1 체크
+        if not pos.tp1_hit:
+            tp1_triggered = (is_buy and current_price >= pos.tp1_price) or \
+                            (not is_buy and current_price <= pos.tp1_price)
+            if tp1_triggered:
+                logger.info(
+                    f"[Monitor] {pos.coin} TP1 HIT @ {current_price:.4f} "
+                    f"(tp1={pos.tp1_price:.4f}) — 33% 청산, SL→BEP"
+                )
+                await self._partial_tp(pos.coin, 1, current_price)
+                return
+
+        # TP2 체크
+        if pos.tp1_hit and not pos.tp2_hit:
+            tp2_triggered = (is_buy and current_price >= pos.tp2_price) or \
+                            (not is_buy and current_price <= pos.tp2_price)
+            if tp2_triggered:
+                logger.info(
+                    f"[Monitor] {pos.coin} TP2 HIT @ {current_price:.4f} "
+                    f"(tp2={pos.tp2_price:.4f}) — 33% 청산, SL→TP1"
+                )
+                await self._partial_tp(pos.coin, 2, current_price)
+                return
+
+        # TP3 체크 (전량 청산)
+        if pos.tp1_hit and pos.tp2_hit:
+            tp3_triggered = (is_buy and current_price >= pos.tp3_price) or \
+                            (not is_buy and current_price <= pos.tp3_price)
+            if tp3_triggered:
+                logger.info(
+                    f"[Monitor] {pos.coin} TP3 HIT @ {current_price:.4f} "
+                    f"(tp3={pos.tp3_price:.4f}) — 잔여 전량 청산"
+                )
+                await self._close(pos.coin, "TP3_HIT", current_price)
 
     def increment_all_bars(self) -> None:
         """Called once per 2h cycle to increment bars_held."""

@@ -13,12 +13,13 @@ source: "v4.2 + RL meta-layer design v2"
 
 # ── Common Parameters (unchanged from v4.2) ────────────
 common:
-  k_upper: 3.0
-  k_lower: 0.6
+  k_upper: 5.0               # TP3 = ATR×5.0 (was 3.0)
+  k_lower: 1.2               # SL  = ATR×1.2 (was 0.6) — 노이즈 손절 방지
   risk_frac: 0.005
-  max_horizon: 12             # was 18 (72h) → 12 (48h): faster slot turnover, +$3.5k equity
+  max_horizon: 12
   bar_minutes: 240
   min_barrier_pct: 0.002
+  min_cv_score: 0.55          # CV 미달 코인 진입 차단
 
 # ── Cost Model (unchanged) ─────────────────────────────
 cost_model:
@@ -65,7 +66,7 @@ model:
   pipeline: "2stage_binary"
 
 monitoring:
-  sl_tp_poll_seconds: 30
+  sl_tp_poll_seconds: 5
   position_persist: true
   model_artifact_save: true
 

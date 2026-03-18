@@ -257,6 +257,30 @@ class RiskEngine:
                 warnings=warnings,
             )
 
+        # 10. Fee-adjusted EV check
+        # 예상 수수료(진입+청산) 합산 후 손익분기 확인
+        # fee = taker_fee × 2 (진입+청산 각 1회), notional 기준
+        taker_fee = 0.00055   # Binance Futures taker
+        round_trip_fee_pct = taker_fee * 2  # 0.11%
+        fee_usdt = sizing.notional * round_trip_fee_pct
+        sl_loss  = sizing.qty * abs(entry_price - sl_price)  # SL 도달 시 손실
+        # SL 손실 + 수수료가 risk_usdt의 150%를 초과하면 수수료 비중이 너무 큼
+        if sl_loss > 0 and fee_usdt / sl_loss > 0.5:
+            warnings.append(
+                f"High fee ratio: fee={fee_usdt:.4f} USDT = "
+                f"{fee_usdt/sl_loss*100:.0f}% of SL loss"
+            )
+        # 최소 노셔널 체크: 수수료를 감당하려면 notional이 fee의 10배 이상
+        if sizing.notional < fee_usdt * 10:
+            return PreTradeCheck(
+                approved=False,
+                reason=(
+                    f"Notional {sizing.notional:.2f} USDT too small vs fee "
+                    f"{fee_usdt:.4f} USDT — not fee-efficient"
+                ),
+                warnings=warnings,
+            )
+
         return PreTradeCheck(
             approved=True,
             sizing=sizing,
