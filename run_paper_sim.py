@@ -286,7 +286,22 @@ def run_simulation(equity: float = 10000.0, days: int = 90):
                 mae = (entry_price - price_high) / entry_price
 
             pnl_net = pnl_pct - 0.002  # cost deduction
-            equity += pnl_net * equity * common["risk_frac"] / (abs(entry_price - sl) / entry_price + 1e-10)
+
+            # Confidence-tiered risk + DD brake
+            confidence = pred.p_trade * pred.p_direction
+            daily_dd = max(0, -sum(t["pnl_pct"] for t in trades[-12:])) if trades else 0
+            sizing_cfg = cfg.get("sizing_tiers", {})
+            if confidence > 0.65:
+                risk_f = sizing_cfg.get("tier_high", 0.015)
+            elif confidence > 0.50:
+                risk_f = sizing_cfg.get("tier_mid", 0.010)
+            else:
+                risk_f = sizing_cfg.get("tier_low", 0.005)
+            if daily_dd > sizing_cfg.get("dd_brake_threshold", 0.015):
+                risk_f *= 0.5
+
+            stop_dist = abs(entry_price - sl) / entry_price + 1e-10
+            equity += pnl_net * equity * risk_f / stop_dist
 
             trades.append({
                 "bar": i, "side": pred.side, "regime": regime,

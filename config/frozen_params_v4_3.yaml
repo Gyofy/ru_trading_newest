@@ -121,6 +121,13 @@ coins:
     model_combo: "et+xgb"
     model_weights: { et: 0.5, xgb: 0.5 }
 
+# ── Confidence-Tiered Sizing + DD Brake ────────────────
+sizing_tiers:
+  tier_high: 0.015             # confidence > 0.65 → 1.5% of equity
+  tier_mid: 0.010              # confidence 0.50-0.65 → 1.0%
+  tier_low: 0.005              # confidence < 0.50 → 0.5% (baseline)
+  dd_brake_threshold: 0.015    # daily DD > 1.5% → halve all tiers
+
 # ── RL Meta-Layer (v4.3 NEW) ──────────────────────────
 rl:
   shadow_mode: true              # Phase 1-3: true (로그만), Phase 4: false (실적용)

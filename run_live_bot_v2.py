@@ -312,6 +312,40 @@ class EquityTracker:
 
 
 # ══════════════════════════════════════════════════════════
+#  CONFIDENCE-TIERED RISK + DD BRAKE
+# ══════════════════════════════════════════════════════════
+
+def compute_risk_frac(
+    confidence: float,
+    dd_pct: float,
+    tier_high: float = 0.015,
+    tier_mid: float = 0.010,
+    tier_low: float = 0.005,
+    dd_brake_threshold: float = 0.015,
+) -> float:
+    """Dynamic risk_frac: bigger bets on strong signals, brake on drawdown.
+
+    Tiers (by confidence = p_trade × p_direction):
+      > 0.65  → 1.5% of equity
+      0.50-0.65 → 1.0%
+      < 0.50  → 0.5%
+
+    DD brake: if daily DD > 1.5%, halve everything.
+    """
+    if confidence > 0.65:
+        base = tier_high
+    elif confidence > 0.50:
+        base = tier_mid
+    else:
+        base = tier_low
+
+    if dd_pct > dd_brake_threshold:
+        base *= 0.5
+
+    return base
+
+
+# ══════════════════════════════════════════════════════════
 #  MICROSTRUCTURE SIZING
 # ══════════════════════════════════════════════════════════
 
@@ -741,6 +775,17 @@ class LiveTradingBot:
             self._last_funding_cache[coin] = funding
         except Exception:
             funding = self._last_funding_cache.get(coin, 0.0)
+
+        # Dynamic risk_frac: confidence-tiered + DD brake
+        dd_pct = max(0.0, -self.dd_tracker.daily_pnl) / (self.dd_tracker.daily_start + 1e-10)
+        sizing_cfg = self.config.get("sizing_tiers", {})
+        self.risk_engine.config.risk_frac = compute_risk_frac(
+            confidence=pred.confidence, dd_pct=dd_pct,
+            tier_high=sizing_cfg.get("tier_high", 0.015),
+            tier_mid=sizing_cfg.get("tier_mid", 0.010),
+            tier_low=sizing_cfg.get("tier_low", 0.005),
+            dd_brake_threshold=sizing_cfg.get("dd_brake_threshold", 0.015),
+        )
 
         check = self.risk_engine.pre_trade_gate(
             symbol=coin, side=pred.side, entry_price=entry_price,
