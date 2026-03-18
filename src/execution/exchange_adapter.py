@@ -44,6 +44,7 @@ SYMBOL_MAP = {
     "DOT": "DOT/USDT:USDT",
     "LINK": "LINK/USDT:USDT",
     "BNB": "BNB/USDT:USDT",
+    "TAO": "TAO/USDT:USDT",
 }
 
 class ExchangeAdapter:

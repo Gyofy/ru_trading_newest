@@ -57,7 +57,7 @@ from src.rl.signal_logger import SignalLogger, SIZING_MAP
 from src.rl.rl_gate import RLGate
 
 # ── Constants ──────────────────────────────────────────────
-COINS = ["DOT", "ADA", "XRP", "SOL", "LINK"]
+COINS = ["TAO", "DOT", "ADA", "XRP", "SOL", "LINK", "BTC", "ETH"]
 CYCLE_SECONDS = 2 * 3600
 HEARTBEAT_INTERVAL = 60
 

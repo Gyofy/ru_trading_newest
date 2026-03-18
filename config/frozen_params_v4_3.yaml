@@ -69,8 +69,20 @@ monitoring:
   position_persist: true
   model_artifact_save: true
 
-# ── Coin-Specific Parameters (unchanged from v4.2) ────
+# ── Coin-Specific Parameters (Mega Search v3 results) ──
+# Clean pipeline: symmetric labeling, no bfill, rolling VWAP, max_horizon=12
 coins:
+  TAO:
+    stage1_threshold: 0.45
+    max_features: 120
+    n_estimators: 300
+    max_depth_tree: 8
+    min_child_samples: 10
+    blocked_regimes_override: [RANGE_LOW]
+    # Mega Search v3: avg +3.42%, WR 53%, DD 6.7%
+    model_combo: "cb+xgb"
+    model_weights: { cb: 0.5, xgb: 0.5 }
+
   DOT:
     stage1_threshold: 0.45
     max_features: 120
@@ -78,18 +90,20 @@ coins:
     max_depth_tree: 8
     min_child_samples: 10
     blocked_regimes_override: [RANGE_LOW]
-    model_combo: "et+tabm"
-    model_weights: { et: 0.7, tabm: 0.3 }
+    # Mega Search v3: avg +1.14%, WR 41%, DD 9.2%
+    model_combo: "et+xgb"
+    model_weights: { et: 0.7, xgb: 0.3 }
 
   ADA:
-    stage1_threshold: 0.40
+    stage1_threshold: 0.45
     max_features: 120
     n_estimators: 300
     max_depth_tree: 8
     min_child_samples: 10
-    blocked_regimes_override: [RANGE_LOW, UNKNOWN]
-    model_combo: "et+cb"
-    model_weights: { et: 0.5, cb: 0.5 }
+    blocked_regimes_override: [RANGE_LOW]
+    # Mega Search v3: avg +0.91%, WR 36%, DD 9.0%
+    model_combo: "et+tabm"
+    model_weights: { et: 0.7, tabm: 0.3 }
 
   XRP:
     stage1_threshold: 0.45
@@ -98,8 +112,9 @@ coins:
     max_depth_tree: 8
     min_child_samples: 10
     blocked_regimes_override: [RANGE_LOW]
-    model_combo: "et+cb"
-    model_weights: { et: 0.5, cb: 0.5 }
+    # Mega Search v3: avg +1.01%, WR 47%, DD 4.6%
+    model_combo: "et+tabm"
+    model_weights: { et: 0.7, tabm: 0.3 }
 
   SOL:
     stage1_threshold: 0.45
@@ -108,8 +123,9 @@ coins:
     max_depth_tree: 8
     min_child_samples: 10
     blocked_regimes_override: [RANGE_LOW]
-    model_combo: "et+cb"
-    model_weights: { et: 0.5, cb: 0.5 }
+    # Mega Search v3: avg +0.30%, WR 29%, DD 7.8%
+    model_combo: "et+tabm"
+    model_weights: { et: 0.7, tabm: 0.3 }
 
   LINK:
     stage1_threshold: 0.45
@@ -118,8 +134,31 @@ coins:
     max_depth_tree: 8
     min_child_samples: 10
     blocked_regimes_override: [RANGE_LOW]
-    model_combo: "et+xgb"
-    model_weights: { et: 0.5, xgb: 0.5 }
+    # Mega Search v3: avg +0.14%, WR 26%, DD 10.1%
+    model_combo: "xgb"
+    model_weights: { xgb: 1.0 }
+
+  BTC:
+    stage1_threshold: 0.45
+    max_features: 120
+    n_estimators: 300
+    max_depth_tree: 8
+    min_child_samples: 10
+    blocked_regimes_override: [RANGE_LOW]
+    # Mega Search v3: avg +0.74%, WR 44%, DD 4.3%
+    model_combo: "et+cb"
+    model_weights: { et: 0.5, cb: 0.5 }
+
+  ETH:
+    stage1_threshold: 0.45
+    max_features: 120
+    n_estimators: 300
+    max_depth_tree: 8
+    min_child_samples: 10
+    blocked_regimes_override: [RANGE_LOW]
+    # Mega Search v3: avg +0.78%, WR 40%, DD 6.4%
+    model_combo: "et+tabm"
+    model_weights: { et: 0.7, tabm: 0.3 }
 
 # ── Confidence-Tiered Sizing + DD Brake ────────────────
 sizing_tiers:

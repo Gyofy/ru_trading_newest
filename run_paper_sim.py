@@ -36,7 +36,7 @@ from src.rl.state_builder import build_rl_state
 from src.rl.signal_logger import SignalLogger, SIZING_MAP
 from src.rl.rl_gate import RLGate
 
-COINS = ["DOT", "ADA", "XRP", "SOL", "LINK"]
+COINS = ["TAO", "DOT", "ADA", "XRP", "SOL", "LINK", "BTC", "ETH"]
 LOG_DIR = PROJECT_ROOT / "data" / "reports" / "paper_sim"
 LOG_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -61,10 +61,25 @@ def fetch_historical(coins: list, days: int = 90) -> dict[str, pd.DataFrame]:
         "ADA": "ADA-USD", "XRP": "XRP-USD", "SOL": "SOL-USD",
         "LINK": "LINK-USD",
     }
+    # Local CSV fallback for coins not on yfinance (e.g., TAO)
+    local_ohlcv = {
+        "TAO": PROJECT_ROOT / "data" / "microstructure" / "TAO_4h_ohlcv.csv",
+    }
     results = {}
     fetch_list = list(set(coins + ["BTC", "ETH"]))
 
     for coin in fetch_list:
+        # Try local CSV first
+        if coin in local_ohlcv and local_ohlcv[coin].exists():
+            try:
+                df = pd.read_csv(local_ohlcv[coin], index_col=0, parse_dates=True)
+                df.index = df.index.tz_localize("UTC") if df.index.tz is None else df.index.tz_convert("UTC")
+                results[coin] = df
+                logger.info(f"[Data] {coin}: {len(df)} bars (local CSV)")
+                continue
+            except Exception as e:
+                logger.warning(f"[Data] {coin} local CSV failed: {e}")
+
         sym = ticker_map.get(coin, f"{coin}-USD")
         try:
             df = yf.Ticker(sym).history(period=f"{days}d", interval="1h")

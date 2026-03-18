@@ -1,0 +1,47 @@
+{
+  "DOT": {
+    "config": "et+xgb_70",
+    "n_windows": 4,
+    "avg_pnl_mean": 0.011358,
+    "total_pnl_sum": 0.949396,
+    "avg_trades": 24.2,
+    "avg_wr": 0.4092,
+    "avg_dd": 0.092209
+  },
+  "ADA": {
+    "config": "et+tabm_70",
+    "n_windows": 4,
+    "avg_pnl_mean": 0.009115,
+    "total_pnl_sum": 0.685428,
+    "avg_trades": 23.5,
+    "avg_wr": 0.3601,
+    "avg_dd": 0.089852
+  },
+  "XRP": {
+    "config": "et+tabm_70",
+    "n_windows": 4,
+    "avg_pnl_mean": 0.010134,
+    "total_pnl_sum": 0.695287,
+    "avg_trades": 18.0,
+    "avg_wr": 0.4742,
+    "avg_dd": 0.046174
+  },
+  "SOL": {
+    "config": "et+tabm_70",
+    "n_windows": 4,
+    "avg_pnl_mean": 0.003019,
+    "total_pnl_sum": 0.294999,
+    "avg_trades": 26.8,
+    "avg_wr": 0.289,
+    "avg_dd": 0.07819
+  },
+  "LINK": {
+    "config": "xgb",
+    "n_windows": 4,
+    "avg_pnl_mean": 0.001412,
+    "total_pnl_sum": 0.155015,
+    "avg_trades": 29.0,
+    "avg_wr": 0.2635,
+    "avg_dd": 0.101382
+  }
+}
