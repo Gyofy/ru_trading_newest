@@ -2,42 +2,40 @@
 
 ## Agent Memory (ALWAYS READ FIRST)
 - **Development Index**: `docs/INDEX.md` -- devlog, checkpoints, brainstorm
-- **Current Config**: `config/frozen_params_v4_0.yaml` (v4.0 — WF 444eval 반영, th 하향)
-- **Previous Config**: `config/frozen_params_v3_4.yaml` (보존)
+- **Current Config**: `config/frozen_params_v4_2.yaml` (v4.2 — Mega Search v2 best 반영)
+- **Previous Config**: `config/frozen_params_v4_1.yaml`, `config/frozen_params_v3_4.yaml` (보존)
+- **Live Bot**: `run_live_bot_v2.py` (v4.2, 2-Stage + Multi-Model + 30s SL/TP)
 - **Live Criteria**: `config/live_promotion_criteria.yaml`
-- **Active Coins**: DOT, ADA (XRP suspended)
+- **Active Coins**: DOT, ADA, XRP, SOL, LINK (5코인 확장)
 
 ## Overview
-크립토 Top 10 코인 자동 예측·매매 시스템.
-yfinance 5분봉 + 15개 미디어 + 18개 매크로/원자재 데이터를 수집하고,
-MOMENT(self-supervised pretrain) DL + 5-Model ML Ensemble로 방향(UP/HOLD/DOWN)을 분류.
+크립토 5코인(DOT/ADA/XRP/SOL/LINK) 자동 예측·매매 시스템.
+Binance USDT-M Futures 4h봉 + 마이크로스트럭처(CVD/OFI/VPIN) 223개 피처,
+2-Stage Binary(Trade/NoTrade → Long/Short) ML Ensemble로 방향 분류.
 Claude Code를 오케스트레이터로 사용하고, 데이터·모델·주문은 분리된 파이썬 서비스로 운영.
 
-## Current Pipeline (v3)
+## Current Pipeline (v4.2)
 ```
 Phase 1: Data Collection
-  ├── OHLCV: yfinance 5분봉 60일 (10 코인)
-  ├── 미디어: 15개 소스 (뉴스/SNS/온체인/리서치)
-  └── 매크로: 18개 yfinance 티커 + Fear&Greed + DeFi TVL
+  ├── OHLCV: Binance ccxt 4h봉 500bars (5 코인 + BTC/ETH)
+  └── 마이크로스트럭처: CVD, OFI, VPIN, Roll Spread, Amihud
 
 Phase 2: Feature Engineering
-  ├── 기술지표 51개 → technical_analysis.py
-  ├── 미디어 감성 81개 → sentiment_analyzer.py
-  ├── 크로스소스 7개
-  └── 매크로 134개 → macro_commodity_crawler.py
-  → MI 기반 Feature Selection: top 80개
+  ├── 기술지표 ~60개 → technical_analysis.py
+  ├── 시그널 피처 → signal_features.py (wavelet, FFT, entropy)
+  ├── 마이크로스트럭처 ~71개 → microstructure_rollup.py
+  └── MI 기반 Feature Selection: top 120개
 
-Phase 3a: Deep Learning
-  ├── MOMENT pretrain (SelectiveMasking 30ep)
-  └── OLinear + RevIN + MediaAttention fine-tune (80ep)
+Phase 3: 2-Stage Binary ML (per-coin combo)
+  ├── Stage 1: Trade/NoTrade (ET + CatBoost/XGBoost/TabM weighted)
+  ├── Stage 2: Long/Short   (same combo, Trade samples only)
+  ├── CV: TimeSeriesSplit(n_splits=3, gap=12)
+  └── Coin-specific combos: DOT(et+tabm), ADA/XRP/SOL(et+cb), LINK(et+xgb)
 
-Phase 3b: ML Ensemble
-  ├── LightGBM (GPU) + XGBoost (GPU) + CatBoost (GPU)
-  ├── RandomForest + ExtraTrees (CPU, n_jobs=6)
-  ├── GridSearch: TimeSeriesSplit(n_splits=3, gap=12)
-  └── balanced_accuracy 기반 가중 앙상블
-
-Phase 4: Report (JSON + Markdown)
+Phase 4: Execution
+  ├── 30s SL/TP/TTL monitoring (background asyncio)
+  ├── Post-Only entry + STOP_MARKET SL + TAKE_PROFIT_MARKET TP
+  └── Risk engine 9-gate pre-trade check
 ```
 
 ## Target Assets
@@ -55,22 +53,29 @@ Phase 4: Report (JSON + Markdown)
 ```
 src/
   data/
-    crawlers/    # yfinance OHLCV, 15개 미디어 크롤러, 매크로/원자재 수집
-    kis_client.py  # 한국투자증권 API (예약 — 실행 모듈 구현 시 연결)
+    crawlers/    # Binance OHLCV, 미디어 크롤러, 매크로/원자재, 마이크로스트럭처
   models/
-    multimodal_classifier.py  # MOMENT DL (PatchEmbed + SelectiveMasking + OLinear + RevIN)
-    masking_loop.py           # 5-Model ML Ensemble + GridSearch + Fee-aware labeling
-    run_masking_pipeline.py   # 전체 파이프라인 오케스트레이터
-  discussion/  # 멀티 AI 팀 디스커션 (Claude 내부 + Gemini 검증)
-  signals/     # (미구현) 앙상블 시그널 생성
-  execution/   # (미구현) 주문 실행, paper/live 전환
-  evaluation/  # (미구현) holdout 검증, walk-forward 백테스트
-  utils/       # 로깅, 설정 로드
-config/        # YAML 설정
-data/          # raw/reports (일자별)
-.claude/
-  skills/      # 13개 스킬
-  agents/      # 5개 서브에이전트
+    masking_loop.py           # 2-Stage Binary labeling + ensemble training
+    model_store.py            # artifact save/load (joblib)
+    enhanced_ensemble.py      # 5-model weighted ensemble
+  execution/
+    exchange_adapter.py       # Binance USDT-M Futures (ccxt)
+    live_predictor.py         # 2-Stage + Multi-Model combo train/predict
+    sl_tp_monitor.py          # 30s background SL/TP/TTL polling
+    position_store.py         # crash-safe JSON position persistence
+    risk_engine.py            # 9-gate pre-trade check + sizing
+    order_ledger.py           # SQLite order/fill/PnL ledger
+    cost_model.py             # fee + slippage + funding + miss-fill cost
+    state_machine.py          # position FSM (IDLE→FILLED→PROTECTED→...)
+  signals/
+    contract.py               # Signal dataclass
+    policy.py                 # SignalPolicy regime-aware filtering
+  evaluation/
+    trade_level_ev.py         # bar-by-bar Triple Barrier simulation
+  utils/       # config, logging, feature_policy
+config/        # YAML 설정 (frozen_params_v4_2.yaml)
+data/          # raw/reports/models (일자별)
+run_live_bot_v2.py            # v4.2 autonomous trading bot
 ```
 
 ## Key Rules
@@ -80,27 +85,20 @@ data/          # raw/reports (일자별)
 4. 당일 손실 계좌의 2% 초과 시 전체 거래 중단
 5. OHLCV → feature → prediction → (signal → order) 파이프라인 순서 준수
 
-## Labeling & Evaluation (v3)
-- **라벨링**: Fee-aware dynamic — UP > +0.2%, DOWN < -0.2%, HOLD = 사이
+## Labeling & Evaluation (v4.2)
+- **라벨링**: Triple Barrier (k_upper=3.0×ATR, k_lower=0.6×ATR, max_hold=18bars)
+- **2-Stage Binary**: S1(Trade/NoTrade) → S2(Long/Short, Trade samples only)
 - **CV**: TimeSeriesSplit(n_splits=3, gap=12) — StratifiedKFold 사용 금지
-- **평가지표**: balanced_accuracy (주), MCC, Brier, PR-AUC, F1-macro, confusion matrix
-- **목적함수**: balanced_accuracy 단일 기준 (GridSearch, 앙상블 가중, 리포트 통일)
-- **Horizons**: 4개 (5min, 15min, 30min, 60min)
+- **평가지표**: balanced_accuracy (주), trade-level PnL, MDD
+- **Horizons**: 4h bars × [1, 3, 6, 18] = 4h, 12h, 24h, 72h
 
-## DL Architecture (MOMENT v3)
-- PatchEmbedding: patch_len=8(40min), stride=4(50% overlap) → 11 patches
-- SelectiveMasking: random → hard-mining → curriculum (3-phase)
-- MaskedAutoEncoder: pretrain 30ep (self-supervised)
-- OLinear(NormLin) + RevIN + MediaSourceAttention + CrossModalFusion
-- Fine-tune 80ep, AMP FP16, batch=512, torch.compile(backend="eager")
-
-## ML Ensemble (v3)
-- LightGBM (GPU, device=gpu)
-- XGBoost (GPU, device=cuda)
-- CatBoost (GPU, task_type=GPU)
-- RandomForest (CPU, n_jobs=6)
-- ExtraTrees (CPU, n_jobs=6)
-- Feature Selection: MI 기반 top 80 (273개 중)
+## ML Ensemble (v4.2 -- Mega Search v2 best per coin)
+- DOT: ExtraTrees(70%) + TabM(30%)
+- ADA: ExtraTrees(50%) + CatBoost(50%)
+- XRP: ExtraTrees(50%) + CatBoost(50%)
+- SOL: ExtraTrees(50%) + CatBoost(50%)
+- LINK: ExtraTrees(50%) + XGBoost(50%)
+- Feature Selection: MI 기반 top 120 (223개 중, 마이크로스트럭처 포함)
 
 ## Data Sources
 ```
@@ -159,14 +157,18 @@ SNS:       Reddit (7 subreddits), X/Twitter, YouTube, TikTok(proxy), Instagram(p
 
 ## Implementation Status
 ```
-[완료] src/data/crawlers/     — OHLCV + 15 미디어 + 매크로/원자재 수집
-[완료] src/models/            — MOMENT DL + 5-Model ML Ensemble
-[완료] src/discussion/        — Claude 내부 + Gemini 검증 (미연결)
-[완료] src/utils/             — config, logging
-[완료] run_overnight_loop.py  — 9시까지 자동 반복 실행
-[미구현] src/signals/ensemble — ML+DL 시그널 결합
-[미구현] src/execution/       — 주문 실행 (paper/live)
-[미구현] src/evaluation/      — holdout 검증, walk-forward
+[완료] src/data/crawlers/            — OHLCV + 마이크로스트럭처 + 시그널피처
+[완료] src/models/                   — 2-Stage Binary + ML Ensemble + model_store
+[완료] src/execution/                — 주문실행 + 리스크엔진 + 비용모델
+[완료] src/execution/live_predictor  — 2-Stage + Multi-Model combo (v4.2)
+[완료] src/execution/sl_tp_monitor   — 30s 실시간 SL/TP 모니터링
+[완료] src/execution/position_store  — 포지션 영속화 (crash recovery)
+[완료] src/signals/                  — Signal contract + SignalPolicy
+[완료] src/evaluation/               — trade-level bar-by-bar simulation
+[완료] src/utils/                    — config, logging, feature_policy
+[완료] run_live_bot_v2.py            — v4.2 autonomous trading bot
+[완료] run_overnight_loop.py         — 자동 반복 실행
+[완료] experiments/mega_search_v2    — 20 configs × 5 coins 최적화
 ```
 
 ## Environment Variables Required

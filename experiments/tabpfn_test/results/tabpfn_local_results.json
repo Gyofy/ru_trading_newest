@@ -1,0 +1,60 @@
+{
+  "DOT": {
+    "A_ensemble": {
+      "trades": 26,
+      "avg": 0.007731,
+      "total": 0.200999,
+      "dd": 0.022741
+    },
+    "B_tabpfn": {
+      "trades": 45,
+      "avg": 0.00297,
+      "total": 0.133634,
+      "dd": 0.0341
+    },
+    "C_blend70": {
+      "trades": 27,
+      "avg": 0.00663,
+      "total": 0.179002,
+      "dd": 0.022789
+    },
+    "D_blend50": {
+      "trades": 29,
+      "avg": 0.005339,
+      "total": 0.154828,
+      "dd": 0.030272
+    },
+    "agreement_s1": 0.5371,
+    "time_ensemble": 32.3,
+    "time_tabpfn": 5.3
+  },
+  "ADA": {
+    "A_ensemble": {
+      "trades": 17,
+      "avg": 0.002631,
+      "total": 0.044726,
+      "dd": 0.029098
+    },
+    "B_tabpfn": {
+      "trades": 31,
+      "avg": 0.004641,
+      "total": 0.14386,
+      "dd": 0.023256
+    },
+    "C_blend70": {
+      "trades": 23,
+      "avg": 0.002907,
+      "total": 0.066869,
+      "dd": 0.023412
+    },
+    "D_blend50": {
+      "trades": 27,
+      "avg": 0.004818,
+      "total": 0.130084,
+      "dd": 0.023319
+    },
+    "agreement_s1": 0.3056,
+    "time_ensemble": 31.3,
+    "time_tabpfn": 7.4
+  }
+}

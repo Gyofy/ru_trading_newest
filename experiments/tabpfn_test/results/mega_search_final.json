@@ -1,0 +1,30 @@
+{
+  "best_per_coin": {
+    "DOT": {
+      "config": "et",
+      "n_windows": 4,
+      "avg_pnl_mean": 0.004186,
+      "total_pnl_sum": 0.271497,
+      "avg_trades": 17.8,
+      "avg_dd": 0.028706
+    },
+    "ADA": {
+      "config": "et+tabpfn_70",
+      "n_windows": 4,
+      "avg_pnl_mean": 0.004323,
+      "total_pnl_sum": 0.218691,
+      "avg_trades": 12.8,
+      "avg_dd": 0.025594
+    },
+    "XRP": {
+      "config": "et+tabm_70",
+      "n_windows": 4,
+      "avg_pnl_mean": 0.00758,
+      "total_pnl_sum": 0.515435,
+      "avg_trades": 18.0,
+      "avg_dd": 0.01982
+    }
+  },
+  "configs_tested": 47,
+  "deadline": "2026-03-18 10:30:00"
+}

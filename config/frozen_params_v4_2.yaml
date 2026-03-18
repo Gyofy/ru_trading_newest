@@ -1,0 +1,161 @@
+# Frozen Parameters v4.2 -- 2026-03-18
+# v4.1 + Mega Search v2 (20 configs, 5 coins, 223 microstructure features) 결과 반영
+#
+# 핵심 변경 (v4.1 → v4.2):
+#   1. Mega Search v2 best per coin 적용 (마이크로스트럭처 포함 223 features)
+#      - DOT:  et+tabm_70  → avg +0.406%, 18.5 trades, DD 2.93%
+#      - ADA:  et+cb       → avg +0.652%, 11.2 trades, DD 1.16% (brf +0.745% 제외: 6 trades 통계 부족)
+#      - XRP:  et+cb       → avg +0.896%, 16.8 trades, DD 1.54%
+#      - SOL:  et+cb       → avg +0.888%, 18.8 trades, DD 1.80%
+#      - LINK: et+xgb      → avg +0.649%, 18.2 trades, DD 2.46%
+#   2. 2-Stage Binary 파이프라인 강제: S1(Trade/NoTrade) → S2(Long/Short)
+#   3. SOL/LINK placeholder 제거 (v2 확정)
+#   4. max_features 120으로 통일 (v2 실험 기준)
+
+version: "v4.2"
+frozen_date: "2026-03-18"
+source: "v4.1 + Mega Search v2 (20 configs, 5 coins, 223 features)"
+
+# ── Common Parameters ──────────────────────────────────────
+common:
+  k_upper: 3.0
+  k_lower: 0.6
+  risk_frac: 0.005
+  max_horizon: 18
+  bar_minutes: 240
+  min_barrier_pct: 0.002
+
+# ── Cost Model ─────────────────────────────────────────────
+cost_model:
+  maker_fee: 0.0002
+  taker_fee: 0.00055
+  slippage_entry: 0.0003
+  slippage_exit_limit: 0.0001
+  slippage_exit_market: 0.0005
+  funding_interval_hours: 8.0
+  funding_default_rate: 0.0001
+  miss_fill_reject_prob: 0.15
+  miss_fill_missed_ev: 0.0015
+
+# ── Feature Policy ─────────────────────────────────────────
+excluded_feature_keywords:
+  - macro_gold
+  - macro_vix
+  - macro_usd_index
+  - macro_us_10y
+  - macro_sp500
+  - macro_fear_greed
+  - macro_defi_tvl
+  - hilbert
+  - inst_phase
+  - inst_freq
+  - inst_amp
+
+# ── Regime Filter ──────────────────────────────────────────
+blocked_regimes:
+  - RANGE_LOW
+
+# ── Microstructure ─────────────────────────────────────────
+microstructure:
+  cvd_filter_enabled: true
+  cvd_long_mult_high: 0.6
+  cvd_long_mult_low: 1.2
+  ofi_timing_enabled: true
+  ofi_timing_mult: 1.1
+  flow_pressure_weight: 0.3
+
+# ── Model Architecture ────────────────────────────────────
+model:
+  primary_base: "ExtraTrees"
+  ensemble_method: "weighted"
+  pipeline: "2stage_binary"        # S1: Trade/NoTrade → S2: Long/Short
+
+# ── SL/TP Monitoring ──────────────────────────────────────
+monitoring:
+  sl_tp_poll_seconds: 30           # SL/TP 체크 주기 (2시간 → 30초)
+  position_persist: true           # 포지션 JSON 영속화
+  model_artifact_save: true        # 학습 후 artifact 저장
+
+# ── Coin-Specific Parameters ──────────────────────────────
+coins:
+  DOT:
+    stage1_threshold: 0.45
+    max_features: 120
+    n_estimators: 300
+    max_depth_tree: 8
+    min_child_samples: 10
+    blocked_regimes_override:
+      - RANGE_LOW
+    # Mega Search v2 best: et+tabm_70 (avg +0.406%, 18.5 trades, DD 2.93%)
+    model_combo: "et+tabm"
+    model_weights: { et: 0.7, tabm: 0.3 }
+
+  ADA:
+    stage1_threshold: 0.40
+    max_features: 120
+    n_estimators: 300
+    max_depth_tree: 8
+    min_child_samples: 10
+    blocked_regimes_override:
+      - RANGE_LOW
+      - UNKNOWN
+    # Mega Search v2 best (practical): et+cb (avg +0.652%, 11.2 trades, DD 1.16%)
+    # brf (+0.745%) 제외 사유: 6.0 trades/window 통계 부족
+    model_combo: "et+cb"
+    model_weights: { et: 0.5, cb: 0.5 }
+
+  XRP:
+    stage1_threshold: 0.45
+    max_features: 120
+    n_estimators: 300
+    max_depth_tree: 8
+    min_child_samples: 10
+    blocked_regimes_override:
+      - RANGE_LOW
+    # Mega Search v2 best: et+cb (avg +0.896%, 16.8 trades, DD 1.54%)
+    model_combo: "et+cb"
+    model_weights: { et: 0.5, cb: 0.5 }
+
+  SOL:
+    stage1_threshold: 0.45
+    max_features: 120
+    n_estimators: 300
+    max_depth_tree: 8
+    min_child_samples: 10
+    blocked_regimes_override:
+      - RANGE_LOW
+    # Mega Search v2 best: et+cb (avg +0.888%, 18.8 trades, DD 1.80%)
+    model_combo: "et+cb"
+    model_weights: { et: 0.5, cb: 0.5 }
+
+  LINK:
+    stage1_threshold: 0.45
+    max_features: 120
+    n_estimators: 300
+    max_depth_tree: 8
+    min_child_samples: 10
+    blocked_regimes_override:
+      - RANGE_LOW
+    # Mega Search v2 best: et+xgb (avg +0.649%, 18.2 trades, DD 2.46%)
+    model_combo: "et+xgb"
+    model_weights: { et: 0.5, xgb: 0.5 }
+
+# ── Frozen OOS Validation ──────────────────────────────────
+frozen_oos:
+  method: "walk-forward"
+  n_windows: 4
+  train_bars: 360
+  test_bars: 90
+  gap_bars: 6
+  pass_criteria:
+    min_net_ev_per_trade: 0.002
+    min_trades_per_window: 5
+    max_avg_dd: 0.05
+    min_windows_positive: 3
+  coins_to_validate:
+    - DOT
+    - ADA
+    - XRP
+    - SOL
+    - LINK
+  output_dir: "data/reports/frozen_oos_v4_2/"

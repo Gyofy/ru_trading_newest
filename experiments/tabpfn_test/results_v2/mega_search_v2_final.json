@@ -1,0 +1,53 @@
+{
+  "best": {
+    "DOT": {
+      "config": "et+tabm_70",
+      "n_windows": 4,
+      "avg_pnl_mean": 0.004055,
+      "total_pnl_sum": 0.286054,
+      "avg_trades": 18.5,
+      "avg_dd": 0.029284
+    },
+    "ADA": {
+      "config": "brf",
+      "n_windows": 4,
+      "avg_pnl_mean": 0.007447,
+      "total_pnl_sum": 0.192647,
+      "avg_trades": 6.0,
+      "avg_dd": 0.007246
+    },
+    "XRP": {
+      "config": "et+cb",
+      "n_windows": 4,
+      "avg_pnl_mean": 0.008956,
+      "total_pnl_sum": 0.603254,
+      "avg_trades": 16.8,
+      "avg_dd": 0.015436
+    },
+    "SOL": {
+      "config": "et+cb",
+      "n_windows": 4,
+      "avg_pnl_mean": 0.008884,
+      "total_pnl_sum": 0.650676,
+      "avg_trades": 18.8,
+      "avg_dd": 0.01799
+    },
+    "LINK": {
+      "config": "et+xgb",
+      "n_windows": 4,
+      "avg_pnl_mean": 0.006488,
+      "total_pnl_sum": 0.422354,
+      "avg_trades": 18.2,
+      "avg_dd": 0.024588
+    }
+  },
+  "configs_tested": 20,
+  "coins": [
+    "DOT",
+    "ADA",
+    "XRP",
+    "SOL",
+    "LINK"
+  ],
+  "features": "223 (microstructure included)"
+}

@@ -1,0 +1,182 @@
+# Frozen Parameters v4.1 -- 2026-03-18
+# v4.0 + Mega Search v1 모델 조합 최적화 결과 반영
+#
+# 핵심 변경 (v4.0 → v4.1):
+#   1. 5코인 확장: DOT, ADA, XRP + SOL, LINK 추가
+#   2. ExtraTrees를 primary base model로 채택 (Mega Search v1 전 코인 1위)
+#   3. 코인별 최적 모델 조합 적용 (v1 결과 기반)
+#      - DOT: ET solo (avg_pnl_mean +0.419%, 17.8 trades/window)
+#      - ADA: ET+TabPFN 70/30 (avg_pnl_mean +0.432%, 12.8 trades/window)
+#      - XRP: ET+TabM 70/30 (avg_pnl_mean +0.758%, 18.0 trades/window)
+#      - SOL: ET solo (default, Mega Search v2 결과 반영 예정)
+#      - LINK: ET solo (default, Mega Search v2 결과 반영 예정)
+#   4. 마이크로스트럭처 feature flag enabled (cvd_filter, ofi_timing)
+#
+# Mega Search v1 근거 (47 configs, 4 windows each):
+#   XRP et+tabm_70: total_pnl_sum +51.54%, avg_dd 1.98% (best overall)
+#   DOT et:         total_pnl_sum +27.15%, avg_dd 2.87%
+#   ADA et+tabpfn_70: total_pnl_sum +21.87%, avg_dd 2.56%
+
+version: "v4.1"
+frozen_date: "2026-03-18"
+source: "v4.0 + Mega Search v1 (47 configs, 3 coins) + 5-coin expansion"
+pending: "Mega Search v2 results for SOL/LINK optimization"
+
+# ── Common Parameters ──────────────────────────────────────
+common:
+  k_upper: 3.0
+  k_lower: 0.6
+  risk_frac: 0.005
+  max_horizon: 18
+  bar_minutes: 240
+  min_barrier_pct: 0.002
+
+# ── Cost Model (unchanged from v4.0) ──────────────────────
+cost_model:
+  maker_fee: 0.0002
+  taker_fee: 0.00055
+  slippage_entry: 0.0003
+  slippage_exit_limit: 0.0001
+  slippage_exit_market: 0.0005
+  funding_interval_hours: 8.0
+  funding_default_rate: 0.0001
+  miss_fill_reject_prob: 0.15
+  miss_fill_missed_ev: 0.0015
+
+# ── Feature Policy ─────────────────────────────────────────
+excluded_feature_keywords:
+  - macro_gold
+  - macro_vix
+  - macro_usd_index
+  - macro_us_10y
+  - macro_sp500
+  - macro_fear_greed
+  - macro_defi_tvl
+  - hilbert
+  - inst_phase
+  - inst_freq
+  - inst_amp
+
+# ── Regime Filter ──────────────────────────────────────────
+# Global blocked (applied to all coins unless overridden)
+blocked_regimes:
+  - RANGE_LOW
+
+# ── Microstructure Features (v4.1: ENABLED) ───────────────
+microstructure:
+  cvd_filter_enabled: true       # v4.0: false → v4.1: true
+  cvd_long_mult_high: 0.6        # cvd > Q75 시 LONG 사이즈 배수
+  cvd_long_mult_low: 1.2         # cvd < Q25 시 LONG 사이즈 배수
+  ofi_timing_enabled: true       # v4.0: false → v4.1: true
+  ofi_timing_mult: 1.1           # ofi_sum_3 > Q67 시 배수
+  flow_pressure_weight: 0.3      # OrderFlowCollector flow_pressure → sizing
+
+# ── Model Architecture ─────────────────────────────────────
+model:
+  primary_base: "ExtraTrees"     # Mega Search v1: 전 코인 ET가 base 최강
+  ensemble_method: "weighted"     # weighted average by validation performance
+  # TabPFN / TabM는 코인별 secondary로만 사용
+
+# ── Coin-Specific Parameters ──────────────────────────────
+coins:
+  DOT:
+    stage1_threshold: 0.45
+    max_features: 80
+    num_leaves: 47
+    learning_rate: 0.1
+    n_estimators: 300
+    max_depth_tree: 8
+    subsample: 0.7
+    colsample: 0.8
+    min_child_samples: 10
+    blocked_regimes_override:
+      - RANGE_LOW
+    # Model combo: ET solo (Mega Search v1 best)
+    model_combo: "et"
+    model_weights: { et: 1.0 }
+
+  ADA:
+    stage1_threshold: 0.40
+    max_features: 120
+    num_leaves: 15
+    learning_rate: 0.02
+    n_estimators: 400
+    max_depth_tree: 8
+    subsample: 0.7
+    colsample: 0.9
+    min_child_samples: 5
+    blocked_regimes_override:
+      - RANGE_LOW
+      - UNKNOWN
+    # Model combo: ET+TabPFN 70/30 (Mega Search v1 best)
+    model_combo: "et+tabpfn_70"
+    model_weights: { et: 0.7, tabpfn: 0.3 }
+
+  XRP:
+    stage1_threshold: 0.45
+    max_features: 80
+    num_leaves: 47
+    learning_rate: 0.1
+    n_estimators: 300
+    max_depth_tree: 8
+    subsample: 0.7
+    colsample: 0.8
+    min_child_samples: 10
+    blocked_regimes_override:
+      - RANGE_LOW
+    # Model combo: ET+TabM 70/30 (Mega Search v1 best, +0.758% avg_pnl_mean)
+    model_combo: "et+tabm_70"
+    model_weights: { et: 0.7, tabm: 0.3 }
+
+  SOL:
+    stage1_threshold: 0.50   # placeholder -- Mega Search v2 결과로 최적화 예정
+    max_features: 80
+    num_leaves: 47
+    learning_rate: 0.1
+    n_estimators: 300
+    max_depth_tree: 8
+    subsample: 0.7
+    colsample: 0.8
+    min_child_samples: 10
+    # SOL: default blocked regimes (RANGE_LOW)
+    # Model combo: ET solo (default, pending v2 results)
+    model_combo: "et"
+    model_weights: { et: 1.0 }
+    pending_optimization: true   # flag: Mega Search v2 결과 반영 필요
+
+  LINK:
+    stage1_threshold: 0.50   # placeholder -- Mega Search v2 결과로 최적화 예정
+    max_features: 80
+    num_leaves: 47
+    learning_rate: 0.1
+    n_estimators: 300
+    max_depth_tree: 8
+    subsample: 0.7
+    colsample: 0.8
+    min_child_samples: 10
+    # LINK: default blocked regimes (RANGE_LOW)
+    # Model combo: ET solo (default, pending v2 results)
+    model_combo: "et"
+    model_weights: { et: 1.0 }
+    pending_optimization: true   # flag: Mega Search v2 결과 반영 필요
+
+# ── Frozen OOS Validation Framework ───────────────────────
+frozen_oos:
+  description: "v4.1 파라미터 동결 후 OOS 검증 프레임워크"
+  method: "walk-forward"
+  n_windows: 4
+  train_bars: 360        # 60일 * 6 bars/day
+  test_bars: 90          # 15일 * 6 bars/day
+  gap_bars: 6            # 1일 gap (look-ahead 방지)
+  pass_criteria:
+    min_net_ev_per_trade: 0.002    # +0.2% 최소 EV/trade
+    min_trades_per_window: 5       # 최소 5 trades/window
+    max_avg_dd: 0.05               # 최대 평균 DD 5%
+    min_windows_positive: 3        # 4 windows 중 3개 이상 양의 PnL
+  coins_to_validate:
+    - DOT    # v1 confirmed
+    - ADA    # v1 confirmed
+    - XRP    # v1 confirmed
+    - SOL    # pending v2 optimization
+    - LINK   # pending v2 optimization
+  output_dir: "data/reports/frozen_oos_v4_1/"

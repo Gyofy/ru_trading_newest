@@ -1,0 +1,135 @@
+{
+  "best_per_coin": {
+    "DOT": {
+      "coin": "DOT",
+      "config": "TabPFN_e4_b50",
+      "wins": 3,
+      "total_windows": 4,
+      "avg_improvement": 0.000829,
+      "details": [
+        {
+          "baseline_avg": 0.002175,
+          "blend_avg": 0.005475,
+          "baseline_total": 0.045671,
+          "blend_total": 0.114971,
+          "blend_trades": 21,
+          "win": "True"
+        },
+        {
+          "baseline_avg": 0.007738,
+          "blend_avg": 0.00789,
+          "baseline_total": 0.085115,
+          "blend_total": 0.134136,
+          "blend_trades": 17,
+          "win": "True"
+        },
+        {
+          "baseline_avg": 0.01134,
+          "blend_avg": 0.007407,
+          "baseline_total": 0.079379,
+          "blend_total": 0.14813,
+          "blend_trades": 20,
+          "win": "False"
+        },
+        {
+          "baseline_avg": 0.002433,
+          "blend_avg": 0.006228,
+          "baseline_total": 0.017028,
+          "blend_total": 0.112101,
+          "blend_trades": 18,
+          "win": "True"
+        }
+      ],
+      "timestamp": "2026-03-17T20:25:20.164623"
+    },
+    "ADA": {
+      "coin": "ADA",
+      "config": "TabPFN_b20",
+      "wins": 2,
+      "total_windows": 4,
+      "avg_improvement": 0.003192,
+      "details": [
+        {
+          "baseline_avg": 0.01278,
+          "blend_avg": 0.01278,
+          "baseline_total": 0.115024,
+          "blend_total": 0.115024,
+          "blend_trades": 9,
+          "win": "False"
+        },
+        {
+          "baseline_avg": 0.010559,
+          "blend_avg": 0.010559,
+          "baseline_total": 0.073913,
+          "blend_total": 0.073913,
+          "blend_trades": 7,
+          "win": "False"
+        },
+        {
+          "baseline_avg": 0.003096,
+          "blend_avg": 0.007941,
+          "baseline_total": 0.021674,
+          "blend_total": 0.063527,
+          "blend_trades": 8,
+          "win": "True"
+        },
+        {
+          "baseline_avg": -0.002391,
+          "blend_avg": 0.005532,
+          "baseline_total": -0.016739,
+          "blend_total": 0.060856,
+          "blend_trades": 11,
+          "win": "True"
+        }
+      ],
+      "timestamp": "2026-03-17T17:34:11.785704"
+    },
+    "XRP": {
+      "coin": "XRP",
+      "config": "TabPFN_b10",
+      "wins": 3,
+      "total_windows": 4,
+      "avg_improvement": 0.001086,
+      "details": [
+        {
+          "baseline_avg": 0.010149,
+          "blend_avg": 0.011053,
+          "baseline_total": 0.152237,
+          "blend_total": 0.176847,
+          "blend_trades": 16,
+          "win": "True"
+        },
+        {
+          "baseline_avg": 0.010548,
+          "blend_avg": 0.010642,
+          "baseline_total": 0.158214,
+          "blend_total": 0.180916,
+          "blend_trades": 17,
+          "win": "True"
+        },
+        {
+          "baseline_avg": 0.010769,
+          "blend_avg": 0.014117,
+          "baseline_total": 0.16154,
+          "blend_total": 0.254098,
+          "blend_trades": 18,
+          "win": "True"
+        },
+        {
+          "baseline_avg": 0.011024,
+          "blend_avg": 0.011024,
+          "baseline_total": 0.187412,
+          "blend_total": 0.187412,
+          "blend_trades": 17,
+          "win": "False"
+        }
+      ],
+      "timestamp": "2026-03-17T17:08:17.538404"
+    }
+  },
+  "total_configs": 30,
+  "beaten_coins": [
+    "DOT",
+    "XRP"
+  ]
+}

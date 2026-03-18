@@ -1,0 +1,220 @@
+{
+  "DOT": {
+    "A_ensemble": {
+      "label": "A_ensemble",
+      "coin": "DOT",
+      "trades": 24,
+      "avg_pnl": 0.009578,
+      "total_pnl": 0.22988,
+      "win_rate": 0.5,
+      "max_dd": 0.018326,
+      "score": 211.2635
+    },
+    "time_A": 34.2,
+    "TabM_k16": {
+      "label": "TabM_k16",
+      "coin": "DOT",
+      "trades": 43,
+      "avg_pnl": 0.003347,
+      "total_pnl": 0.143905,
+      "win_rate": 0.2326,
+      "max_dd": 0.037597,
+      "score": -28.0676
+    },
+    "TabM_k16_blend70": {
+      "label": "TabM_k16_blend70",
+      "coin": "DOT",
+      "trades": 30,
+      "avg_pnl": 0.005192,
+      "total_pnl": 0.155772,
+      "win_rate": 0.3,
+      "max_dd": 0.0341,
+      "score": -6.5374
+    },
+    "TabM_k16_blend50": {
+      "label": "TabM_k16_blend50",
+      "coin": "DOT",
+      "trades": 43,
+      "avg_pnl": 0.003347,
+      "total_pnl": 0.143905,
+      "win_rate": 0.2326,
+      "max_dd": 0.037597,
+      "score": -28.0676
+    },
+    "time_TabM_k16": 11.5,
+    "agree_TabM_k16": 0.4273,
+    "TabM_k32": {
+      "label": "TabM_k32",
+      "coin": "DOT",
+      "trades": 40,
+      "avg_pnl": 0.004773,
+      "total_pnl": 0.190939,
+      "win_rate": 0.275,
+      "max_dd": 0.0341,
+      "score": -6.9397
+    },
+    "TabM_k32_blend70": {
+      "label": "TabM_k32_blend70",
+      "coin": "DOT",
+      "trades": 30,
+      "avg_pnl": 0.005192,
+      "total_pnl": 0.155772,
+      "win_rate": 0.3,
+      "max_dd": 0.0341,
+      "score": -6.5374
+    },
+    "TabM_k32_blend50": {
+      "label": "TabM_k32_blend50",
+      "coin": "DOT",
+      "trades": 38,
+      "avg_pnl": 0.004554,
+      "total_pnl": 0.173041,
+      "win_rate": 0.2632,
+      "max_dd": 0.0341,
+      "score": -6.4526
+    },
+    "time_TabM_k32": 8.8,
+    "agree_TabM_k32": 0.4451,
+    "TabM_k64": {
+      "label": "TabM_k64",
+      "coin": "DOT",
+      "trades": 44,
+      "avg_pnl": 0.003853,
+      "total_pnl": 0.169548,
+      "win_rate": 0.25,
+      "max_dd": 0.037597,
+      "score": -32.6911
+    },
+    "TabM_k64_blend70": {
+      "label": "TabM_k64_blend70",
+      "coin": "DOT",
+      "trades": 30,
+      "avg_pnl": 0.005192,
+      "total_pnl": 0.155772,
+      "win_rate": 0.3,
+      "max_dd": 0.0341,
+      "score": -6.5374
+    },
+    "TabM_k64_blend50": {
+      "label": "TabM_k64_blend50",
+      "coin": "DOT",
+      "trades": 43,
+      "avg_pnl": 0.003378,
+      "total_pnl": 0.145269,
+      "win_rate": 0.2326,
+      "max_dd": 0.037597,
+      "score": -28.3335
+    },
+    "time_TabM_k64": 8.2,
+    "agree_TabM_k64": 0.4273
+  },
+  "ADA": {
+    "A_ensemble": {
+      "label": "A_ensemble",
+      "coin": "ADA",
+      "trades": 18,
+      "avg_pnl": 0.003485,
+      "total_pnl": 0.062725,
+      "win_rate": 0.3889,
+      "max_dd": 0.029098,
+      "score": 18.7864
+    },
+    "time_A": 34.4,
+    "TabM_k16": {
+      "label": "TabM_k16",
+      "coin": "ADA",
+      "trades": 37,
+      "avg_pnl": 0.000664,
+      "total_pnl": 0.024552,
+      "win_rate": 0.2162,
+      "max_dd": 0.032739,
+      "score": 0.7197
+    },
+    "TabM_k16_blend70": {
+      "label": "TabM_k16_blend70",
+      "coin": "ADA",
+      "trades": 24,
+      "avg_pnl": 0.007226,
+      "total_pnl": 0.173431,
+      "win_rate": 0.4583,
+      "max_dd": 0.017523,
+      "score": 167.9077
+    },
+    "TabM_k16_blend50": {
+      "label": "TabM_k16_blend50",
+      "coin": "ADA",
+      "trades": 35,
+      "avg_pnl": 0.001721,
+      "total_pnl": 0.060248,
+      "win_rate": 0.2571,
+      "max_dd": 0.032739,
+      "score": 1.8158
+    },
+    "time_TabM_k16": 6.4,
+    "agree_TabM_k16": 0.365,
+    "TabM_k32": {
+      "label": "TabM_k32",
+      "coin": "ADA",
+      "trades": 38,
+      "avg_pnl": -0.00013,
+      "total_pnl": -0.004932,
+      "win_rate": 0.1842,
+      "max_dd": 0.049755,
+      "score": -51.2978
+    },
+    "TabM_k32_blend70": {
+      "label": "TabM_k32_blend70",
+      "coin": "ADA",
+      "trades": 24,
+      "avg_pnl": 0.007226,
+      "total_pnl": 0.173431,
+      "win_rate": 0.4583,
+      "max_dd": 0.017523,
+      "score": 167.9077
+    },
+    "TabM_k32_blend50": {
+      "label": "TabM_k32_blend50",
+      "coin": "ADA",
+      "trades": 37,
+      "avg_pnl": 0.001371,
+      "total_pnl": 0.050736,
+      "win_rate": 0.2432,
+      "max_dd": 0.028972,
+      "score": 10.9138
+    },
+    "time_TabM_k32": 9.5,
+    "agree_TabM_k32": 0.3947,
+    "TabM_k64": {
+      "label": "TabM_k64",
+      "coin": "ADA",
+      "trades": 39,
+      "avg_pnl": -0.000267,
+      "total_pnl": -0.010426,
+      "win_rate": 0.1795,
+      "max_dd": 0.055278,
+      "score": -52.6734
+    },
+    "TabM_k64_blend70": {
+      "label": "TabM_k64_blend70",
+      "coin": "ADA",
+      "trades": 23,
+      "avg_pnl": 0.007787,
+      "total_pnl": 0.179102,
+      "win_rate": 0.4783,
+      "max_dd": 0.017523,
+      "score": 177.1273
+    },
+    "TabM_k64_blend50": {
+      "label": "TabM_k64_blend50",
+      "coin": "ADA",
+      "trades": 39,
+      "avg_pnl": 0.000348,
+      "total_pnl": 0.013581,
+      "win_rate": 0.2051,
+      "max_dd": 0.043673,
+      "score": -6.7458
+    },
+    "time_TabM_k64": 12.0,
+    "agree_TabM_k64": 0.3591
+  }
+}
