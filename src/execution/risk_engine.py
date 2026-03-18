@@ -150,15 +150,15 @@ class RiskEngine:
 
         Returns: (sl_price, tp_price)
         """
-        upper_dist = max(k_upper * atr, entry_price * min_barrier_pct)
-        lower_dist = max(k_lower * atr, entry_price * min_barrier_pct)
+        tp_dist = max(k_upper * atr, entry_price * min_barrier_pct)  # wide TP
+        sl_dist = max(k_lower * atr, entry_price * min_barrier_pct)  # tight SL
 
-        if side == "BUY":  # LONG
-            tp_price = entry_price + upper_dist
-            sl_price = entry_price - lower_dist
-        else:  # SHORT
-            tp_price = entry_price - lower_dist
-            sl_price = entry_price + upper_dist
+        if side == "BUY":  # LONG: TP above, SL below
+            tp_price = entry_price + tp_dist
+            sl_price = entry_price - sl_dist
+        else:  # SHORT: TP below, SL above (same R:R as LONG)
+            tp_price = entry_price - tp_dist
+            sl_price = entry_price + sl_dist
 
         return sl_price, tp_price
 

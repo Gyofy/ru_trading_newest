@@ -237,11 +237,6 @@ def run_simulation(equity: float = 10000.0, days: int = 90):
                 i += 1
                 continue
 
-            # SHORT disabled: R:R = 0.2:1 with k_upper=3.0/k_lower=0.6
-            if pred.side == "SELL":
-                i += 1
-                continue
-
             # RL gate — use actual per-coin equity + recent PnL
             btc_full = featured.get("BTC")
             if btc_full is not None:

@@ -709,10 +709,6 @@ class LiveTradingBot:
         if pred.side == "HOLD":
             return None
 
-        # SHORT disabled: R:R = 0.2:1 with current k_upper/k_lower asymmetry
-        if pred.side == "SELL":
-            return None
-
         # Build RL state
         coin_history = self._get_coin_history(coin)
         state = build_rl_state(

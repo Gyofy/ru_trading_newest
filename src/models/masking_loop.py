@@ -236,9 +236,11 @@ def create_labels_triple_barrier(df: pd.DataFrame, horizon: int = 18,
             entry = close[i]
             cur_atr = atr[i] if not np.isnan(atr[i]) else entry * 0.01
 
-            # 배리어 폭: max(k * ATR, min_barrier_pct * entry)
+            # Symmetric barriers: both directions use k_upper for TP distance
+            # This ensures DOWN label = "price fell by k_upper*ATR" (matches SELL TP)
+            # k_lower is used only for SL in execution, not for labeling
             upper_dist = max(k_upper * cur_atr, min_barrier_pct * entry)
-            lower_dist = max(k_lower * cur_atr, min_barrier_pct * entry)
+            lower_dist = max(k_upper * cur_atr, min_barrier_pct * entry)
             upper_barrier = entry + upper_dist
             lower_barrier = entry - lower_dist
 
