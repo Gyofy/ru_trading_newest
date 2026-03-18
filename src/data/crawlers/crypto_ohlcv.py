@@ -23,11 +23,17 @@ from src.data.crawlers.signal_features import add_signal_features
 # ---------------------------------------------------------------------------
 
 
-def _add_vwap(df: pd.DataFrame) -> pd.DataFrame:
-    """VWAP (Volume-Weighted Average Price) + 가격 괴리율."""
-    cum_vol = df["volume"].cumsum()
-    cum_vp = (df["close"] * df["volume"]).cumsum()
-    df["vwap"] = cum_vp / cum_vol.replace(0, np.nan)
+def _add_vwap(df: pd.DataFrame, window: int = 20) -> pd.DataFrame:
+    """Rolling VWAP (Volume-Weighted Average Price) + deviation.
+
+    Uses rolling window instead of cumulative to maintain signal quality
+    over long series. Cumulative VWAP converges to long-run mean and
+    becomes useless after ~100 bars.
+    """
+    vp = df["close"] * df["volume"]
+    roll_vp = vp.rolling(window, min_periods=1).sum()
+    roll_vol = df["volume"].rolling(window, min_periods=1).sum()
+    df["vwap"] = roll_vp / roll_vol.replace(0, np.nan)
     df["vwap_deviation"] = (df["close"] - df["vwap"]) / df["vwap"].replace(0, np.nan)
     return df
 
@@ -102,7 +108,7 @@ def _add_ema_decomposition(df: pd.DataFrame, period: int) -> pd.DataFrame:
     close = df["close"]
     trend = close.ewm(span=period, adjust=False).mean()
     detrended = close - trend
-    seasonal = detrended.rolling(period, min_periods=period // 2, center=True).mean().fillna(0)
+    seasonal = detrended.rolling(period, min_periods=period // 2, center=False).mean().fillna(0)
     residual = close - trend - seasonal
 
     df["decomp_trend"] = (trend / close).fillna(0)

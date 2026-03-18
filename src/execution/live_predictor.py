@@ -281,12 +281,17 @@ def train_combo(
     # ── Feature selection ──────────────────────────────────
     all_cols = select_features(labeled)
     max_feat = coin_cfg.get("max_features", 120)
-    clean = labeled.replace([np.inf, -np.inf], np.nan).ffill().bfill()
+    clean = labeled.replace([np.inf, -np.inf], np.nan).ffill().fillna(0)
 
-    y_3c = clean[label_col].fillna(LABEL_MAP["HOLD"]).values.astype(int)
-    X_all = clean[all_cols].fillna(0).values
+    # Exclude last max_horizon rows: labels are always HOLD (no future data to label)
+    max_h = common_cfg.get("max_horizon", 18)
+    n_train = max(0, len(clean) - max_h)
+    train_slice = clean.iloc[:n_train]
+
+    y_3c = train_slice[label_col].fillna(LABEL_MAP["HOLD"]).values.astype(int)
+    X_all = train_slice[all_cols].fillna(0).values
     feature_cols = mi_select(X_all, y_3c, all_cols, max_feat)
-    X = clean[feature_cols].fillna(0).values
+    X = train_slice[feature_cols].fillna(0).values
 
     if len(X) < 200:
         logger.warning(f"[Train] {coin}: too few samples ({len(X)})")
