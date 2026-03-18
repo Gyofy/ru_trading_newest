@@ -16,7 +16,7 @@ common:
   k_upper: 3.0
   k_lower: 0.6
   risk_frac: 0.005
-  max_horizon: 18
+  max_horizon: 12             # was 18 (72h) → 12 (48h): faster slot turnover, +$3.5k equity
   bar_minutes: 240
   min_barrier_pct: 0.002
 
