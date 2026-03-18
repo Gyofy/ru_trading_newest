@@ -30,6 +30,7 @@ from datetime import datetime, timezone, date
 from pathlib import Path
 
 import numpy as np
+import pandas as pd
 import yaml
 
 # ── Project root ───────────────────────────────────────────
@@ -139,7 +140,6 @@ async def fetch_ohlcv(exchange, symbol: str, limit: int = 500):
             ohlcv = await exchange._exchange.fetch_ohlcv(ccxt_sym, "4h", limit=limit)
             if not ohlcv:
                 raise ValueError(f"Empty OHLCV for {symbol}")
-            import pandas as pd
             df = pd.DataFrame(ohlcv, columns=["timestamp", "open", "high", "low", "close", "volume"])
             df["timestamp"] = pd.to_datetime(df["timestamp"], unit="ms", utc=True)
             df.set_index("timestamp", inplace=True)
@@ -153,11 +153,16 @@ async def fetch_ohlcv(exchange, symbol: str, limit: int = 500):
 
 
 async def fetch_all_ohlcv(exchange, coins: list) -> dict:
-    results = {}
+    """Fetch OHLCV for all coins concurrently."""
     fetch_list = list(set(coins + ["BTC", "ETH"]))
-    for coin in fetch_list:
-        df = await fetch_ohlcv(exchange, coin)
-        if df is not None and not df.empty:
+    tasks = [fetch_ohlcv(exchange, coin) for coin in fetch_list]
+    dfs = await asyncio.gather(*tasks, return_exceptions=True)
+
+    results = {}
+    for coin, df in zip(fetch_list, dfs):
+        if isinstance(df, Exception):
+            logger.error(f"[OHLCV] {coin}: {df}")
+        elif df is not None and not df.empty:
             results[coin] = df
             logger.info(f"[OHLCV] {coin}: {len(df)} bars, ${df['close'].iloc[-1]:,.4f}")
     return results
@@ -341,6 +346,7 @@ class LiveTradingBot:
         self.coin_cfgs = self.config["coins"]
         self.micro_cfg = self.config.get("microstructure", {})
         self.monitor_cfg = self.config.get("monitoring", {})
+        self.blocked_regimes = self.config.get("blocked_regimes", ["RANGE_LOW"])
 
         # Cost model
         cm = self.config.get("cost_model", {})
@@ -572,7 +578,7 @@ class LiveTradingBot:
         self.last_train_date = today
         logger.info(f"[Step 2] Trained: {list(self.models.keys())}")
 
-    # ── Step 4: Signals ────────────────────────────────────
+    # ── Step 3: Signals ────────────────────────────────────
 
     async def _generate_signals(self):
         logger.info("[Step 3] Generating signals...")
@@ -595,8 +601,7 @@ class LiveTradingBot:
 
         # Regime filter
         regime = detect_regime(df)
-        blocked = coin_cfg.get("blocked_regimes_override",
-                               self.config.get("blocked_regimes", ["RANGE_LOW"]))
+        blocked = coin_cfg.get("blocked_regimes_override", self.blocked_regimes)
         if regime in blocked:
             logger.info(f"[Signal] {coin}: {regime} BLOCKED")
             return

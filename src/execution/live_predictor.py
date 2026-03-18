@@ -12,8 +12,7 @@ from __future__ import annotations
 
 import logging
 import time
-import traceback
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
@@ -206,16 +205,18 @@ class TrainedCombo:
 
 # ── Feature Selection ──────────────────────────────────────
 
-def select_features(df: pd.DataFrame, max_features: int = 120) -> list[str]:
-    """Select numeric feature columns, excluding OHLCV/labels/leaky cols."""
-    exclude = {"open", "high", "low", "close", "volume", "label"}
-    leaky = ["future", "target", "label_", "return_", "fwd_", "forward_"]
+_EXCLUDE_COLS = frozenset({"open", "high", "low", "close", "volume", "label"})
+_LEAKY_KEYS = ("future", "target", "label_", "return_", "fwd_", "forward_")
 
+
+def select_features(df: pd.DataFrame) -> list[str]:
+    """Select numeric feature columns, excluding OHLCV/labels/leaky cols."""
     cols = []
     for c in df.columns:
-        if c.lower() in exclude:
+        cl = c.lower()
+        if cl in _EXCLUDE_COLS:
             continue
-        if any(k in c.lower() for k in leaky):
+        if any(k in cl for k in _LEAKY_KEYS):
             continue
         if is_excluded_feature(c):
             continue
@@ -256,7 +257,7 @@ def train_combo(
 
     # ── Labeling (same as backtesting pipeline) ────────────
     labeled = create_labels_triple_barrier(
-        df.copy(),
+        df,
         horizon=HORIZONS[-1],
         k_upper_override=common_cfg["k_upper"],
         k_lower_override=common_cfg.get("k_lower", 0.6),
@@ -360,6 +361,23 @@ def train_combo(
 
 # ── Core: 2-Stage Prediction ──────────────────────────────
 
+def _weighted_ensemble_proba(
+    models: list, weights: list, X: np.ndarray, stage_name: str,
+) -> Optional[np.ndarray]:
+    """Run weighted ensemble prediction. Returns averaged proba or None."""
+    proba_list = []
+    for model in models:
+        try:
+            proba_list.append(model.predict_proba(X)[0])
+        except Exception as e:
+            logger.warning(f"[Predict] {stage_name} model error: {e}")
+    if not proba_list:
+        return None
+    wts = weights[:len(proba_list)]
+    w_sum = sum(wts)
+    return sum(w / w_sum * p for w, p in zip(wts, proba_list))
+
+
 def predict_2stage(
     combo: TrainedCombo,
     df: pd.DataFrame,
@@ -367,70 +385,35 @@ def predict_2stage(
 ) -> PredictionResult:
     """Run 2-stage prediction on the latest bar.
 
-    Stage 1: p(Trade) >= threshold → proceed to Stage 2
-    Stage 2: p(Long) > 0.5 → BUY, else SELL
+    Stage 1: p(Trade) >= threshold -> proceed to Stage 2
+    Stage 2: p(Long) > 0.5 -> BUY, else SELL
     """
     fcols = combo.feature_columns
     missing = [c for c in fcols if c not in df.columns]
     if missing:
+        df = df.copy()
         for c in missing:
-            df = df.copy()
             df[c] = 0.0
 
-    X = df[fcols].iloc[[-1]].values
-    X = np.nan_to_num(X, nan=0.0, posinf=0.0, neginf=0.0)
+    X = np.nan_to_num(df[fcols].iloc[[-1]].values, nan=0.0, posinf=0.0, neginf=0.0)
 
-    # ── Stage 1: weighted ensemble ─────────────────────────
-    s1_proba_list = []
-    for model in combo.s1_models:
-        try:
-            p = model.predict_proba(X)[0]
-            s1_proba_list.append(p)
-        except Exception as e:
-            logger.warning(f"[Predict] S1 model error: {e}")
-
-    if not s1_proba_list:
+    # Stage 1
+    s1 = _weighted_ensemble_proba(combo.s1_models, combo.weights, X, "S1")
+    if s1 is None:
         return PredictionResult("HOLD", 0.0, 0.5, 0.0)
-
-    # Weighted average
-    wts = combo.weights[:len(s1_proba_list)]
-    w_sum = sum(wts)
-    s1_proba = sum(w / w_sum * p for w, p in zip(wts, s1_proba_list))
-    p_trade = float(s1_proba[1]) if len(s1_proba) > 1 else float(s1_proba[0])
-
+    p_trade = float(s1[1]) if len(s1) > 1 else float(s1[0])
     if p_trade < s1_threshold:
         return PredictionResult("HOLD", p_trade, 0.5, 0.0)
 
-    # ── Stage 2: weighted ensemble ─────────────────────────
-    s2_proba_list = []
-    for model in combo.s2_models:
-        try:
-            p = model.predict_proba(X)[0]
-            s2_proba_list.append(p)
-        except Exception as e:
-            logger.warning(f"[Predict] S2 model error: {e}")
-
-    if not s2_proba_list:
+    # Stage 2
+    s2 = _weighted_ensemble_proba(combo.s2_models, combo.weights, X, "S2")
+    if s2 is None:
         return PredictionResult("HOLD", p_trade, 0.5, 0.0)
-
-    wts2 = combo.weights[:len(s2_proba_list)]
-    w_sum2 = sum(wts2)
-    s2_proba = sum(w / w_sum2 * p for w, p in zip(wts2, s2_proba_list))
-    p_long = float(s2_proba[1]) if len(s2_proba) > 1 else float(s2_proba[0])
+    p_long = float(s2[1]) if len(s2) > 1 else float(s2[0])
 
     if p_long > 0.5:
-        side = "BUY"
-        confidence = p_trade * p_long
-    else:
-        side = "SELL"
-        confidence = p_trade * (1 - p_long)
-
-    return PredictionResult(
-        side=side,
-        p_trade=p_trade,
-        p_direction=p_long if side == "BUY" else 1 - p_long,
-        confidence=confidence,
-    )
+        return PredictionResult("BUY", p_trade, p_long, p_trade * p_long)
+    return PredictionResult("SELL", p_trade, 1 - p_long, p_trade * (1 - p_long))
 
 
 # ── Artifact Save/Load ─────────────────────────────────────
