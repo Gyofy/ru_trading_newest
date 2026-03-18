@@ -11,7 +11,7 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass
 from datetime import date, datetime, timezone
-from typing import Optional
+from typing import Optional, Tuple
 
 from src.execution.order_ledger import OrderLedger
 
@@ -79,10 +79,66 @@ class RiskEngine:
         self._weekly_start_equity: float = 0.0
         self._kill_switch: bool = False
         self._kill_reason: str = ""
+        # Drawdown accumulation (replaces DrawdownTracker)
+        self._daily_pnl: float = 0.0
+        self._weekly_pnl: float = 0.0
+        self._last_daily_date: date | None = None
+        self._last_weekly_date: date | None = None
 
     def set_initial_equity(self, equity: float) -> None:
         self._daily_start_equity = equity
         self._weekly_start_equity = equity
+
+    # ── Drawdown Accumulation (replaces DrawdownTracker) ────
+
+    @property
+    def daily_pnl(self) -> float:
+        return self._daily_pnl
+
+    @property
+    def weekly_pnl(self) -> float:
+        return self._weekly_pnl
+
+    def record_pnl(self, pnl: float) -> None:
+        """Accumulate realized PnL into daily/weekly buckets."""
+        self._daily_pnl += pnl
+        self._weekly_pnl += pnl
+
+    def maybe_reset(self, equity: float) -> None:
+        """Auto-reset daily/weekly buckets on calendar rollover."""
+        today = datetime.now(timezone.utc).date()
+        if self._last_daily_date != today:
+            self._daily_pnl = 0.0
+            self._daily_start_equity = equity
+            self._last_daily_date = today
+            if self._kill_switch and "Daily" in self._kill_reason:
+                self._kill_switch = False
+                self._kill_reason = ""
+                logger.info("[RiskEngine] Daily kill switch lifted on reset")
+        if self._last_weekly_date is None or (today - self._last_weekly_date).days >= 7:
+            self._weekly_pnl = 0.0
+            self._weekly_start_equity = equity
+            self._last_weekly_date = today
+            if self._kill_switch and "Weekly" in self._kill_reason:
+                self._kill_switch = False
+                self._kill_reason = ""
+                logger.info("[RiskEngine] Weekly kill switch lifted on reset")
+
+    def check_drawdown(self) -> Tuple[bool, str]:
+        """Check daily + weekly drawdown limits. Activates kill switch if breached."""
+        if self._daily_start_equity > 0:
+            dd = -self._daily_pnl / self._daily_start_equity
+            if dd >= self.config.daily_drawdown_pct:
+                msg = f"Daily DD {dd:.2%} >= {self.config.daily_drawdown_pct:.0%}"
+                self.activate_kill_switch(f"Daily drawdown: {msg}")
+                return False, msg
+        if self._weekly_start_equity > 0:
+            wd = -self._weekly_pnl / self._weekly_start_equity
+            if wd >= self.config.weekly_drawdown_pct:
+                msg = f"Weekly DD {wd:.2%} >= {self.config.weekly_drawdown_pct:.0%}"
+                self.activate_kill_switch(f"Weekly drawdown: {msg}")
+                return False, msg
+        return True, ""
 
     # ── Core Sizing ─────────────────────────────────────────
 

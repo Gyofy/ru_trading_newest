@@ -123,7 +123,8 @@ def detect_regime(df, lookback: int = 24) -> str:
     else:
         di_diff = 0.0
     if not has_adx:
-        logger.warning("[Regime] adx_14/di columns missing — regime detection degraded (add_signal_features may have failed)")
+        logger.warning("[Regime] adx_14 missing — regime UNKNOWN (signal_features may have failed)")
+        return "UNKNOWN"
     if "atr_14" in df.columns:
         atr_pct = df["atr_14"].iloc[-1] / (df["close"].iloc[-1] + 1e-10)
         median_pct = (df["atr_14"].iloc[-96:] / (df["close"].iloc[-96:] + 1e-10)).median()
@@ -212,61 +213,8 @@ def compute_features(raw_data: dict) -> dict:
     return featured
 
 
-# ══════════════════════════════════════════════════════════
-#  DRAWDOWN TRACKER
-# ══════════════════════════════════════════════════════════
-
-class DrawdownTracker:
-    def __init__(self, daily_limit: float = 0.02, weekly_limit: float = 0.05):
-        self.daily_limit = daily_limit
-        self.weekly_limit = weekly_limit
-        self.daily_pnl = 0.0
-        self.weekly_pnl = 0.0
-        self.daily_start = 0.0
-        self.weekly_start = 0.0
-        self.killed = False
-        self.kill_reason = ""
-        self._last_daily: date | None = None
-        self._last_weekly: date | None = None
-
-    def set_equity(self, eq: float):
-        self.daily_start = eq
-        self.weekly_start = eq
-
-    def record(self, pnl: float):
-        self.daily_pnl += pnl
-        self.weekly_pnl += pnl
-
-    def check(self) -> tuple[bool, str]:
-        if self.daily_start <= 0:
-            return True, ""
-        dd = -self.daily_pnl / self.daily_start
-        if dd >= self.daily_limit:
-            self.killed = True
-            self.kill_reason = f"Daily DD {dd:.2%} >= {self.daily_limit:.0%}"
-            return False, self.kill_reason
-        wd = -self.weekly_pnl / self.weekly_start
-        if wd >= self.weekly_limit:
-            self.killed = True
-            self.kill_reason = f"Weekly DD {wd:.2%} >= {self.weekly_limit:.0%}"
-            return False, self.kill_reason
-        return True, ""
-
-    def maybe_reset(self, eq: float):
-        today = datetime.now(timezone.utc).date()
-        if self._last_daily != today:
-            self.daily_pnl = 0.0
-            self.daily_start = eq
-            self._last_daily = today
-            if self.killed and "Daily" in self.kill_reason:
-                self.killed = False; self.kill_reason = ""
-        # Rolling 7-day window: reset weekly accum if oldest entry > 7 days ago
-        if self._last_weekly is None or (today - self._last_weekly).days >= 7:
-            self.weekly_pnl = 0.0
-            self.weekly_start = eq
-            self._last_weekly = today
-            if self.killed and "Weekly" in self.kill_reason:
-                self.killed = False; self.kill_reason = ""
+# DrawdownTracker removed — functionality merged into RiskEngine.
+# Use risk_engine.record_pnl(), risk_engine.maybe_reset(), risk_engine.check_drawdown().
 
 
 # ══════════════════════════════════════════════════════════
@@ -396,6 +344,9 @@ class LiveTradingBot:
         self.micro_cfg = self.config.get("microstructure", {})
         self.monitor_cfg = self.config.get("monitoring", {})
         self.blocked_regimes = self.config.get("blocked_regimes", ["RANGE_LOW"])
+        # Always block UNKNOWN — regime detection failed, do not trade
+        if "UNKNOWN" not in self.blocked_regimes:
+            self.blocked_regimes = list(self.blocked_regimes) + ["UNKNOWN"]
 
         # Cost model
         cm = self.config.get("cost_model", {})
@@ -430,7 +381,6 @@ class LiveTradingBot:
         self.ledger = OrderLedger(db_path=STATE_DB)
         self.pos_manager = PositionManager(persist_path=POSITIONS_FILE)
         self.equity = EquityTracker(initial_equity, EQUITY_FILE)
-        self.dd_tracker = DrawdownTracker()
         self.models: dict[str, TrainedCombo] = {}
         self.monitor: SlTpMonitor | None = None
         self.raw_data: dict = {}
@@ -470,7 +420,6 @@ class LiveTradingBot:
         except Exception as e:
             logger.warning(f"[Init] Balance fetch failed: {e}")
 
-        self.dd_tracker.set_equity(self.equity.current)
         self.risk_engine.set_initial_equity(self.equity.current)
 
         # Try loading saved models
@@ -626,9 +575,9 @@ class LiveTradingBot:
                 logger.info(f"  CYCLE #{self.cycle_count} @ {datetime.now(timezone.utc).strftime('%H:%M UTC')}")
                 logger.info(f"{'='*60}")
 
-                self.dd_tracker.maybe_reset(self.equity.current)
-                if self.dd_tracker.killed:
-                    logger.warning(f"[KillSwitch] {self.dd_tracker.kill_reason}")
+                self.risk_engine.maybe_reset(self.equity.current)
+                if self.risk_engine.is_killed:
+                    logger.warning(f"[KillSwitch] {self.risk_engine.kill_reason}")
                     for coin in list(self.pos_manager.positions.keys()):
                         await self._close_position(coin, "KILL_SWITCH")
                     await self._wait_next_cycle(t0)
@@ -734,7 +683,7 @@ class LiveTradingBot:
 
     async def _generate_signals(self):
         logger.info("[Step 3] Generating signals...")
-        if self.dd_tracker.killed:
+        if self.risk_engine.is_killed:
             return
 
         # Collect candidates from all coins
@@ -777,48 +726,46 @@ class LiveTradingBot:
             logger.info(f"[Step 3] Entered: {[t['coin'] for t in taken]} "
                         f"(from {len(candidates)} candidates, {len(accepted)} accepted)")
 
-    async def _evaluate_coin(self, coin: str) -> dict | None:
-        """Evaluate one coin: prediction + RL gate + risk check. Returns candidate dict or None."""
-        if self.pos_manager.has_position(coin):
-            return None
-        if coin not in self.models or coin not in self.featured_data:
-            return None
+    # ── Signal Evaluation (decomposed) ────────────────────
 
-        df = self.featured_data[coin]
-        coin_cfg = self.coin_cfgs.get(coin, {})
+    def _check_regime_and_predict(self, coin: str, df, coin_cfg: dict):
+        """Check regime filter + CV gate + 2-stage prediction.
 
-        # Regime filter
+        Returns (regime, pred) or (None, None) if blocked.
+        """
         regime = detect_regime(df)
         blocked = coin_cfg.get("blocked_regimes_override", self.blocked_regimes)
         if regime in blocked:
-            return None
+            return None, None
 
-        # 2-Stage prediction
         combo = self.models[coin]
-
-        # CV 스코어 미달 코인 차단
         min_cv = self.common.get("min_cv_score", 0.0)
         if min_cv > 0 and combo.cv_score < min_cv:
-            logger.info(
-                f"[Signal] {coin}: CV {combo.cv_score:.3f} < min {min_cv:.2f} — 차단"
-            )
-            return None
+            logger.info(f"[Signal] {coin}: CV {combo.cv_score:.3f} < min {min_cv:.2f} — 차단")
+            return None, None
 
         s1_thresh = coin_cfg.get("stage1_threshold", 0.50)
         pred = predict_2stage(combo, df, s1_thresh)
         if pred.side == "HOLD":
-            return None
+            return None, None
+        return regime, pred
 
-        # Build RL state
+    def _build_rl_decision(self, coin: str, df, pred, regime: str):
+        """Build RL state, run gate, return (state, rl_action, rl_effective, rl_score, sizing_mult)."""
         coin_history = self._get_coin_history(coin)
+        s1_thresh = self.coin_cfgs.get(coin, {}).get("stage1_threshold", 0.50)
+        dd_denom = max(
+            self.risk_engine._daily_start_equity * self.risk_engine.config.daily_drawdown_pct,
+            1e-10,
+        )
         state = build_rl_state(
             df=df, pred_side=pred.side,
             p_trade=pred.p_trade, p_direction=pred.p_direction,
             s1_threshold=s1_thresh, coin=coin,
             equity=self.equity.current,
-            daily_pnl=self.dd_tracker.daily_pnl,
-            weekly_pnl=self.dd_tracker.weekly_pnl,
-            dd_ratio=max(0.0, -self.dd_tracker.daily_pnl) / max(self.dd_tracker.daily_start * self.dd_tracker.daily_limit, 1e-10),
+            daily_pnl=self.risk_engine.daily_pnl,
+            weekly_pnl=self.risk_engine.weekly_pnl,
+            dd_ratio=max(0.0, -self.risk_engine.daily_pnl) / dd_denom,
             open_count=self.pos_manager.count(),
             coin_win_rate_5=coin_history["win_rate_5"],
             coin_avg_pnl_5=coin_history["avg_pnl_5"],
@@ -828,51 +775,13 @@ class LiveTradingBot:
             last_funding=self._last_funding_cache.get(coin, 0.0),
             btc_df=self.featured_data.get("BTC"),
         )
-
-        # RL gate decision
         rl_action, rl_score = self.rl_gate.decide(state)
         rl_effective = self.rl_gate.effective_action(rl_action)
         sizing_mult = SIZING_MAP.get(rl_effective, 1.0)
+        return state, rl_action, rl_effective, rl_score, sizing_mult
 
-        logger.info(
-            f"[Signal] {coin}: {pred.side} p_trade={pred.p_trade:.3f} "
-            f"conf={pred.confidence:.3f} rl={rl_action}({self.rl_gate.status}) "
-            f"score={rl_score:.3f} regime={regime}"
-        )
-
-        # Ticker + barriers + risk gate (only if not rejected)
-        if rl_effective == 0:
-            # Still compute barriers for counterfactual logging
-            close_price = df["close"].iloc[-1]
-            atr_raw = df["atr_14"].iloc[-1] if "atr_14" in df.columns else np.nan
-            atr = atr_raw if (not np.isnan(atr_raw) and atr_raw > 1e-10) else close_price * 0.01
-            sl, tp = RiskEngine.compute_barriers(
-                close_price, atr, pred.side,
-                self.common["k_upper"], self.common["k_lower"], self.common["min_barrier_pct"],
-            )
-            return {
-                "coin": coin, "pred": pred, "regime": regime, "state": state,
-                "rl_action": rl_action, "rl_effective_action": 0,
-                "rl_score": rl_score, "sizing_mult": 0.0,
-                "entry_price": close_price, "sl_price": sl, "tp_price": tp,
-                "risk_ok": False, "check": None, "atr": atr, "df": df,
-            }
-
-        # Fetch live market data
-        try:
-            ticker = await self.exchange.fetch_ticker(coin)
-            bid = ticker.get("bid")
-            ask = ticker.get("ask")
-            last = ticker.get("last")
-            entry_price = (bid if pred.side == "BUY" else ask) or last
-            if not entry_price:
-                logger.warning(f"[Signal] {coin}: bid/ask/last all None, skip")
-                return None
-            spread_bps = ticker["spread_bps"]
-        except Exception as e:
-            logger.error(f"[Signal] {coin}: ticker failed: {e}")
-            return None
-
+    def _compute_atr_and_barriers(self, coin: str, df, entry_price: float, side: str):
+        """Read ATR from features and compute SL/TP barriers."""
         atr_raw = df["atr_14"].iloc[-1] if "atr_14" in df.columns else None
         try:
             atr = float(atr_raw)
@@ -881,9 +790,26 @@ class LiveTradingBot:
         if np.isnan(atr) or atr < 1e-10:
             atr = entry_price * 0.01
         sl_price, tp_price = RiskEngine.compute_barriers(
-            entry_price, atr, pred.side,
+            entry_price, atr, side,
             self.common["k_upper"], self.common["k_lower"], self.common["min_barrier_pct"],
         )
+        return atr, sl_price, tp_price
+
+    async def _fetch_market_inputs(self, coin: str, side: str, df):
+        """Fetch ticker + funding rate. Returns dict or None on failure."""
+        try:
+            ticker = await self.exchange.fetch_ticker(coin)
+            bid = ticker.get("bid")
+            ask = ticker.get("ask")
+            last = ticker.get("last")
+            entry_price = (bid if side == "BUY" else ask) or last
+            if not entry_price:
+                logger.warning(f"[Signal] {coin}: bid/ask/last all None, skip")
+                return None
+            spread_bps = ticker["spread_bps"]
+        except Exception as e:
+            logger.error(f"[Signal] {coin}: ticker failed: {e}")
+            return None
 
         try:
             funding = await self.exchange.fetch_funding_rate(coin)
@@ -891,8 +817,17 @@ class LiveTradingBot:
         except Exception:
             funding = self._last_funding_cache.get(coin, 0.0)
 
-        # Dynamic risk_frac: confidence-tiered + DD brake (per-coin, not shared)
-        dd_pct = max(0.0, -self.dd_tracker.daily_pnl) / (self.dd_tracker.daily_start + 1e-10)
+        atr, sl_price, tp_price = self._compute_atr_and_barriers(coin, df, entry_price, side)
+        return {
+            "entry_price": entry_price, "sl_price": sl_price, "tp_price": tp_price,
+            "atr": atr, "spread_bps": spread_bps, "funding": funding,
+        }
+
+    def _run_risk_gate(self, coin: str, pred, market: dict):
+        """Run pre-trade risk gate with confidence-tiered dynamic risk_frac."""
+        dd_pct = max(0.0, -self.risk_engine.daily_pnl) / (
+            self.risk_engine._daily_start_equity + 1e-10
+        )
         sizing_cfg = self.config.get("sizing_tiers", {})
         dynamic_risk_frac = compute_risk_frac(
             confidence=pred.confidence, dd_pct=dd_pct,
@@ -901,37 +836,73 @@ class LiveTradingBot:
             tier_low=sizing_cfg.get("tier_low", 0.005),
             dd_brake_threshold=sizing_cfg.get("dd_brake_threshold", 0.015),
         )
-        # Temporarily override risk_frac — always restore via finally
-        orig_risk_frac = self.risk_engine.config.risk_frac
+        orig = self.risk_engine.config.risk_frac
         self.risk_engine.config.risk_frac = dynamic_risk_frac
         try:
-            check = self.risk_engine.pre_trade_gate(
-                symbol=coin, side=pred.side, entry_price=entry_price,
-                sl_price=sl_price, equity_usdt=self.equity.current,
-                p_trade=pred.p_trade, atr=atr,
-                funding_rate=funding, spread_bps=spread_bps,
+            return self.risk_engine.pre_trade_gate(
+                symbol=coin, side=pred.side,
+                entry_price=market["entry_price"], sl_price=market["sl_price"],
+                equity_usdt=self.equity.current, p_trade=pred.p_trade,
+                atr=market["atr"], funding_rate=market["funding"],
+                spread_bps=market["spread_bps"],
             )
         finally:
-            self.risk_engine.config.risk_frac = orig_risk_frac  # always restore
+            self.risk_engine.config.risk_frac = orig
 
-        if not check.approved:
-            logger.info(f"[Signal] {coin}: risk REJECTED ({check.reason})")
+    async def _evaluate_coin(self, coin: str) -> dict | None:
+        """Orchestrate per-coin evaluation: predict → RL gate → risk check."""
+        if self.pos_manager.has_position(coin):
+            return None
+        if coin not in self.models or coin not in self.featured_data:
+            return None
+
+        df = self.featured_data[coin]
+        coin_cfg = self.coin_cfgs.get(coin, {})
+
+        # 1. Regime filter + CV check + prediction
+        regime, pred = self._check_regime_and_predict(coin, df, coin_cfg)
+        if pred is None:
+            return None
+
+        # 2. RL gate
+        state, rl_action, rl_effective, rl_score, sizing_mult = self._build_rl_decision(
+            coin, df, pred, regime
+        )
+        logger.info(
+            f"[Signal] {coin}: {pred.side} p_trade={pred.p_trade:.3f} "
+            f"conf={pred.confidence:.3f} rl={rl_action}({self.rl_gate.status}) "
+            f"score={rl_score:.3f} regime={regime}"
+        )
+
+        # 3. RL REJECT — return counterfactual for logging (no live market fetch)
+        if rl_effective == 0:
+            close_price = df["close"].iloc[-1]
+            atr, sl, tp = self._compute_atr_and_barriers(coin, df, close_price, pred.side)
             return {
                 "coin": coin, "pred": pred, "regime": regime, "state": state,
-                "rl_action": rl_action, "rl_effective_action": rl_effective,
-                "rl_score": rl_score, "sizing_mult": sizing_mult,
-                "entry_price": entry_price, "sl_price": sl_price, "tp_price": tp_price,
-                "risk_ok": False, "check": check, "atr": atr, "df": df,
+                "rl_action": rl_action, "rl_effective_action": 0,
+                "rl_score": rl_score, "sizing_mult": 0.0,
+                "entry_price": close_price, "sl_price": sl, "tp_price": tp,
+                "risk_ok": False, "check": None, "atr": atr, "df": df,
             }
 
-        return {
+        # 4. Live market fetch + barriers
+        market = await self._fetch_market_inputs(coin, pred.side, df)
+        if market is None:
+            return None
+
+        # 5. Risk gate
+        check = self._run_risk_gate(coin, pred, market)
+        base = {
             "coin": coin, "pred": pred, "regime": regime, "state": state,
             "rl_action": rl_action, "rl_effective_action": rl_effective,
-            "rl_score": rl_score, "sizing_mult": sizing_mult,
-            "entry_price": entry_price, "sl_price": sl_price, "tp_price": tp_price,
-            "risk_ok": True, "check": check, "atr": atr, "df": df,
-            "funding": funding, "spread_bps": spread_bps,
+            "rl_score": rl_score, "sizing_mult": sizing_mult, "df": df,
+            **market,
         }
+        if not check.approved:
+            logger.info(f"[Signal] {coin}: risk REJECTED ({check.reason})")
+            return {**base, "risk_ok": False, "check": check}
+        return {**base, "risk_ok": True, "check": check}
 
     async def _execute_entry(self, c: dict):
         """Execute a ranked candidate entry."""
@@ -1186,7 +1157,7 @@ class LiveTradingBot:
         pos.sl_price = new_sl
         self.pos_manager._save()
 
-        self.dd_tracker.record(pnl_usdt)
+        self.risk_engine.record_pnl(pnl_usdt)
         self.equity.record_pnl(pnl_usdt)
 
         log_event("partial_tp", {
@@ -1231,7 +1202,7 @@ class LiveTradingBot:
             pnl_pct = (pos.entry_price - exit_price) / pos.entry_price
         pnl_usdt = pnl_pct * pos.qty * pos.entry_price
 
-        self.dd_tracker.record(pnl_usdt)
+        self.risk_engine.record_pnl(pnl_usdt)
         self.equity.record_pnl(pnl_usdt)
         self.ledger.record_pnl(coin, pnl_usdt, 0.0)
 
@@ -1269,7 +1240,7 @@ class LiveTradingBot:
             f"entry={pos.entry_price:.4f} exit={exit_price:.4f} | "
             f"pnl={pnl_pct:.2%} ({pnl_usdt:+.2f} USDT)"
         )
-        ok, msg = self.dd_tracker.check()
+        ok, msg = self.risk_engine.check_drawdown()
         if not ok:
             logger.warning(f"[KillSwitch] {msg}")
 
