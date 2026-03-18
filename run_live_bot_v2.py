@@ -744,7 +744,8 @@ class LiveTradingBot:
         if rl_effective == 0:
             # Still compute barriers for counterfactual logging
             close_price = df["close"].iloc[-1]
-            atr = df["atr_14"].iloc[-1] if "atr_14" in df.columns else close_price * 0.01
+            atr_raw = df["atr_14"].iloc[-1] if "atr_14" in df.columns else np.nan
+            atr = atr_raw if (not np.isnan(atr_raw) and atr_raw > 1e-10) else close_price * 0.01
             sl, tp = RiskEngine.compute_barriers(
                 close_price, atr, pred.side,
                 self.common["k_upper"], self.common["k_lower"], self.common["min_barrier_pct"],
@@ -939,7 +940,8 @@ class LiveTradingBot:
         self.ledger.insert_fill(oid, fill_price, fill_qty, fill.get("fee", 0))
 
         # Recalculate barriers at fill price
-        atr_val = self.featured_data[coin]["atr_14"].iloc[-1]
+        atr_col = self.featured_data[coin].get("atr_14")
+        atr_val = float(atr_col.iloc[-1]) if atr_col is not None and not pd.isna(atr_col.iloc[-1]) else fill_price * 0.01
         sl_new, tp_new = RiskEngine.compute_barriers(
             fill_price, atr_val, pred.side,
             self.common["k_upper"], self.common["k_lower"], self.common["min_barrier_pct"],
