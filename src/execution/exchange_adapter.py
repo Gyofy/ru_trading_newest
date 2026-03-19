@@ -116,6 +116,10 @@ class ExchangeAdapter:
 
         async_ex = ccxt_async.binanceusdm(config)
         sync_ex = ccxt_sync.binanceusdm(config)
+        try:
+            sync_ex.load_time_difference()
+        except Exception:
+            pass
         return async_ex, sync_ex
 
     # ── Order param helpers (Binance USDT-M) ────────────────
@@ -153,6 +157,7 @@ class ExchangeAdapter:
 
     async def initialize(self) -> None:
         """Load markets (must call once before any order)."""
+        await self._exchange.load_time_difference()
         await self._exchange.load_markets()
         self._markets_loaded = True
         logger.info(
@@ -437,7 +442,15 @@ class ExchangeAdapter:
                 await asyncio.sleep(poll_interval)
 
             except Exception as e:
-                logger.warning(f"[WaitFill] {symbol} poll error: {e}")
+                err_str = str(e)
+                if "-1021" in err_str or "ahead of the server" in err_str or "Timestamp" in err_str:
+                    logger.warning(f"[WaitFill] {symbol} time drift detected, resyncing...")
+                    try:
+                        await self._exchange.load_time_difference()
+                    except Exception:
+                        pass
+                else:
+                    logger.warning(f"[WaitFill] {symbol} poll error: {e}")
                 await asyncio.sleep(poll_interval)
 
         logger.info(f"[WaitFill] {symbol} timeout ({ttl_sec}s), cancelling")
