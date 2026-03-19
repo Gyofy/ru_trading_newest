@@ -628,6 +628,7 @@ class LiveTradingBot:
                     f"Equity: {self.equity.current:.2f} | "
                     f"Open: {[p.coin for p in self.pos_manager.all_positions()]}"
                 )
+                self._export_trading_result()
                 await self._wait_next_cycle(t0)
 
             except asyncio.CancelledError:
@@ -1117,6 +1118,26 @@ class LiveTradingBot:
         )
 
     # ── Partial Close (분할 익절) ───────────────────────────
+
+    def _export_trading_result(self) -> None:
+        """사이클마다 trading_result/ 폴더에 거래 기록 CSV 갱신."""
+        import csv as _csv, shutil as _shutil
+        out = PROJECT_ROOT / "trading_result"
+        out.mkdir(exist_ok=True)
+        try:
+            conn = self.ledger._conn
+            for table, fname in [("orders", "orders.csv"), ("fills", "fills.csv"), ("daily_pnl", "daily_pnl.csv")]:
+                rows = conn.execute(f"SELECT * FROM {table} ORDER BY rowid").fetchall()
+                if rows:
+                    keys = [d[0] for d in conn.execute(f"SELECT * FROM {table} LIMIT 0").description]
+                    with open(out / fname, "w", newline="", encoding="utf-8") as f:
+                        w = _csv.writer(f)
+                        w.writerow(keys)
+                        w.writerows(rows)
+            _shutil.copy(EQUITY_FILE, out / "equity_state.json")
+            _shutil.copy(JSONL_LOG, out / "events.jsonl")
+        except Exception as e:
+            logger.debug(f"[Export] trading_result 갱신 실패: {e}")
 
     async def _partial_close_position(self, coin: str, stage: int, exit_price: float):
         """TP1/TP2 분할 익절: 일부 청산 + SL 이동."""
