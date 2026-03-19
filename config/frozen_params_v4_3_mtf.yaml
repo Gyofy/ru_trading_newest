@@ -1,0 +1,103 @@
+# Multi-Timeframe Strategy Config -- v4.3-MTF
+# 5분봉 방향 확인 → 1분봉 정밀 진입
+#
+# 문제: 1분봉 단독으로 돌리면 노이즈에 즉시 청산
+# 해결: 5분봉 모델이 방향(LONG/SHORT)을 결정하고,
+#       1분봉 모델이 진입 타이밍만 결정
+#
+# SL 설계: 레버리지 4x에서 한 번 SL = equity의 ~0.5%가 되도록
+#   risk_frac = 0.005 → 실제 risk = 0.5% / 4x = 마진 대비 2%
+#   SL 거리 = 5분봉 ATR × 2.0 (1분봉 ATR 아닌 상위 TF ATR 사용)
+
+version: "v4.3-mtf"
+frozen_date: "2026-03-19"
+
+# ── 5분봉 (방향 결정 TF) ─────────────────────────────
+tf_5m:
+  bar_minutes: 5
+  horizons: [6, 12, 24, 48]          # 30m, 1h, 2h, 4h
+  max_horizon: 96                     # 8시간 보유 상한 (5m × 96 = 480분)
+  k_upper: 3.0                       # 라벨링용 TP
+  k_lower: 3.0                       # 대칭 라벨링
+  min_barrier_pct: 0.003
+  stage1_threshold: 0.55             # 5분봉은 보수적 (방향 확신 높아야)
+  role: "direction"                  # 방향만 결정
+
+# ── 1분봉 (진입 타이밍 TF) ───────────────────────────
+tf_1m:
+  bar_minutes: 1
+  horizons: [15, 30, 60, 120]        # 15m, 30m, 1h, 2h
+  max_horizon: 120                   # 2시간 보유 상한
+  stage1_threshold: 0.45             # 타이밍은 약간 공격적
+  role: "timing"                     # 진입 시점만 결정
+
+# ── 실행 배리어 (레버리지 조정) ────────────────────────
+execution:
+  leverage: 4
+  # SL: max(ATR × mult, 가격의 min_sl_pct) — 절대 최소 거리 보장
+  sl_atr_mult: 3.0
+  sl_atr_source: "5m"
+  min_sl_pct: 0.012                 # SL 최소 1.2% (4x 레버리지 → 마진 4.8%)
+  # TP: 현실적 거리 (SL의 2~3배)
+  tp1_atr_mult: 1.5                 # 33% 청산 + SL→BEP
+  tp2_atr_mult: 2.5                 # 33% 청산 + SL→TP1
+  tp3_atr_mult: 4.0                 # 나머지 청산
+  min_tp_pct: 0.010                 # TP1 최소 1.0%
+  # TTL
+  max_hold_minutes: 480             # 8시간 최대 보유 (5분봉 96 bars)
+  min_barrier_pct: 0.012            # 절대 최소 SL/TP 1.2%
+
+# ── MTF 진입 조건 ────────────────────────────────────
+entry_rules:
+  # 5분봉 + 1분봉 모두 같은 방향이어야 진입
+  require_direction_match: true
+  # 5분봉 시그널 후 1분봉 진입 허용 윈도우 (5분봉 bars)
+  entry_window_5m_bars: 6           # 30분 이내에 1분봉 시그널 있어야
+  # 5분봉 confidence 최소값
+  min_5m_confidence: 0.55
+  # 1분봉 confidence 최소값
+  min_1m_confidence: 0.45
+  # 최대 동시 포지션
+  max_positions: 3
+
+# ── 코인별 모델 (Mega Search v3 결과 기반) ─────────────
+# 5분봉/1분봉 각각 재탐색 필요 — 일단 4h 결과 적용
+coins:
+  TAO:
+    model_combo: "cb+xgb"
+    model_weights: { cb: 0.5, xgb: 0.5 }
+  DOT:
+    model_combo: "et+xgb"
+    model_weights: { et: 0.7, xgb: 0.3 }
+  ADA:
+    model_combo: "et+tabm"
+    model_weights: { et: 0.7, tabm: 0.3 }
+  XRP:
+    model_combo: "et+tabm"
+    model_weights: { et: 0.7, tabm: 0.3 }
+  SOL:
+    model_combo: "et+tabm"
+    model_weights: { et: 0.7, tabm: 0.3 }
+  LINK:
+    model_combo: "xgb"
+    model_weights: { xgb: 1.0 }
+  BTC:
+    model_combo: "et+cb"
+    model_weights: { et: 0.5, cb: 0.5 }
+  ETH:
+    model_combo: "et+tabm"
+    model_weights: { et: 0.7, tabm: 0.3 }
+
+# ── Sizing (레버리지 조정) ───────────────────────────
+sizing_tiers:
+  tier_high: 0.010                  # conf > 0.65 → 1.0% (레버리지 4x → 실질 4%)
+  tier_mid: 0.007                   # conf 0.50-0.65 → 0.7%
+  tier_low: 0.005                   # conf < 0.50 → 0.5%
+  dd_brake_threshold: 0.01          # DD 1%에서 브레이크 (4x라 조기)
+
+# ── Risk ─────────────────────────────────────────────
+risk:
+  daily_drawdown_pct: 0.02
+  weekly_drawdown_pct: 0.05
+  max_notional_usdt: 2000           # 4x 레버리지 → 실제 마진 $500
+  min_stop_distance_pct: 0.003      # 최소 SL 0.3%
