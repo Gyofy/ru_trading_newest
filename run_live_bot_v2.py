@@ -26,6 +26,7 @@ import signal
 import sys
 import time
 import traceback
+import urllib.request
 from datetime import datetime, timezone, date
 from pathlib import Path
 
@@ -88,6 +89,21 @@ logger.addHandler(_sh)
 # ══════════════════════════════════════════════════════════
 #  UTILITIES
 # ══════════════════════════════════════════════════════════
+
+def send_discord(msg: str) -> None:
+    url = os.getenv("DISCORD_WEBHOOK_URL", "")
+    if not url:
+        return
+    try:
+        payload = json.dumps({"content": msg}).encode()
+        req = urllib.request.Request(url, data=payload, headers={
+            "Content-Type": "application/json",
+            "User-Agent": "DiscordBot (trading-bot, 1.0)",
+        })
+        urllib.request.urlopen(req, timeout=5)
+    except Exception:
+        pass
+
 
 def log_event(event_type: str, data: dict) -> None:
     record = {"ts": datetime.now(timezone.utc).isoformat(), "event": event_type, **data}
@@ -461,6 +477,8 @@ class LiveTradingBot:
         logger.info(f"  Positions: {[p.coin for p in self.pos_manager.all_positions()]}")
         logger.info(f"  SL/TP:     every {poll_s}s")
         logger.info(f"{'='*60}")
+        if self.mode == "live":
+            send_discord("🤖 **자동매매 시작**\n이제부터 매수/매도 체결 시 알림을 보냅니다.")
 
     async def _sync_exchange_positions(self):
         """봇 재시작 시 거래소 실제 포지션과 position_store 동기화.
@@ -610,6 +628,7 @@ class LiveTradingBot:
                     f"Equity: {self.equity.current:.2f} | "
                     f"Open: {[p.coin for p in self.pos_manager.all_positions()]}"
                 )
+                self._export_trading_result()
                 await self._wait_next_cycle(t0)
 
             except asyncio.CancelledError:
@@ -914,7 +933,14 @@ class LiveTradingBot:
         qty *= c["sizing_mult"]  # RL sizing adjustment
         qty = apply_micro_sizing(qty, df, pred.side, self.micro_cfg)
         qty = self.exchange.round_qty(coin, qty)
-        entry_price = self.exchange.round_price(coin, c["entry_price"])
+        raw_entry   = c["entry_price"]
+        # Post-Only maker offset: BUY 1 tick below bid, SELL 1 tick above ask
+        tick = self.exchange.get_tick_size(coin)
+        if pred.side == "BUY":
+            raw_entry -= tick
+        else:
+            raw_entry += tick
+        entry_price = self.exchange.round_price(coin, raw_entry)
         sl_price    = self.exchange.round_price(coin, c["sl_price"])
         tp_price    = self.exchange.round_price(coin, c["tp_price"])
 
@@ -1085,8 +1111,33 @@ class LiveTradingBot:
             f"[Live] {coin} {pred.side} FILLED @ {fill_price} "
             f"| SL={sl} TP1={tp1} TP2={tp2} TP3={tp3}"
         )
+        send_discord(
+            f"**[LIVE 체결]** {coin} {pred.side} @ ${fill_price}\n"
+            f"Qty={fill_qty} | SL={sl} | TP1={tp1} TP2={tp2} TP3={tp3}\n"
+            f"p_trade={pred.p_trade:.3f} p_dir={pred.p_direction:.3f}"
+        )
 
     # ── Partial Close (분할 익절) ───────────────────────────
+
+    def _export_trading_result(self) -> None:
+        """사이클마다 trading_result/ 폴더에 거래 기록 CSV 갱신."""
+        import csv as _csv, shutil as _shutil
+        out = PROJECT_ROOT / "trading_result"
+        out.mkdir(exist_ok=True)
+        try:
+            conn = self.ledger._conn
+            for table, fname in [("orders", "orders.csv"), ("fills", "fills.csv"), ("daily_pnl", "daily_pnl.csv")]:
+                rows = conn.execute(f"SELECT * FROM {table} ORDER BY rowid").fetchall()
+                if rows:
+                    keys = [d[0] for d in conn.execute(f"SELECT * FROM {table} LIMIT 0").description]
+                    with open(out / fname, "w", newline="", encoding="utf-8") as f:
+                        w = _csv.writer(f)
+                        w.writerow(keys)
+                        w.writerows(rows)
+            _shutil.copy(EQUITY_FILE, out / "equity_state.json")
+            _shutil.copy(JSONL_LOG, out / "events.jsonl")
+        except Exception as e:
+            logger.debug(f"[Export] trading_result 갱신 실패: {e}")
 
     async def _partial_close_position(self, coin: str, stage: int, exit_price: float):
         """TP1/TP2 분할 익절: 일부 청산 + SL 이동."""
@@ -1239,6 +1290,12 @@ class LiveTradingBot:
             f"[Close] {coin} {pos.side} ({reason}) | "
             f"entry={pos.entry_price:.4f} exit={exit_price:.4f} | "
             f"pnl={pnl_pct:.2%} ({pnl_usdt:+.2f} USDT)"
+        )
+        emoji = "🟢" if pnl_usdt >= 0 else "🔴"
+        send_discord(
+            f"{emoji} **[LIVE 청산]** {coin} {pos.side} ({reason})\n"
+            f"진입 ${pos.entry_price} → 청산 ${exit_price:.4f}\n"
+            f"PnL: {pnl_pct:.2%} ({pnl_usdt:+.2f} USDT)"
         )
         ok, msg = self.risk_engine.check_drawdown()
         if not ok:
