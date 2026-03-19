@@ -252,6 +252,14 @@ def run_simulation(equity: float = 10000.0, days: int = 90):
                 i += 1
                 continue
 
+            # Momentum filter: block counter-trend entries
+            if len(df_slice) >= 4:
+                recent_ret = df_slice["close"].iloc[-1] / df_slice["close"].iloc[-4] - 1
+                if pred.side == "BUY" and recent_ret < -0.01:
+                    i += 1; continue
+                if pred.side == "SELL" and recent_ret > 0.01:
+                    i += 1; continue
+
             # RL gate — use actual per-coin equity + recent PnL
             btc_full = featured.get("BTC")
             if btc_full is not None:

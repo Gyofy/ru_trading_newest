@@ -767,6 +767,18 @@ class LiveTradingBot:
         pred = predict_2stage(combo, df, s1_thresh)
         if pred.side == "HOLD":
             return None, None
+
+        # Momentum filter: 방향과 최근 가격 모멘텀이 일치해야 진입
+        # BUY인데 최근 3 bars 하락 중이면 진입하지 않음 (역추세 진입 방지)
+        if len(df) >= 4 and "close" in df.columns:
+            recent_ret = (df["close"].iloc[-1] / df["close"].iloc[-4] - 1)
+            if pred.side == "BUY" and recent_ret < -0.01:
+                logger.info(f"[Signal] {coin}: BUY blocked — price dropping {recent_ret:.2%} in 3 bars")
+                return None, None
+            if pred.side == "SELL" and recent_ret > 0.01:
+                logger.info(f"[Signal] {coin}: SELL blocked — price rising {recent_ret:.2%} in 3 bars")
+                return None, None
+
         return regime, pred
 
     def _build_rl_decision(self, coin: str, df, pred, regime: str):
