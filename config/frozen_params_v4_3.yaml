@@ -13,8 +13,8 @@ source: "v4.2 + RL meta-layer design v2"
 
 # ── Common Parameters (unchanged from v4.2) ────────────
 common:
-  k_upper: 5.0               # TP3 = ATR×5.0 (was 3.0)
-  k_lower: 1.2               # SL  = ATR×1.2 (was 0.6) — 노이즈 손절 방지
+  k_upper: 3.0               # TP = ATR×3.0 (Mega Search v3 verified)
+  k_lower: 0.8               # SL = ATR×0.8 (was 0.6, slightly wider for live noise)
   risk_frac: 0.005
   max_horizon: 12
   bar_minutes: 240
