@@ -59,7 +59,7 @@ from src.rl.rl_gate import RLGate
 
 # ── Constants ──────────────────────────────────────────────
 COINS = ["TAO", "DOT", "ADA", "XRP", "SOL", "LINK", "BTC", "ETH"]
-CYCLE_SECONDS = 2 * 3600
+CYCLE_SECONDS = 2 * 3600  # default; overridden by config bar_minutes
 HEARTBEAT_INTERVAL = 60
 
 LOG_DIR = PROJECT_ROOT / "data" / "reports" / "live_trading_v2"
@@ -156,11 +156,11 @@ def detect_regime(df, lookback: int = 24) -> str:
 #  DATA FETCHING
 # ══════════════════════════════════════════════════════════
 
-async def fetch_ohlcv(exchange, symbol: str, limit: int = 500):
+async def fetch_ohlcv(exchange, symbol: str, limit: int = 500, timeframe: str = "4h"):
     ccxt_sym = SYMBOL_MAP.get(symbol, f"{symbol}/USDT:USDT")
     for attempt in range(3):
         try:
-            ohlcv = await exchange._exchange.fetch_ohlcv(ccxt_sym, "4h", limit=limit)
+            ohlcv = await exchange._exchange.fetch_ohlcv(ccxt_sym, timeframe, limit=limit)
             if not ohlcv:
                 raise ValueError(f"Empty OHLCV for {symbol}")
             df = pd.DataFrame(ohlcv, columns=["timestamp", "open", "high", "low", "close", "volume"])
@@ -178,13 +178,13 @@ async def fetch_ohlcv(exchange, symbol: str, limit: int = 500):
 _FETCH_SEM = asyncio.Semaphore(3)  # max 3 concurrent ccxt requests
 
 
-async def fetch_all_ohlcv(exchange, coins: list) -> dict:
+async def fetch_all_ohlcv(exchange, coins: list, timeframe: str = "4h", n_bars: int = 500) -> dict:
     """Fetch OHLCV with rate-limited concurrency (max 3 parallel)."""
     fetch_list = list(set(coins + ["BTC", "ETH"]))
 
     async def _limited(coin):
         async with _FETCH_SEM:
-            return await fetch_ohlcv(exchange, coin)
+            return await fetch_ohlcv(exchange, coin, limit=n_bars, timeframe=timeframe)
 
     dfs = await asyncio.gather(*[_limited(c) for c in fetch_list], return_exceptions=True)
 
@@ -346,17 +346,23 @@ def apply_micro_sizing(qty: float, df, side: str, cfg: dict) -> float:
 
 class LiveTradingBot:
 
-    def __init__(self, mode: str = "paper", initial_equity: float = 10000.0):
+    def __init__(self, mode: str = "paper", initial_equity: float = 10000.0, config_path: str = None):
         self.mode = mode
         self.running = False
         self._shutdown_event = asyncio.Event()
 
         # Config
-        cfg_path = PROJECT_ROOT / "config" / "frozen_params_v4_3.yaml"
+        cfg_path = Path(config_path) if config_path else PROJECT_ROOT / "config" / "frozen_params_v4_3.yaml"
         with open(cfg_path, encoding="utf-8") as f:
             self.config = yaml.safe_load(f)
         self.common = self.config["common"]
         self.coin_cfgs = self.config["coins"]
+        # Cycle: 1 bar 마다 실행 (bar_minutes 기반)
+        bar_min = self.common.get("bar_minutes", 240)
+        self._cycle_seconds = max(60, bar_min * 60)
+        # OHLCV timeframe
+        self._timeframe = self.config.get("data_fetch", {}).get("timeframe", f"{bar_min}m" if bar_min < 60 else f"{bar_min//60}h")
+        self._n_bars = self.config.get("data_fetch", {}).get("n_bars", 500)
         self.micro_cfg = self.config.get("microstructure", {})
         self.monitor_cfg = self.config.get("monitoring", {})
         self.blocked_regimes = self.config.get("blocked_regimes", ["RANGE_LOW"])
@@ -390,6 +396,8 @@ class LiveTradingBot:
             daily_drawdown_pct=0.02,
             weekly_drawdown_pct=0.05,
             leverage=4.0,
+            min_stop_distance_pct=self.common.get("min_barrier_pct", 0.003) * 0.9,
+            max_notional_usdt=initial_equity * 1.5,  # 계좌 크기 기반 포지션 상한
         ))
 
         # Components
@@ -488,12 +496,22 @@ class LiveTradingBot:
         3. 포지션 없는 코인의 잔여 주문 → 취소
         """
         logger.info("[Sync] 거래소 포지션 동기화 시작...")
+        def _pos_qty(p: dict) -> float:
+            for key in ("contracts", "positionAmt", "size"):
+                v = p.get(key)
+                if v is not None:
+                    try:
+                        return abs(float(v))
+                    except (TypeError, ValueError):
+                        pass
+            return 0.0
+
         try:
             ex_positions = await self.exchange._exchange.fetch_positions()
             ex_open = {
-                p["symbol"].split("/")[0].split(":")[0]: p
+                p["symbol"].split("/")[0]: p
                 for p in ex_positions
-                if abs(float(p.get("contracts", 0) or 0)) > 0
+                if _pos_qty(p) > 0
             }
         except Exception as e:
             logger.warning(f"[Sync] 거래소 포지션 조회 실패: {e}")
@@ -512,7 +530,7 @@ class LiveTradingBot:
             p = ex_open[coin]
             try:
                 entry = float(p.get("entryPrice", 0))
-                qty   = float(p.get("contracts", 0))
+                qty   = _pos_qty(p)
             except (TypeError, ValueError) as e:
                 logger.error(f"[Sync] {coin}: invalid position data {e} — skip")
                 continue
@@ -639,7 +657,7 @@ class LiveTradingBot:
                 await self._wait_next_cycle(time.time())
 
     async def _wait_next_cycle(self, cycle_start: float):
-        remaining = max(10, CYCLE_SECONDS - (time.time() - cycle_start))
+        remaining = max(10, self._cycle_seconds - (time.time() - cycle_start))
         end_time = time.time() + remaining
         while time.time() < end_time and self.running:
             write_heartbeat(LOG_DIR / "heartbeat.json", "running", {
@@ -661,7 +679,7 @@ class LiveTradingBot:
 
     async def _fetch_data(self):
         logger.info("[Step 1] Fetching OHLCV...")
-        self.raw_data = await fetch_all_ohlcv(self.exchange, COINS)
+        self.raw_data = await fetch_all_ohlcv(self.exchange, COINS, timeframe=self._timeframe, n_bars=self._n_bars)
         if not self.raw_data:
             logger.error("[Step 1] No data!")
             return
@@ -941,6 +959,9 @@ class LiveTradingBot:
         pred = c["pred"]
         df = c["df"]
 
+        if not c["check"].sizing:
+            logger.warning(f"[Entry] {coin} sizing is None, skip")
+            return
         qty = c["check"].sizing.qty
         qty *= c["sizing_mult"]  # RL sizing adjustment
         qty = apply_micro_sizing(qty, df, pred.side, self.micro_cfg)
@@ -982,6 +1003,7 @@ class LiveTradingBot:
             await self._live_entry(
                 coin, pred, qty, entry_price, sl_price, tp_price, order_id,
                 tp1_price, tp2_price, tp3_price,
+                atr_val=c.get("atr", 0.0),
             )
         else:
             await self._paper_entry(
@@ -1060,7 +1082,7 @@ class LiveTradingBot:
         logger.info(f"[Paper] {coin} {pred.side} FILLED @ {entry} | TP1={tp1} TP2={tp2} TP3={tp3}")
 
     async def _live_entry(self, coin, pred, qty, entry, sl, tp, oid,
-                           tp1=0.0, tp2=0.0, tp3=0.0):
+                           tp1=0.0, tp2=0.0, tp3=0.0, atr_val=0.0):
         self.ledger.insert_order(oid, coin, pred.side, "LIMIT", qty, price=entry,
                                  purpose="entry", metadata={"p_trade": pred.p_trade, "mode": "live"})
         result = await self.exchange.place_post_only_entry(coin, pred.side, qty, entry, oid)
@@ -1071,6 +1093,22 @@ class LiveTradingBot:
 
         fill = await self.exchange.wait_fill_or_cancel(coin, oid, ttl_sec=20.0)
         if not fill:
+            # WaitFill None 반환 시 거래소 포지션 직접 확인 (orphan 방지)
+            try:
+                ex_pos = await self.exchange.fetch_position(coin)
+                if ex_pos and float(ex_pos.get("qty", 0)) > 0:
+                    logger.error(
+                        f"[Entry] {coin} WaitFill None이지만 거래소 포지션 존재 "
+                        f"qty={ex_pos['qty']} — 즉시 시장가 청산"
+                    )
+                    exit_side = "SELL" if pred.side == "BUY" else "BUY"
+                    await self.exchange.market_close(
+                        coin, exit_side, float(ex_pos["qty"]),
+                        oid + "-orphan-close",
+                    )
+                    send_discord(f"⚠️ **[고아 포지션 강제 청산]** {coin} — WaitFill 실패로 자동 청산")
+            except Exception as ce:
+                logger.error(f"[Entry] {coin} orphan check failed: {ce}")
             logger.info(f"[Entry] {coin} TIMEOUT, cancelled")
             self.ledger.update_order_status(oid, "CANCELLED")
             return
@@ -1080,9 +1118,9 @@ class LiveTradingBot:
         self.ledger.update_order_status(oid, "FILLED", result.get("exchange_order_id"))
         self.ledger.insert_fill(oid, fill_price, fill_qty, fill.get("fee", 0))
 
-        # Recalculate barriers at fill price
-        atr_col = self.featured_data[coin].get("atr_14")
-        atr_val = float(atr_col.iloc[-1]) if atr_col is not None and not pd.isna(atr_col.iloc[-1]) else fill_price * 0.01
+        # Recalculate barriers at fill price (atr_val passed from _execute_entry)
+        if not atr_val or atr_val < 1e-10:
+            atr_val = fill_price * 0.01
         sl_new, tp_new = RiskEngine.compute_barriers(
             fill_price, atr_val, pred.side,
             self.common["k_upper"], self.common["k_lower"], self.common["min_barrier_pct"],
@@ -1103,7 +1141,13 @@ class LiveTradingBot:
         exit_side = "SELL" if pred.side == "BUY" else "BUY"
         sl_oid = oid + "-sl"
         # TP는 모니터가 관리 — 거래소 TP 주문 미사용
-        await self.exchange.place_protective_stop(coin, exit_side, fill_qty, sl, sl_oid, oid)
+        sl_result = await self.exchange.place_protective_stop(coin, exit_side, fill_qty, sl, sl_oid, oid)
+        if not sl_result.get("success"):
+            logger.error(f"[Entry] {coin} SL 주문 실패: {sl_result.get('error')} — 즉시 시장가 청산")
+            send_discord(f"🚨 **[SL 주문 실패]** {coin} — 시장가 즉시 청산 실행")
+            await self.exchange.market_close(coin, exit_side, fill_qty, oid + "-sl-fail-close")
+            self.ledger.update_order_status(oid, "SL_FAIL_CLOSED")
+            return
 
         pos = OpenPosition(
             coin=coin, side=pred.side, entry_price=fill_price, qty=fill_qty,
@@ -1333,11 +1377,12 @@ def parse_args():
     parser = argparse.ArgumentParser(description="CLAUDE_CRYPTO_AGENT Live Bot v4.3")
     parser.add_argument("--mode", choices=["paper", "live"], default="paper")
     parser.add_argument("--equity", type=float, default=10000.0)
+    parser.add_argument("--config", type=str, default=None, help="config yaml path (relative to project root)")
     return parser.parse_args()
 
 
 async def async_main(args):
-    bot = LiveTradingBot(mode=args.mode, initial_equity=args.equity)
+    bot = LiveTradingBot(mode=args.mode, initial_equity=args.equity, config_path=args.config)
     shutdown_triggered = False
 
     def handle_sig(signum, frame):

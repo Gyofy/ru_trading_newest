@@ -421,24 +421,18 @@ class ExchangeAdapter:
 
         while time.time() - start < ttl_sec:
             try:
-                orders = await self._exchange.fetch_open_orders(
-                    symbol=ccxt_sym,
-                    params={self._client_id_key(): order_link_id},
-                )
-                if not orders:
-                    order = await self._fetch_order_by_link_id(symbol, order_link_id)
-                    if order and order.get("status") == "closed":
+                # 단건 직접 조회 (fetch_open_orders는 clientOrderId 필터 미지원)
+                order = await self._fetch_order_by_link_id(symbol, order_link_id)
+                if order:
+                    if order.get("status") == "closed":
                         return {
                             "filled": True,
                             "fill_price": order.get("average", order.get("price", 0)),
                             "fill_qty": order.get("filled", 0),
                             "fee": (order.get("fee") or {}).get("cost", 0),
                         }
-                    if order and order.get("status") in ("canceled", "cancelled", "rejected"):
+                    if order.get("status") in ("canceled", "cancelled", "rejected"):
                         return None
-                    await asyncio.sleep(poll_interval)
-                    continue
-
                 await asyncio.sleep(poll_interval)
 
             except Exception as e:

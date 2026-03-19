@@ -132,10 +132,13 @@ class PositionManager:
             self._persist_path.parent.mkdir(parents=True, exist_ok=True)
             data = {coin: asdict(pos) for coin, pos in self.positions.items()}
             text = json.dumps(data, indent=2, default=str)
-            # Write primary, then backup (atomic swap not available on all FS)
-            self._persist_path.write_text(text, encoding="utf-8")
+            # 원자적 쓰기: tmp → rename
+            tmp = self._persist_path.with_suffix(".tmp")
+            tmp.write_text(text, encoding="utf-8")
+            tmp.replace(self._persist_path)
             if self._backup_path:
-                self._backup_path.write_text(text, encoding="utf-8")
+                import shutil
+                shutil.copy2(self._persist_path, self._backup_path)
         except Exception as e:
             logger.error(f"[PosStore] Save failed: {e}")
 
