@@ -14,39 +14,31 @@ docs/
   brainstorm/           <-- ideas, experiments, design notes
 ```
 
-## Current State (2026-03-18)
+## Current State (2026-03-20)
 
-### Active Config
-- **Production params**: `config/frozen_params_v4_1.yaml` (v4.1 -- 5-coin expansion)
-- **Previous params**: `config/frozen_params_v4_0.yaml` (v4.0, superseded)
-- **Live promotion criteria**: `config/live_promotion_criteria.yaml`
-- **Evaluation**: trade-level bar-by-bar simulation (not summary EV)
-- **Feature policy**: `src/utils/feature_policy.py`
+### CRITICAL: Feature Leakage Discovered (2026-03-20)
+- STL decomposition, Ichimoku .shift(26), SVD interpolation → 미래 데이터 누수
+- **S2 방향 예측: 0.687 → 0.518 (누수 제거 후 거의 랜덤)**
+- **v4.0~v4.3 모든 백테스트 결과 무효**
+- 15,120 조합 전수 검색 → BTC spike만 유일한 edge
 
-### Active Coins (v4.1 -- 5 coins)
-- **DOT**: ET solo, th=0.45 (Mega Search v1 confirmed, +27.15% total PnL)
-- **ADA**: ET+TabPFN 70/30, th=0.40 (Mega Search v1 confirmed, +21.87% total PnL)
-- **XRP**: ET+TabM 70/30, th=0.45 (Mega Search v1 best, +51.54% total PnL)
-- **SOL**: ET solo (default), th=0.50 (pending Mega Search v2 results)
-- **LINK**: ET solo (default), th=0.50 (pending Mega Search v2 results)
+### Active Strategy: BTC Spike → Alt Follow (v4.4)
+- **Bot**: `run_btc_spike_paper.py` (paper trading, 백그라운드 실행 중)
+- **Config**: `config/frozen_params_v4_3.yaml` (누수 수정 + rf=2%)
+- **Coins**: SOL, ETH, XRP, ADA
+- **Trigger**: BTC 1h |ret| > 1.2% + alt confirmation
+- **Evidence**: 180d, n=276, WR 48.6%, avg +0.11% (하락장 -38.5%)
 
-### Running Processes
-- **Mega Search v2**: SOL/LINK model combo optimization (in progress)
-- **Frozen OOS v4.1**: validation framework prepared, awaiting v2 completion
-
-### Key v4.1 Changes (from v4.0)
-- ExtraTrees as primary base model (Mega Search v1 finding)
-- Coin-specific model combos (ET solo / ET+TabPFN / ET+TabM)
-- 5-coin expansion (DOT, ADA, XRP + SOL, LINK)
-- Microstructure features enabled (CVD filter, OFI timing)
-
-### Paper Sim Results (500M KRW, 8w, v3.4 baseline)
-- 41 trades, +29.48% (+1,474,153 KRW), MDD 2.94%
+### Suspended
+- v4.3 ML bot (`run_live_bot_v2.py`) — 누수 수정 적용됨, ML 방향 예측 신뢰 불가
+- RL meta-layer — shadow mode 유지, 데이터 축적 중
+- Mega Search v3 결과 — 누수 feature 기반이므로 무효
 
 ## Devlog Files
 
 | Date | File | Summary |
 |------|------|---------|
+| **2026-03-20** | **[devlog/2026-03-20.md](devlog/2026-03-20.md)** | **Feature leakage discovery, strategy pivot, BTC spike bot** |
 | 2026-03-18 | [devlog/2026-03-18.md](devlog/2026-03-18.md) | v4.1 config, Mega Search v1 results, Frozen OOS framework |
 | 2026-03-17 | [devlog/2026-03-17.md](devlog/2026-03-17.md) | v3.1->v3.4 evolution, OOS validation, strategy diagnosis |
 
