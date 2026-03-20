@@ -75,36 +75,22 @@ def _add_garman_klass_vol(df: pd.DataFrame, window: int = 20) -> pd.DataFrame:
 
 
 def _add_decomposition(df: pd.DataFrame, period: int, min_bars_factor: int = 2) -> pd.DataFrame:
-    """시계열 성분분해: trend / seasonal / residual.
+    """시계열 성분분해: trend / seasonal / residual (CAUSAL ONLY).
 
-    STL 가용하면 사용, 아니면 EMA 경량 분해 fallback.
+    2026-03-20: STL 제거 — centered moving average가 미래 데이터 누수 유발.
+    EMA 기반 causal decomposition만 사용.
     period: 1일 주기 바 수 (5분봉=288, 1시간봉=24).
     """
-    close = df["close"].copy()
-    n = len(close)
-
-    if n < period * min_bars_factor:
-        return _add_ema_decomposition(df, period)
-
-    try:
-        from statsmodels.tsa.seasonal import STL
-        stl = STL(close, period=period, robust=True)
-        result = stl.fit()
-        df["decomp_trend"] = (result.trend / close).fillna(0)
-        df["decomp_seasonal"] = (result.seasonal / close).fillna(0)
-        df["decomp_residual"] = (result.resid / close).fillna(0)
-    except Exception:
-        return _add_ema_decomposition(df, period)
-
-    df["trend_slope"] = df["decomp_trend"].diff(3)
-    s_std = df["decomp_seasonal"].rolling(period, min_periods=period // 2).std()
-    r_std = df["decomp_residual"].rolling(period, min_periods=period // 2).std()
-    df["seasonal_strength"] = s_std / (s_std + r_std + 1e-10)
-    return df
+    return _add_ema_decomposition(df, period)
 
 
 def _add_ema_decomposition(df: pd.DataFrame, period: int) -> pd.DataFrame:
-    """EMA 경량 분해 (STL fallback)."""
+    """EMA 기반 causal 분해 (미래 데이터 사용 없음).
+
+    trend: EMA(adjust=False) — 순수 과거 데이터만 사용
+    seasonal: trailing rolling mean(center=False) — 과거 데이터만
+    residual: price - trend - seasonal
+    """
     close = df["close"]
     trend = close.ewm(span=period, adjust=False).mean()
     detrended = close - trend
@@ -122,16 +108,15 @@ def _add_ema_decomposition(df: pd.DataFrame, period: int) -> pd.DataFrame:
 
 
 def _add_svd_features(df: pd.DataFrame, window: int = 48, n_components: int = 3) -> pd.DataFrame:
-    """SVD latent factors: rolling OHLCV window → 상위 성분 추출.
+    """SVD latent factors: rolling OHLCV window → 상위 성분 추출 (CAUSAL).
 
-    노이즈 제거 + 잠재 구조(공통 변동 축) 포착.
-    stride로 연산 최적화 → 중간 바는 보간.
+    2026-03-20: stride+interpolation 제거 — 보간이 데이터 불안정 유발.
+    매 바마다 직접 계산, window 내 과거 데이터만 사용.
     """
     cols = [c for c in ["close", "high", "low"] if c in df.columns]
     if len(cols) < 2:
         return df
 
-    # volume은 0→inf 문제가 있어 log-ratio로 대체
     ret_df = df[cols].pct_change().fillna(0)
     if "volume" in df.columns:
         vol = df["volume"].replace(0, np.nan)
@@ -145,18 +130,13 @@ def _add_svd_features(df: pd.DataFrame, window: int = 48, n_components: int = 3)
         df["svd_explained_ratio"] = 0.0
         return df
 
-    stride = max(1, window // 6)
-    factors = np.full((n, n_components), np.nan)
-    explained = np.full(n, np.nan)
+    factors = np.full((n, n_components), 0.0)
+    explained = np.full(n, 0.0)
     values = ret_matrix.values
 
-    # stride 적용하되 마지막 바는 반드시 포함
-    indices = list(range(window, n, stride))
-    if indices and indices[-1] != n - 1 and n - 1 >= window:
-        indices.append(n - 1)
-
-    for i in indices:
-        chunk = values[i - window:i]
+    # 매 바마다 계산 (stride 없음, 보간 없음)
+    for i in range(window, n):
+        chunk = values[i - window:i]  # [i-window, i) — bar i 미포함 (causal)
         with np.errstate(invalid="ignore"):
             std = np.nanstd(chunk, axis=0)
         std[std < 1e-10] = 1.0
@@ -172,14 +152,8 @@ def _add_svd_features(df: pd.DataFrame, window: int = 48, n_components: int = 3)
             pass
 
     for k in range(n_components):
-        col = f"svd_factor_{k}"
-        df[col] = factors[:, k]
-        df[col] = df[col].interpolate(method="linear", limit_direction="forward").fillna(0)
-
+        df[f"svd_factor_{k}"] = factors[:, k]
     df["svd_explained_ratio"] = explained
-    df["svd_explained_ratio"] = df["svd_explained_ratio"].interpolate(
-        method="linear", limit_direction="forward"
-    ).fillna(0)
     return df
 
 

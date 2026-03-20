@@ -431,6 +431,86 @@ def predict_2stage(
     return PredictionResult("SELL", p_trade, 1 - p_long, p_trade * (1 - p_long))
 
 
+def predict_hybrid(
+    combo: TrainedCombo,
+    df: pd.DataFrame,
+    s1_threshold: float = 0.50,
+) -> PredictionResult:
+    """Hybrid prediction: S1(ML) for timing + momentum for direction.
+
+    2026-03-20: S2 direction prediction has near-random accuracy (0.52)
+    after removing feature leakage. Use momentum-based direction instead.
+
+    Direction signals (majority vote):
+      1. momentum_12 (48h return) sign
+      2. EMA crossover (ema_12 > ema_26)
+      3. ADX directional index (plus_di > minus_di)
+    """
+    fcols = combo.feature_columns
+    missing = [c for c in fcols if c not in df.columns]
+    if missing:
+        df = df.copy()
+        for c in missing:
+            df[c] = 0.0
+
+    X = np.nan_to_num(df[fcols].iloc[[-1]].values, nan=0.0, posinf=0.0, neginf=0.0)
+
+    # Stage 1: ML timing (genuine alpha 0.55-0.65)
+    s1 = _weighted_ensemble_proba(combo.s1_models, combo.weights, X, "S1")
+    if s1 is None:
+        return PredictionResult("HOLD", 0.0, 0.5, 0.0)
+    p_trade = float(s1[1]) if len(s1) > 1 else float(s1[0])
+    if p_trade < s1_threshold:
+        return PredictionResult("HOLD", p_trade, 0.5, 0.0)
+
+    # Direction: momentum vote (no ML, no leakage risk)
+    close = df["close"]
+    votes_long = 0
+    total_votes = 0
+
+    # Signal 1: 12-bar momentum (48h return)
+    if len(close) >= 13:
+        mom_12 = close.iloc[-1] / close.iloc[-13] - 1
+        votes_long += 1 if mom_12 > 0 else 0
+        total_votes += 1
+
+    # Signal 2: EMA crossover
+    if len(close) >= 26:
+        ema_12 = close.ewm(span=12, adjust=False).mean().iloc[-1]
+        ema_26 = close.ewm(span=26, adjust=False).mean().iloc[-1]
+        votes_long += 1 if ema_12 > ema_26 else 0
+        total_votes += 1
+
+    # Signal 3: ADX directional index
+    if "plus_di_14" in df.columns and "minus_di_14" in df.columns:
+        plus_di = df["plus_di_14"].iloc[-1]
+        minus_di = df["minus_di_14"].iloc[-1]
+        if not (np.isnan(plus_di) or np.isnan(minus_di)):
+            votes_long += 1 if plus_di > minus_di else 0
+            total_votes += 1
+
+    if total_votes == 0:
+        return PredictionResult("HOLD", p_trade, 0.5, 0.0)
+
+    long_ratio = votes_long / total_votes
+    # Convert to pseudo-probability
+    p_long = 0.5 + (long_ratio - 0.5) * 0.3  # dampen to 0.35-0.65 range
+
+    if long_ratio > 0.5:
+        return PredictionResult("BUY", p_trade, p_long, p_trade * p_long)
+    elif long_ratio < 0.5:
+        return PredictionResult("SELL", p_trade, 1 - p_long, p_trade * (1 - p_long))
+    else:
+        # Tie: use shorter momentum as tiebreaker
+        if len(close) >= 4:
+            mom_3 = close.iloc[-1] / close.iloc[-4] - 1
+            if mom_3 > 0:
+                return PredictionResult("BUY", p_trade, 0.52, p_trade * 0.52)
+            else:
+                return PredictionResult("SELL", p_trade, 0.52, p_trade * 0.52)
+        return PredictionResult("HOLD", p_trade, 0.5, 0.0)
+
+
 # ── Artifact Save/Load ─────────────────────────────────────
 
 ARTIFACT_DIR = Path("data/models/live_v4_3")

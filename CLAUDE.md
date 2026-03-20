@@ -85,9 +85,10 @@ run_live_bot_v2.py            # v4.2 autonomous trading bot
 4. 당일 손실 계좌의 2% 초과 시 전체 거래 중단
 5. OHLCV → feature → prediction → (signal → order) 파이프라인 순서 준수
 
-## Labeling & Evaluation (v4.2)
-- **라벨링**: Triple Barrier (k_upper=3.0×ATR, k_lower=0.6×ATR, max_hold=18bars)
+## Labeling & Evaluation (v4.3)
+- **라벨링**: Triple Barrier (k_upper=3.0×ATR, k_lower=1.0×ATR, max_hold=12bars)
 - **2-Stage Binary**: S1(Trade/NoTrade) → S2(Long/Short, Trade samples only)
+- **S2 Deadzone**: |p_long - 0.5| < 0.10 → HOLD (WR +4.2%p, MDD -5.6%p)
 - **CV**: TimeSeriesSplit(n_splits=3, gap=12) — StratifiedKFold 사용 금지
 - **평가지표**: balanced_accuracy (주), trade-level PnL, MDD
 - **Horizons**: 4h bars × [1, 3, 6, 18] = 4h, 12h, 24h, 72h

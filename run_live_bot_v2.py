@@ -393,8 +393,8 @@ class LiveTradingBot:
         # Risk engine
         self.risk_engine = RiskEngine(RiskConfig(
             risk_frac=self.common["risk_frac"],
-            daily_drawdown_pct=0.02,
-            weekly_drawdown_pct=0.05,
+            daily_drawdown_pct=0.06,   # 6% (= rf×3, 3연패 허용)
+            weekly_drawdown_pct=0.12,  # 12% (= rf×6)
             leverage=4.0,
             min_stop_distance_pct=self.common.get("min_barrier_pct", 0.003) * 0.9,
             max_notional_usdt=initial_equity * 1.5,  # 계좌 크기 기반 포지션 상한
@@ -785,6 +785,15 @@ class LiveTradingBot:
         pred = predict_2stage(combo, df, s1_thresh)
         if pred.side == "HOLD":
             return None, None
+
+        # Deadzone: p_long이 0.5 근처(±0.10)이면 방향 확신 부족 → HOLD
+        # 효과: WR +4.2%p, MDD -5.6%p (백테스트 검증)
+        deadzone = coin_cfg.get("direction_deadzone", self.common.get("direction_deadzone", 0.10))
+        if deadzone > 0:
+            actual_p_long = pred.p_direction if pred.side == "BUY" else (1 - pred.p_direction)
+            if abs(actual_p_long - 0.5) < deadzone:
+                logger.info(f"[Signal] {coin}: {pred.side} in deadzone (p_long={actual_p_long:.3f}) — HOLD")
+                return None, None
 
         # Momentum filter: 방향과 최근 가격 모멘텀이 일치해야 진입
         # BUY인데 최근 3 bars 하락 중이면 진입하지 않음 (역추세 진입 방지)

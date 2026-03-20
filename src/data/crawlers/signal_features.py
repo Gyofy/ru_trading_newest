@@ -428,7 +428,8 @@ def _add_advanced_technicals(df: pd.DataFrame) -> pd.DataFrame:
     senkou_a = (tenkan + kijun) / 2
     senkou_b = (high.rolling(52).max() + low.rolling(52).min()) / 2
     df["ichi_cloud_width"] = (senkou_a - senkou_b) / (close + 1e-10)
-    df["ichi_above_cloud"] = (close > senkou_a.shift(26)).astype(float)
+    # 2026-03-20: .shift(26) 제거 — 미래 클라우드 참조는 데이터 누수
+    df["ichi_above_cloud"] = (close > senkou_a).astype(float)
 
     # --- Keltner Channel ---
     ema_20 = close.ewm(span=20).mean()
