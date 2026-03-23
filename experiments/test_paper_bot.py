@@ -9,7 +9,7 @@ from run_tsmom_paper import PaperBot
 bot = PaperBot()
 
 print('=== Single Cycle Test ===')
-for coin in ['BTC', 'ETH', 'SOL', 'XRP', 'ADA', 'DOT', 'LINK']:
+for coin in ['BTC', 'ETH', 'SOL', 'XRP', 'ADA', 'DOT', 'LINK', 'DOGE', 'AVAX', 'BNB']:
     df = bot.fetch_4h(coin)
     if df.empty:
         print(f'  {coin}: EMPTY')

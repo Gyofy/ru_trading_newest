@@ -44,6 +44,7 @@ from src.rl.bandit import SIZING_MAP
 COINS = {
     "BTC": "BTC-USD", "ETH": "ETH-USD", "SOL": "SOL-USD",
     "XRP": "XRP-USD", "ADA": "ADA-USD", "DOT": "DOT-USD", "LINK": "LINK-USD",
+    "DOGE": "DOGE-USD", "AVAX": "AVAX-USD", "BNB": "BNB-USD",
 }
 
 # Strategy params (best OOS config)
@@ -334,7 +335,7 @@ class PaperBot:
                 regime="UNKNOWN", state=state.tolist(),
                 p_trade=signal_info.get("tsmom_strength", 0.0),
                 p_direction=signal_info.get("rsi", 50.0) / 100.0,
-                action=3, rl_score=0.0, sizing_mult=1.0,
+                action=3, rl_score=0.0,
                 entry_price=price, sl_price=sl, tp_price=tp,
                 risk_gate_passed=True, executed=True,
             )
