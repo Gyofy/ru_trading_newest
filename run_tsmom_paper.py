@@ -48,7 +48,9 @@ COINS = {
 
 # Strategy params (best OOS config)
 CFG = {
-    "lookback_days": 28,
+    "lookback_days": 7,          # short-term TSMOM (fast reaction)
+    "lookback_long_days": 28,    # long-term TSMOM (trend confirmation)
+    "dual_lookback": True,       # both must agree
     "volume_weighted": False,
     "cvd_quantile": 0.75,
     "cvd_roll_window": 120,
@@ -206,18 +208,23 @@ class PaperBot:
 
         lb_bars = CFG["lookback_days"] * 6
 
-        # TSMOM direction
-        if CFG["volume_weighted"]:
-            ret = df["close"].pct_change()
-            vol_w = df["volume"] / df["volume"].rolling(lb_bars, min_periods=1).mean()
-            weighted_ret = (ret * vol_w).rolling(lb_bars, min_periods=lb_bars).sum()
-            tsmom = np.sign(weighted_ret.iloc[-1])
-        else:
-            past_ret = df["close"].pct_change(lb_bars).iloc[-1]
-            tsmom = np.sign(past_ret)
+        # TSMOM direction (short-term)
+        past_ret_short = df["close"].pct_change(lb_bars).iloc[-1]
+        tsmom_short = np.sign(past_ret_short)
 
-        if tsmom == 0 or np.isnan(tsmom):
+        if tsmom_short == 0 or np.isnan(tsmom_short):
             return 0, {"reason": "no_momentum"}
+
+        # Dual lookback: long-term must agree
+        if CFG.get("dual_lookback", False):
+            lb_long = CFG["lookback_long_days"] * 6
+            past_ret_long = df["close"].pct_change(lb_long).iloc[-1]
+            tsmom_long = np.sign(past_ret_long)
+            if tsmom_short != tsmom_long:
+                return 0, {"reason": "dual_disagree",
+                           "short": int(tsmom_short), "long": int(tsmom_long)}
+
+        tsmom = tsmom_short
 
         direction = int(tsmom)
 
