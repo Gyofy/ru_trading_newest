@@ -52,6 +52,7 @@ from src.data.crawlers.crypto_ohlcv import (
 )
 from src.data.crawlers.signal_features import add_signal_features
 from src.data.crawlers.microstructure_rollup import add_microstructure_rollup
+from src.data.crawlers.binance_public_features import add_binance_public_features
 from src.utils.feature_policy import is_excluded_feature
 from src.rl.state_builder import build_rl_state
 from src.rl.signal_logger import SignalLogger, SIZING_MAP
@@ -306,6 +307,7 @@ def compute_features(raw_data: dict) -> dict:
             df = _add_decomposition(df, period=42)
             df = add_signal_features(df, verbose=False)
             df = add_microstructure_rollup(df, verbose=False)
+            df = add_binance_public_features(df, coin)
             df.ffill(inplace=True)
             df.replace([np.inf, -np.inf], np.nan, inplace=True)
             df.fillna(0, inplace=True)  # no bfill — prevents future data leakage
