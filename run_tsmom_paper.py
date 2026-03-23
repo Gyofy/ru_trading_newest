@@ -56,7 +56,7 @@ CFG = {
     "cvd_quantile": 0.75,
     "cvd_roll_window": 120,
     "k_upper": 5.0,
-    "k_lower": 1.0,
+    "k_lower": 1.5,
     "max_hold_bars": 24,
     "use_oi": True,
     "oi_zscore_max": 2.0,
