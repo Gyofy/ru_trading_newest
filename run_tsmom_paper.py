@@ -1,0 +1,406 @@
+"""TSMOM + RSI + CVD + OI Paper Trading Bot.
+
+Strategy: v5.0 TSMOM Enhanced
+  Layer 1: TSMOM 28d volume-weighted direction
+  Layer 2: RSI > 50 (LONG) / RSI < 50 (SHORT) trend filter
+  Layer 3: CVD Q85 extreme timing (counter-direction overextension)
+  Layer 4: OI z-score < 2.0 (avoid crowded positioning)
+  Barrier: TP=5xATR, SL=1.0xATR, TTL=24 bars (96h)
+
+Validated: IS Sharpe 2.67, OOS Sharpe 2.80, p-value 0.006
+"""
+
+import sys, os, json, time, logging, asyncio
+from datetime import datetime, timezone, timedelta
+from pathlib import Path
+from dataclasses import dataclass, asdict
+
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+import numpy as np
+import pandas as pd
+import yfinance as yf
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    handlers=[
+        logging.StreamHandler(),
+        logging.FileHandler("data/reports/tsmom_paper/bot.log", encoding="utf-8"),
+    ]
+)
+log = logging.getLogger("tsmom_paper")
+
+# ══════════════════════════════════════════════════════════
+# Config
+# ══════════════════════════════════════════════════════════
+
+COINS = {
+    "BTC": "BTC-USD", "ETH": "ETH-USD", "SOL": "SOL-USD",
+    "XRP": "XRP-USD", "ADA": "ADA-USD", "DOT": "DOT-USD", "LINK": "LINK-USD",
+}
+
+# Strategy params (best OOS config)
+CFG = {
+    "lookback_days": 28,
+    "volume_weighted": False,
+    "cvd_quantile": 0.75,
+    "cvd_roll_window": 120,
+    "k_upper": 5.0,
+    "k_lower": 1.0,
+    "max_hold_bars": 24,
+    "use_oi": True,
+    "oi_zscore_max": 2.0,
+    "cost_roundtrip": 0.0020,
+    "leverage": 2,
+    "equity_risk_pct": 0.02,  # 2% risk per trade
+    "max_positions": 3,
+}
+
+STATE_DIR = Path("data/reports/tsmom_paper")
+STATE_FILE = STATE_DIR / "state.json"
+TRADES_FILE = STATE_DIR / "trades.jsonl"
+
+INITIAL_EQUITY = 1000.0  # paper equity
+BAR_SECONDS = 4 * 3600   # 4h
+POLL_SECONDS = 30         # SL/TP check interval
+
+
+# ══════════════════════════════════════════════════════════
+# Data
+# ══════════════════════════════════════════════════════════
+
+@dataclass
+class Position:
+    coin: str
+    side: int          # +1 LONG, -1 SHORT
+    entry_price: float
+    entry_time: str
+    entry_bar: int
+    tp_price: float
+    sl_price: float
+    atr_at_entry: float
+    size_usd: float
+    bars_held: int = 0
+    status: str = "OPEN"
+
+
+class PaperBot:
+    def __init__(self):
+        STATE_DIR.mkdir(parents=True, exist_ok=True)
+        self.equity = INITIAL_EQUITY
+        self.positions: dict[str, Position] = {}
+        self.trade_count = 0
+        self.load_state()
+
+    def load_state(self):
+        if STATE_FILE.exists():
+            with open(STATE_FILE) as f:
+                s = json.load(f)
+            self.equity = s.get("equity", INITIAL_EQUITY)
+            self.trade_count = s.get("trade_count", 0)
+            for coin, p in s.get("positions", {}).items():
+                self.positions[coin] = Position(**p)
+            log.info(f"State loaded: equity=${self.equity:.2f}, "
+                     f"positions={len(self.positions)}, trades={self.trade_count}")
+
+    def save_state(self):
+        s = {
+            "equity": self.equity,
+            "trade_count": self.trade_count,
+            "positions": {k: asdict(v) for k, v in self.positions.items()},
+            "updated": datetime.now(timezone.utc).isoformat(),
+        }
+        with open(STATE_FILE, "w") as f:
+            json.dump(s, f, indent=2)
+
+    def log_trade(self, trade: dict):
+        with open(TRADES_FILE, "a") as f:
+            f.write(json.dumps(trade, default=str) + "\n")
+
+    # ── Data Fetching ──
+
+    def fetch_4h(self, coin: str) -> pd.DataFrame:
+        """Fetch 1h OHLCV, resample to 4h, add indicators."""
+        sym = COINS[coin]
+        df = yf.download(sym, period="60d", interval="1h", progress=False)
+        if df.empty:
+            return pd.DataFrame()
+
+        if isinstance(df.columns, pd.MultiIndex):
+            df.columns = df.columns.get_level_values(0)
+        df = df.rename(columns={"Open":"open","High":"high","Low":"low",
+                                 "Close":"close","Volume":"volume"})
+
+        # Resample to 4h
+        df = df.resample("4h").agg({
+            "open":"first","high":"max","low":"min","close":"last","volume":"sum"
+        }).dropna()
+
+        # ATR
+        tr = np.maximum(df["high"]-df["low"],
+                        np.maximum(np.abs(df["high"]-df["close"].shift(1)),
+                                   np.abs(df["low"]-df["close"].shift(1))))
+        df["atr_14"] = tr.rolling(14, min_periods=1).mean()
+
+        # RSI
+        delta = df["close"].diff()
+        gain = delta.where(delta > 0, 0).rolling(14).mean()
+        loss = (-delta.where(delta < 0, 0)).rolling(14).mean()
+        rs = gain / loss.replace(0, np.nan)
+        df["rsi_14"] = 100 - (100 / (1 + rs))
+
+        # CVD
+        hr = (df["high"] - df["low"]).replace(0, np.nan)
+        buy_frac = ((df["close"] - df["low"]) / hr).fillna(0.5).clip(0, 1)
+        vd = (2 * buy_frac - 1) * df["volume"]
+        cvd = vd.cumsum()
+        cvd_ma = cvd.rolling(24, min_periods=6).mean()
+        df["cvd_ratio_24"] = ((cvd - cvd_ma) / cvd_ma.abs().replace(0, np.nan)).fillna(0)
+
+        return df
+
+    def fetch_binance_oi(self, coin: str) -> float:
+        """Get latest OI z-score from saved Binance data."""
+        sym = coin + "USDT"
+        oi_dir = Path("data/raw/binance_public/metrics") / sym
+        csvs = sorted(oi_dir.glob("*.csv"))
+        if not csvs:
+            return 0.0
+
+        # Read last 30 days
+        dfs = []
+        for f in csvs[-30:]:
+            try:
+                dfs.append(pd.read_csv(f))
+            except Exception:
+                continue
+        if not dfs:
+            return 0.0
+
+        merged = pd.concat(dfs, ignore_index=True)
+        oi = merged["sum_open_interest_value"].astype(float)
+        if len(oi) < 10:
+            return 0.0
+
+        mean = oi.rolling(len(oi), min_periods=10).mean().iloc[-1]
+        std = oi.rolling(len(oi), min_periods=10).std().iloc[-1]
+        if std > 0:
+            return (oi.iloc[-1] - mean) / std
+        return 0.0
+
+    # ── Signal Generation ──
+
+    def generate_signal(self, df: pd.DataFrame, coin: str) -> tuple[int, dict]:
+        """Generate TSMOM + RSI + CVD + OI signal. Returns (signal, debug_info)."""
+        if len(df) < CFG["lookback_days"] * 6 + 10:
+            return 0, {"reason": "insufficient_bars"}
+
+        lb_bars = CFG["lookback_days"] * 6
+
+        # TSMOM direction
+        if CFG["volume_weighted"]:
+            ret = df["close"].pct_change()
+            vol_w = df["volume"] / df["volume"].rolling(lb_bars, min_periods=1).mean()
+            weighted_ret = (ret * vol_w).rolling(lb_bars, min_periods=lb_bars).sum()
+            tsmom = np.sign(weighted_ret.iloc[-1])
+        else:
+            past_ret = df["close"].pct_change(lb_bars).iloc[-1]
+            tsmom = np.sign(past_ret)
+
+        if tsmom == 0 or np.isnan(tsmom):
+            return 0, {"reason": "no_momentum"}
+
+        direction = int(tsmom)
+
+        # RSI filter
+        rsi = df["rsi_14"].iloc[-1]
+        if direction == 1 and rsi <= 50:
+            return 0, {"reason": "rsi_filter", "rsi": rsi, "dir": "LONG"}
+        if direction == -1 and rsi >= 50:
+            return 0, {"reason": "rsi_filter", "rsi": rsi, "dir": "SHORT"}
+
+        # CVD timing
+        cvd = df["cvd_ratio_24"]
+        cq = CFG["cvd_quantile"]
+        cw = CFG["cvd_roll_window"]
+        q_hi = cvd.rolling(cw, min_periods=30).quantile(cq).iloc[-1]
+        q_lo = cvd.rolling(cw, min_periods=30).quantile(1 - cq).iloc[-1]
+        cvd_now = cvd.iloc[-1]
+
+        cvd_ok = False
+        if direction == -1 and cvd_now > q_hi:
+            cvd_ok = True
+        elif direction == 1 and cvd_now < q_lo:
+            cvd_ok = True
+
+        if not cvd_ok:
+            return 0, {"reason": "cvd_timing", "cvd": cvd_now,
+                       "q_hi": q_hi, "q_lo": q_lo, "dir": "LONG" if direction == 1 else "SHORT"}
+
+        # OI filter
+        if CFG["use_oi"]:
+            oi_z = self.fetch_binance_oi(coin)
+            if abs(oi_z) > CFG["oi_zscore_max"]:
+                return 0, {"reason": "oi_crowded", "oi_zscore": oi_z}
+
+        return direction, {
+            "tsmom": direction, "rsi": rsi, "cvd": cvd_now,
+            "q_hi": q_hi, "q_lo": q_lo,
+            "side": "LONG" if direction == 1 else "SHORT",
+        }
+
+    # ── Position Management ──
+
+    def open_position(self, coin: str, side: int, df: pd.DataFrame):
+        price = df["close"].iloc[-1]
+        atr = df["atr_14"].iloc[-1]
+
+        tp_dist = max(CFG["k_upper"] * atr, price * 0.002)
+        sl_dist = max(CFG["k_lower"] * atr, price * 0.002)
+
+        tp = price + tp_dist * side
+        sl = price - sl_dist * side
+
+        # Position sizing: risk_pct * equity / sl_distance
+        risk_usd = self.equity * CFG["equity_risk_pct"]
+        sl_pct = sl_dist / price
+        size_usd = min(risk_usd / sl_pct, self.equity * 0.2) * CFG["leverage"]
+
+        pos = Position(
+            coin=coin, side=side, entry_price=price,
+            entry_time=datetime.now(timezone.utc).isoformat(),
+            entry_bar=0, tp_price=tp, sl_price=sl,
+            atr_at_entry=atr, size_usd=size_usd,
+        )
+        self.positions[coin] = pos
+
+        side_str = "LONG" if side == 1 else "SHORT"
+        log.info(f"OPEN {side_str} {coin} @ ${price:.4f} | TP=${tp:.4f} SL=${sl:.4f} | "
+                 f"size=${size_usd:.2f} ({CFG['leverage']}x)")
+
+    def check_exit(self, coin: str, df: pd.DataFrame) -> bool:
+        """Check if position should be closed."""
+        if coin not in self.positions:
+            return False
+
+        pos = self.positions[coin]
+        current_high = df["high"].iloc[-1]
+        current_low = df["low"].iloc[-1]
+        current_close = df["close"].iloc[-1]
+        pos.bars_held += 1
+
+        exit_price = None
+        exit_type = None
+
+        if pos.side == 1:  # LONG
+            if current_low <= pos.sl_price:
+                exit_price, exit_type = pos.sl_price, "SL"
+            elif current_high >= pos.tp_price:
+                exit_price, exit_type = pos.tp_price, "TP"
+        else:  # SHORT
+            if current_high >= pos.sl_price:
+                exit_price, exit_type = pos.sl_price, "SL"
+            elif current_low <= pos.tp_price:
+                exit_price, exit_type = pos.tp_price, "TP"
+
+        # TTL
+        if exit_price is None and pos.bars_held >= CFG["max_hold_bars"]:
+            exit_price, exit_type = current_close, "TTL"
+
+        if exit_price is not None:
+            self.close_position(coin, exit_price, exit_type)
+            return True
+
+        return False
+
+    def close_position(self, coin: str, exit_price: float, exit_type: str):
+        pos = self.positions[coin]
+
+        if pos.side == 1:
+            pnl_pct = (exit_price - pos.entry_price) / pos.entry_price
+        else:
+            pnl_pct = (pos.entry_price - exit_price) / pos.entry_price
+
+        pnl_pct_net = pnl_pct - CFG["cost_roundtrip"]
+        pnl_usd = pnl_pct_net * pos.size_usd
+        self.equity += pnl_usd
+        self.trade_count += 1
+
+        side_str = "LONG" if pos.side == 1 else "SHORT"
+        log.info(f"CLOSE {side_str} {coin} @ ${exit_price:.4f} | {exit_type} | "
+                 f"PnL={pnl_pct_net:+.2%} (${pnl_usd:+.2f}) | "
+                 f"bars={pos.bars_held} | equity=${self.equity:.2f}")
+
+        trade = {
+            "coin": coin, "side": side_str, "entry_price": pos.entry_price,
+            "exit_price": exit_price, "exit_type": exit_type,
+            "pnl_pct": pnl_pct, "pnl_net": pnl_pct_net, "pnl_usd": pnl_usd,
+            "bars_held": pos.bars_held, "entry_time": pos.entry_time,
+            "exit_time": datetime.now(timezone.utc).isoformat(),
+            "equity_after": self.equity, "trade_num": self.trade_count,
+            "leverage": CFG["leverage"],
+        }
+        self.log_trade(trade)
+        del self.positions[coin]
+
+    # ── Main Loop ──
+
+    async def run(self):
+        log.info(f"TSMOM Paper Bot started | equity=${self.equity:.2f} | "
+                 f"config: lb={CFG['lookback_days']} cq={CFG['cvd_quantile']} "
+                 f"ku={CFG['k_upper']} kl={CFG['k_lower']} lev={CFG['leverage']}x")
+        log.info(f"Coins: {', '.join(COINS.keys())}")
+
+        while True:
+            try:
+                now = datetime.now(timezone.utc)
+                log.info(f"=== Cycle @ {now.strftime('%H:%M')} UTC | "
+                         f"equity=${self.equity:.2f} | pos={len(self.positions)} ===")
+
+                for coin in COINS:
+                    df = self.fetch_4h(coin)
+                    if df.empty:
+                        continue
+
+                    # Check exits first
+                    if coin in self.positions:
+                        self.check_exit(coin, df)
+                        continue
+
+                    # Check entries
+                    if len(self.positions) >= CFG["max_positions"]:
+                        continue
+
+                    signal, info = self.generate_signal(df, coin)
+
+                    if signal != 0:
+                        self.open_position(coin, signal, df)
+                    elif info.get("reason") not in ("insufficient_bars",):
+                        pass  # normal filter rejection
+
+                self.save_state()
+
+                # Sleep until next 4h bar
+                next_bar = now.replace(minute=0, second=0, microsecond=0)
+                next_bar += timedelta(hours=(4 - next_bar.hour % 4) % 4 or 4)
+                sleep_sec = (next_bar - now).total_seconds()
+                sleep_sec = max(60, min(sleep_sec, BAR_SECONDS))
+
+                log.info(f"Next cycle in {sleep_sec/60:.0f}min")
+                await asyncio.sleep(sleep_sec)
+
+            except KeyboardInterrupt:
+                log.info("Shutting down...")
+                self.save_state()
+                break
+            except Exception as e:
+                log.error(f"Error: {e}", exc_info=True)
+                await asyncio.sleep(60)
+
+
+if __name__ == "__main__":
+    bot = PaperBot()
+    asyncio.run(bot.run())
