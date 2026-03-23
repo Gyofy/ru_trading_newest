@@ -1,23 +1,24 @@
 # CLAUDE_CRYPTO_AGENT
 
-Autonomous crypto trading system — TSMOM rule-based direction + ML/RL enhancement layer.
+Autonomous crypto trading system — Dual TSMOM direction + CVD timing + OI crowding filter + RL sizing.
 
-**Binance USDT-M Futures | 7 coins | TSMOM+RSI+CVD+OI | OOS Sharpe 2.80 | Paper Trading Active**
+**Binance USDT-M Futures | 10 coins | Dual TSMOM(7d+28d)+RSI+CVD+OI | OOS Sharpe 4.03 | Paper Trading Active**
 
 ---
 
 ## Current Status (2026-03-23)
 
-### v5.0 TSMOM Enhanced Strategy
+### v5.1 TSMOM Enhanced Strategy
 
-Feature leakage discovery (2026-03-20) invalidated all ML direction predictions. v5.0 pivots to **rule-based direction** with ML/RL as enhancement layer.
+Feature leakage discovery (2026-03-20) invalidated all ML direction predictions. v5.1 uses **rule-based dual TSMOM direction** + 10-coin universe + compact RL sizing.
 
 ```
-Direction:  TSMOM 28-day momentum (volume-weighted)
+Direction:  Dual TSMOM (7-day + 28-day must agree)
 Filter:     RSI > 50 (LONG valid) / RSI < 50 (SHORT valid)
 Timing:     CVD Q75 extreme (counter-direction overextension)
 Crowding:   OI z-score < 2.0 (Binance metrics)
 Barrier:    TP = 5 x ATR, SL = 1.0 x ATR, TTL = 24 bars (96h)
+Universe:   10 coins (BTC ETH SOL XRP ADA DOT LINK DOGE AVAX BNB)
 Leverage:   2x (paper), max 3x (live)
 ```
 
@@ -26,9 +27,11 @@ Leverage:   2x (paper), max 3x (live)
 | Metric | IS (70%, 9mo) | OOS (30%, 3.5mo) |
 |--------|---------------|-------------------|
 | Configs tested | 6,480 grid | Top-20 IS |
-| Best Sharpe | 2.67 | **2.80** |
-| Best avg PnL | +1.12%/trade | **+2.31%/trade** |
+| Best Sharpe | 2.67 | **4.03** (10 coins) |
+| Best avg PnL | +1.12%/trade | **+2.85%/trade** |
 | Positive configs | many | **20/20 (100%)** |
+| Permutation test | — | **p = 0.006** |
+| Bootstrap P(Sharpe>1) | — | **99.8%** |
 
 | Test | Result |
 |------|--------|
@@ -38,26 +41,30 @@ Leverage:   2x (paper), max 3x (live)
 | Drop-one-out | All coins removable, min Sharpe 2.34 |
 | Optimal leverage | **3x** (Monte Carlo, P(MDD>50%) < 8%) |
 
-### OOS Performance by Coin (best config)
+### OOS Performance by Coin (v5.1, 10 coins)
 
 | Coin | Trades | WR | Avg PnL | Sharpe |
 |------|--------|-----|---------|--------|
-| BTC | 9 | 66.7% | +1.75% | 1.99 |
-| ETH | 12 | 50.0% | +2.21% | 2.18 |
-| SOL | 9 | 44.4% | +1.38% | 1.94 |
-| XRP | 7 | 57.1% | +2.37% | 0.96 |
-| ADA | 3 | 100% | +6.13% | - |
-| DOT | 13 | 30.8% | -0.23% | -0.03 |
-| LINK | 8 | 62.5% | +2.63% | 1.15 |
+| BTC | 4 | 75.0% | +5.34% | 1.82 |
+| ETH | 5 | 80.0% | +4.67% | 2.41 |
+| SOL | 4 | 50.0% | +2.89% | 0.89 |
+| XRP | 4 | 50.0% | +1.65% | 0.55 |
+| ADA | 2 | 100% | +6.13% | - |
+| DOT | 7 | 28.6% | -0.60% | -0.20 |
+| LINK | 4 | 50.0% | +2.63% | 0.82 |
+| DOGE | 13 | 46.2% | +2.17% | 1.69 |
+| AVAX | 11 | 45.5% | +2.48% | 1.48 |
+| BNB | 6 | 50.0% | +1.58% | 0.77 |
 
 ---
 
-## Architecture (v5.0)
+## Architecture (v5.1)
 
 ```
-run_tsmom_paper.py              Paper bot (ACTIVE, RL logging enabled)
+run_tsmom_paper.py              Paper bot (ACTIVE, 10 coins, RL logging)
+run_monitor.py                  Dashboard + healthcheck + auto-restart
 run_live_bot_v2.py              v4.3 ML bot (SUSPENDED)
-run_btc_spike_paper.py          v4.4 BTC spike bot (SUPERSEDED by v5.0)
+run_btc_spike_paper.py          v4.4 BTC spike bot (SUPERSEDED)
 
 src/
   data/crawlers/
@@ -75,9 +82,11 @@ src/
   models/
     masking_loop.py             Triple Barrier labeling
     regime_filter.py            4-state regime (TREND_UP/DOWN, RANGE_LOW/HIGH)
+  strategy/
+    tsmom_core.py               Shared signal gen, backtest, metrics (v5.1)
   rl/
-    bandit.py                   LinUCB 7-action (v5.0)
-    state_builder.py            33-dim state vector (v5.0 TSMOM)
+    bandit.py                   LinUCB 7-action (v5.1)
+    state_builder.py            33-dim full / 7-dim compact state (v5.1)
     signal_logger.py            JSONL signal logging + counterfactual
     rl_gate.py                  Shadow/active mode with safety
     counterfactual.py           Rejected signal PnL estimation
@@ -91,6 +100,8 @@ experiments/
   tsmom_rsi_cvd_deep.py         Phase 2: 6,480 config grid search
   tsmom_rigorous_v2.py          Phase 3: IS/OOS split + permutation test
   download_and_integrate.py     Binance data download + integration
+  v5_1_full_upgrade.py          Phase 4: 10 coins + trailing + trend score + RL
+  rl_state_analysis.py          PCA + feature importance (33→6 dim reduction)
 
 config/
   frozen_params_v4_3.yaml       Config (v4.3, RL section reused)
@@ -148,7 +159,14 @@ LinUCB contextual bandit, 33-dim state, 7 actions
 
 ## Development History
 
-### v5.0 (2026-03-23) — TSMOM Enhanced
+### v5.1 (2026-03-23) — TSMOM Enhanced (Current)
+- Universe expansion: 7 → 10 coins (Sharpe 3.42 → 4.03)
+- Dual TSMOM (7d+28d) for trend transition handling
+- Compact LinUCB (6-dim) trained, lift +0.85%p
+- tsmom_core.py: shared strategy module (anti-spaghetti)
+- run_monitor.py: dashboard + healthcheck
+
+### v5.0 (2026-03-23) — TSMOM Base
 - Pivot from ML direction to rule-based TSMOM
 - 6,480 config grid search + rigorous IS/OOS validation
 - Permutation test p=0.006, Bootstrap P(Sharpe>1)=99.8%
@@ -170,21 +188,27 @@ LinUCB contextual bandit, 33-dim state, 7 actions
 
 ---
 
-## Paper Bot
+## Paper Bot & Monitoring
 
 ```bash
-# Start paper trading (v5.0 TSMOM strategy)
-python run_tsmom_paper.py
+# Start paper trading (v5.1, 10 coins)
+nohup python -X utf8 run_tsmom_paper.py > data/reports/tsmom_paper/nohup.log 2>&1 &
 
-# Signal log for RL training
-data/reports/tsmom_paper/signal_log.jsonl
+# Monitor dashboard (equity, positions, trades, RL status)
+python run_monitor.py
 
-# Trade records
-data/reports/tsmom_paper/trades.jsonl
+# Healthcheck (returns exit code 0/1)
+python run_monitor.py --check
 
-# Bot state
-data/reports/tsmom_paper/state.json
+# Auto-restart if stopped
+python run_monitor.py --restart
 ```
+
+Files:
+- `data/reports/tsmom_paper/state.json` — bot state (equity, positions)
+- `data/reports/tsmom_paper/trades.jsonl` — trade history
+- `data/reports/tsmom_paper/signal_log.jsonl` — RL signal log
+- `data/reports/tsmom_paper/bot.log` — execution log
 
 ---
 
@@ -204,6 +228,17 @@ python src/data/crawlers/binance_public_data_downloader.py \
 ```
 
 Data includes: OI, Long/Short Ratio, Top Trader Ratio, Taker Buy/Sell Volume (5-min resolution)
+
+---
+
+## Reports & Documentation
+
+| Report | Path | Content |
+|--------|------|---------|
+| **Performance Summary** | `docs/performance_summary_v5_1.md` | Full WR, Sharpe, PnL, risk analysis |
+| **Strategy Report** | `docs/strategy_report_v5.md` | Architecture, signal flow, parameters |
+| **Model Status** | `docs/model_status_report_20260323.md` | Validation details, RL spec |
+| **Binance Data Spec** | `docs/binance_public_data_spec.md` | Data types, columns, download guide |
 
 ---
 
