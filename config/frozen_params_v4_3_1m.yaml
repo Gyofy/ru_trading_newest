@@ -57,6 +57,13 @@ blocked_regimes:
   - RANGE_LOW
   - UNKNOWN
 
+# ── Confidence-Tiered Sizing (compute_risk_frac) ───────────
+sizing_tiers:
+  tier_high: 0.015          # confidence > 0.65 → 1.5% risk
+  tier_mid:  0.010          # confidence > 0.50 → 1.0% risk
+  tier_low:  0.005          # confidence ≤ 0.50 → 0.5% risk
+  dd_brake_threshold: 0.015 # 일일 DD 1.5% 초과 시 sizing 50% 감소
+
 # ── Coin-Specific Parameters (SOL 단일 운영 — 2026-03-19) ──
 coins:
   SOL:

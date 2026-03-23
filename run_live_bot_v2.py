@@ -449,7 +449,7 @@ class LiveTradingBot:
         self._shutdown_event = asyncio.Event()
 
         # Config
-        cfg_path = Path(config_path) if config_path else PROJECT_ROOT / "config" / "frozen_params_v4_3_15m.yaml"
+        cfg_path = Path(config_path) if config_path else PROJECT_ROOT / "config" / "frozen_params_v4_3_1m.yaml"
         with open(cfg_path, encoding="utf-8") as f:
             self.config = yaml.safe_load(f)
         self.common = self.config["common"]
@@ -644,7 +644,7 @@ class LiveTradingBot:
                     pnl_pct = (exit_price - pos.entry_price) / pos.entry_price
                 else:
                     pnl_pct = (pos.entry_price - exit_price) / pos.entry_price
-                pnl_usdt = pnl_pct * pos.qty * pos.entry_price
+                pnl_usdt = pnl_pct * pos.current_qty * pos.entry_price
                 self.risk_engine.record_pnl(pnl_usdt)
                 self.equity.record_pnl(pnl_usdt)
                 self.ledger.record_pnl(coin, pnl_usdt, 0.0)
@@ -1496,7 +1496,7 @@ class LiveTradingBot:
             pnl_pct = (exit_price - pos.entry_price) / pos.entry_price
         else:
             pnl_pct = (pos.entry_price - exit_price) / pos.entry_price
-        pnl_usdt = pnl_pct * pos.qty * pos.entry_price
+        pnl_usdt = pnl_pct * pos.current_qty * pos.entry_price
 
         self.risk_engine.record_pnl(pnl_usdt)
         self.equity.record_pnl(pnl_usdt)
@@ -1513,7 +1513,7 @@ class LiveTradingBot:
                         pass
             try:
                 close_oid = ExchangeAdapter.make_order_id(coin, exit_side, prefix="exit")
-                await self.exchange.market_close(coin, exit_side, pos.qty, close_oid)
+                await self.exchange.market_close(coin, exit_side, pos.current_qty, close_oid)
             except Exception as e:
                 logger.error(f"[Close] {coin}: {e}")
 
