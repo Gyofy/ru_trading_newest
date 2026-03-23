@@ -436,25 +436,27 @@ class PaperBot:
                          f"equity=${self.equity:.2f} | pos={len(self.positions)} ===")
 
                 for coin in COINS:
-                    df = self.fetch_4h(coin)
-                    if df.empty:
+                    try:
+                        df = self.fetch_4h(coin)
+                        if df.empty:
+                            continue
+
+                        # Check exits first
+                        if coin in self.positions:
+                            self.check_exit(coin, df)
+                            continue
+
+                        # Check entries
+                        if len(self.positions) >= CFG["max_positions"]:
+                            continue
+
+                        signal, info = self.generate_signal(df, coin)
+
+                        if signal != 0:
+                            self.open_position(coin, signal, df, signal_info=info)
+                    except Exception as coin_err:
+                        log.warning(f"[{coin}] Error: {coin_err}")
                         continue
-
-                    # Check exits first
-                    if coin in self.positions:
-                        self.check_exit(coin, df)
-                        continue
-
-                    # Check entries
-                    if len(self.positions) >= CFG["max_positions"]:
-                        continue
-
-                    signal, info = self.generate_signal(df, coin)
-
-                    if signal != 0:
-                        self.open_position(coin, signal, df, signal_info=info)
-                    elif info.get("reason") not in ("insufficient_bars",):
-                        pass  # normal filter rejection
 
                 self.save_state()
 
