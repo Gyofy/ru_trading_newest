@@ -296,6 +296,7 @@ def run_simulation(equity: float = 10000.0, days: int = 90):
                 btc_df=btc_df,
             )
             rl_action, rl_score = rl_gate.decide(state)
+            rl_effective = rl_gate.effective_action(rl_action)
 
             # Entry
             entry_price = df.iloc[i]["close"]
@@ -369,8 +370,12 @@ def run_simulation(equity: float = 10000.0, days: int = 90):
             if daily_dd > sizing_cfg.get("dd_brake_threshold", 0.015):
                 risk_f *= 0.5
 
-            # Apply RL sizing multiplier (consistent with live bot)
-            risk_f *= SIZING_MAP.get(rl_action, 1.0)
+            # Apply RL sizing multiplier — use rl_effective (shadow-mode-aware)
+            # consistent with live bot: shadow mode always 1.0x, REJECT skips trade
+            if rl_effective == 0:
+                i += 1
+                continue
+            risk_f *= SIZING_MAP.get(rl_effective, 1.0)
 
             stop_dist = abs(entry_price - sl) / entry_price + 1e-10
             coin_equity += pnl_net * coin_equity * risk_f / stop_dist

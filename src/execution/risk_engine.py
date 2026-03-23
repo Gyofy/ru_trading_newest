@@ -206,8 +206,9 @@ class RiskEngine:
 
         Returns: (sl_price, tp_price)
         """
-        tp_dist = max(k_upper * atr, entry_price * min_barrier_pct)  # wide TP
-        sl_dist = max(k_lower * atr, entry_price * min_barrier_pct)  # tight SL
+        sl_dist = max(k_lower * atr, entry_price * min_barrier_pct)
+        # TP는 SL에서 R:R 비율을 유지 — ATR이 너무 작을 때도 1:1이 되는 버그 방지
+        tp_dist = max(k_upper * atr, sl_dist * (k_upper / k_lower))
 
         if side == "BUY":  # LONG: TP above, SL below
             tp_price = entry_price + tp_dist
@@ -267,25 +268,7 @@ class RiskEngine:
         elif funding_status == "warn":
             warnings.append(f"High funding rate: {funding_rate:.4f}")
 
-        # 5. Daily drawdown
-        dd_ok, dd_pct = self.check_daily_drawdown(equity_usdt)
-        if not dd_ok:
-            self._kill_switch = True
-            self._kill_reason = f"Daily drawdown {dd_pct:.2%}"
-            return PreTradeCheck(
-                approved=False,
-                reason=f"Daily drawdown {dd_pct:.2%} > {cfg.daily_drawdown_pct:.0%}",
-            )
-
-        # 6. Consecutive losses
-        if self.ledger and self.ledger.get_consecutive_losses(symbol, cfg.consecutive_loss_limit):
-            return PreTradeCheck(
-                approved=False,
-                reason=f"{symbol}: {cfg.consecutive_loss_limit} consecutive losses",
-                warnings=warnings,
-            )
-
-        # 7. Alt bucket correlation cap
+        # 5. Alt bucket correlation cap  (Gate 5/6 제거됨 — DD 체크는 루프 레벨에서 수행)
         if self.ledger and symbol not in self.BTC_BUCKET:
             alt_ok = self._check_alt_bucket(equity_usdt)
             if not alt_ok:
@@ -295,7 +278,7 @@ class RiskEngine:
                     warnings=warnings,
                 )
 
-        # 8. Liquidation pre-check
+        # 6. Liquidation pre-check
         liq_ok = self._check_liquidation(entry_price, sl_price, side)
         if not liq_ok:
             return PreTradeCheck(
@@ -304,7 +287,7 @@ class RiskEngine:
                 warnings=warnings,
             )
 
-        # 9. Sizing
+        # 7. Sizing
         sizing = self.compute_qty(entry_price, sl_price, equity_usdt)
         if not sizing.approved:
             return PreTradeCheck(
@@ -313,7 +296,7 @@ class RiskEngine:
                 warnings=warnings,
             )
 
-        # 10. Fee-adjusted EV check
+        # 8. Fee-adjusted EV check
         # 예상 수수료(진입+청산) 합산 후 손익분기 확인
         # fee = taker_fee × 2 (진입+청산 각 1회), notional 기준
         taker_fee = 0.00055   # Binance Futures taker

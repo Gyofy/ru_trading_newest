@@ -6,7 +6,7 @@ mode: paper
 
 universe:
   type: crypto_top10
-  coins: [BTC, ETH, SOL, XRP, ADA, DOT, LINK, DOGE]
+  coins: [SOL]  # SOL 단일 운영 (2026-03-19)
   data_source: ccxt_binance_futures
 
 market_hours:

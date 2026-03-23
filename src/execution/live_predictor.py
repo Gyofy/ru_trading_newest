@@ -63,6 +63,14 @@ def _build_xgb(n_est: int = 200, max_depth: int = 6):
     )
 
 
+def _build_lgbm(n_est: int = 150, max_depth: int = 5):
+    from lightgbm import LGBMClassifier
+    return LGBMClassifier(
+        n_estimators=n_est, max_depth=max_depth, learning_rate=0.08,
+        class_weight="balanced", n_jobs=6, verbose=-1, random_state=42,
+    )
+
+
 class TabMWrap:
     """TabM sklearn-compatible wrapper. Defined at module level for pickling."""
 
@@ -173,6 +181,8 @@ def build_model(name: str, n_features: int = 80, coin_cfg: dict = None):
         return _build_cb(n_est, min(max_d, 6))
     elif name == "xgb":
         return _build_xgb(min(n_est, 200), min(max_d, 6))
+    elif name == "lgbm":
+        return _build_lgbm(min(n_est, 150), min(max_d, 5))
     elif name == "tabm":
         m = _build_tabm(n_features)
         if m is None:
