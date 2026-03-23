@@ -24,18 +24,30 @@ https://github.com/binance/binance-public-data
 
 import argparse
 import os
+import time
 import zipfile
 import logging
 from datetime import date, timedelta
 from pathlib import Path
 
 import requests
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 from tqdm import tqdm
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 log = logging.getLogger(__name__)
 
 BASE_URL = "https://data.binance.vision/data/futures/um/daily"
+
+# 재시도 정책: 연결 오류 / 5xx 에 대해 최대 5회, 지수 백오프
+_RETRY = Retry(
+    total=5,
+    backoff_factor=1.5,        # 1.5, 3, 4.5, ... 초
+    status_forcelist=[500, 502, 503, 504],
+    allowed_methods=["GET"],
+    raise_on_status=False,
+)
 
 # data type → (url_path_segment, file_suffix)
 TYPE_MAP = {
@@ -57,23 +69,46 @@ def build_url(data_type: str, symbol: str, day: date) -> str:
     return f"{BASE_URL}/{path}/{symbol}/{symbol}-{suffix}-{date_str}.zip"
 
 
-def download_file(url: str, dest: Path, session: requests.Session) -> bool:
+def _make_session() -> requests.Session:
+    session = requests.Session()
+    adapter = HTTPAdapter(max_retries=_RETRY)
+    session.mount("https://", adapter)
+    session.mount("http://", adapter)
+    return session
+
+
+def download_file(url: str, dest: Path, session: requests.Session, max_attempts: int = 5) -> bool:
     """Download a single zip file. Returns True on success, False if 404."""
     if dest.exists():
         return True  # 이미 있으면 스킵
 
-    resp = session.get(url, stream=True, timeout=30)
-    if resp.status_code == 404:
-        return False
-    resp.raise_for_status()
-
     dest.parent.mkdir(parents=True, exist_ok=True)
     tmp = dest.with_suffix(".tmp")
-    with open(tmp, "wb") as f:
-        for chunk in resp.iter_content(chunk_size=1 << 20):
-            f.write(chunk)
-    tmp.rename(dest)
-    return True
+
+    for attempt in range(1, max_attempts + 1):
+        try:
+            resp = session.get(url, stream=True, timeout=60)
+            if resp.status_code == 404:
+                return False
+            resp.raise_for_status()
+
+            with open(tmp, "wb") as f:
+                for chunk in resp.iter_content(chunk_size=1 << 20):
+                    f.write(chunk)
+            tmp.rename(dest)
+            return True
+
+        except Exception as exc:
+            if tmp.exists():
+                tmp.unlink()
+            if attempt == max_attempts:
+                log.warning("다운로드 실패 (최종): %s — %s", url, exc)
+                return False
+            wait = 2 ** attempt
+            log.debug("재시도 %d/%d (%.0fs 후): %s", attempt, max_attempts, wait, exc)
+            time.sleep(wait)
+
+    return False
 
 
 def extract_zip(zip_path: Path, out_dir: Path) -> None:
@@ -96,7 +131,7 @@ def download(
     extract: bool = True,
 ) -> None:
     out = Path(output_dir)
-    session = requests.Session()
+    session = _make_session()
     dates = date_range(days)
 
     for dtype in data_types:

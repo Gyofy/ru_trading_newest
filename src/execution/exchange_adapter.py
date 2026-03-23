@@ -2,8 +2,8 @@
 
 설계 원칙:
   - Entry: Post-Only (maker fee only, GTX TIF)
-  - Exit SL: reduceOnly STOP_MARKET (체결 보장)
-  - Exit TP: reduceOnly TAKE_PROFIT_MARKET
+  - Exit SL: closePosition=True STOP_MARKET → Position 탭 TP/SL 컬럼에 표시
+  - Exit TP: closePosition=True TAKE_PROFIT_MARKET → Position 탭 TP/SL 컬럼에 표시
   - Single exchange instance 재사용
   - newClientOrderId로 idempotency 보장
   - Precision: load_markets() 후 amount/price 자동 반올림
@@ -138,18 +138,18 @@ class ExchangeAdapter:
         }
 
     def _stop_loss_params(self, stop_price: float, side: str, order_id: str) -> tuple[str, dict]:
-        """STOP_MARKET + reduceOnly."""
+        """STOP_MARKET + closePosition=True → Binance Position 탭 TP/SL 컬럼에 표시."""
         return "stop_market", {
             "stopPrice": stop_price,
-            "reduceOnly": True,
+            "closePosition": True,   # 포지션 전체 청산 (qty 불필요, Position 탭 표시)
             "newClientOrderId": order_id,
         }
 
     def _take_profit_params(self, tp_price: float, side: str, order_id: str) -> tuple[str, dict]:
-        """TAKE_PROFIT_MARKET + reduceOnly."""
+        """TAKE_PROFIT_MARKET + closePosition=True → Binance Position 탭 TP/SL 컬럼에 표시."""
         return "take_profit_market", {
             "stopPrice": tp_price,
-            "reduceOnly": True,
+            "closePosition": True,   # 포지션 전체 청산 (qty 불필요, Position 탭 표시)
             "newClientOrderId": order_id,
         }
 
@@ -261,7 +261,7 @@ class ExchangeAdapter:
                 symbol=ccxt_sym,
                 type=order_type,
                 side=side.lower(),
-                amount=qty,
+                amount=0,   # closePosition=True: 수량 불필요 (포지션 전체 청산)
                 params=params,
             )
             return {
@@ -298,8 +298,7 @@ class ExchangeAdapter:
                 symbol=ccxt_sym,
                 type=order_type,
                 side=side.lower(),
-                amount=qty,
-                price=tp_price if order_type == "limit" else None,
+                amount=0,   # closePosition=True: 수량 불필요 (포지션 전체 청산)
                 params=params,
             )
             return {
@@ -512,8 +511,12 @@ class ExchangeAdapter:
                 symbol=ccxt_sym,
                 params={self._fetch_by_client_id_key(): order_link_id},
             )
-            if orders:
-                return orders[0]
+            for order in (orders or []):
+                # Binance가 필터를 무시하는 경우를 대비해 clientOrderId 직접 검증
+                info = order.get("info", {})
+                cid = info.get("clientOrderId") or info.get("origClientOrderId", "")
+                if cid == order_link_id:
+                    return order
         except Exception:
             pass
         return None

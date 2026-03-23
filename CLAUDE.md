@@ -6,7 +6,7 @@
 - **Previous Config**: `config/frozen_params_v4_1.yaml`, `config/frozen_params_v3_4.yaml` (보존)
 - **Live Bot**: `run_live_bot_v2.py` (v4.2, 2-Stage + Multi-Model + 30s SL/TP)
 - **Live Criteria**: `config/live_promotion_criteria.yaml`
-- **Active Coins**: DOT, ADA, XRP, SOL, LINK (5코인 확장)
+- **Active Coins**: SOL (단일 운영 — 2026-03-19, 백테스트 결과 SOL만 손익분기 근접)
 
 ## Overview
 크립토 5코인(DOT/ADA/XRP/SOL/LINK) 자동 예측·매매 시스템.

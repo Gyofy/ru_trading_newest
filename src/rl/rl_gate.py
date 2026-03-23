@@ -18,8 +18,8 @@ from src.rl.bandit import LinUCB, N_ACTIONS, SIZING_MAP
 
 logger = logging.getLogger("live_bot.rl.gate")
 
-# Default action = ACCEPT_1.00 (index 2)
-DEFAULT_ACTION = 2
+# Default action = ACCEPT_1.00 (index 3 in 7-action space)
+DEFAULT_ACTION = 3
 # Jafar 2024 inspired: limit sizing change to ±25% vs recent week
 CHANGE_CAP_RATIO = 0.25
 
@@ -66,7 +66,7 @@ class RLGate:
         Returns
         -------
         (action, rl_score) : tuple[int, float]
-            action: 0=REJECT, 1=ACCEPT_0.75, 2=ACCEPT_1.00, 3=ACCEPT_1.25
+            action: 0=REJECT, 1=ACCEPT_0.50, 2=ACCEPT_0.75, 3=ACCEPT_1.00, 4=ACCEPT_1.25, 5=ACCEPT_1.50, 6=ACCEPT_2.00
             rl_score: exploitation score (for ranking)
         """
         self.total_signals += 1
@@ -115,15 +115,18 @@ class RLGate:
         new_sizing = SIZING_MAP[action]
         if avg_sizing <= 0:
             return action
+        accept_actions = [a for a in range(1, N_ACTIONS)]  # exclude REJECT(0)
         if new_sizing > avg_sizing * (1 + CHANGE_CAP_RATIO):
-            # Find closest action within cap
             cap = avg_sizing * (1 + CHANGE_CAP_RATIO)
-            for a in [2, 3, 1]:  # prefer 1.0, then 1.25, then 0.75
+            # closest action at or below cap, prefer default (1.00x) first
+            candidates = sorted(accept_actions, key=lambda a: (abs(SIZING_MAP[a] - cap), a != DEFAULT_ACTION))
+            for a in candidates:
                 if SIZING_MAP[a] <= cap:
                     return a
         if new_sizing < avg_sizing * (1 - CHANGE_CAP_RATIO):
             floor = avg_sizing * (1 - CHANGE_CAP_RATIO)
-            for a in [2, 1, 3]:
+            candidates = sorted(accept_actions, key=lambda a: (abs(SIZING_MAP[a] - floor), a != DEFAULT_ACTION))
+            for a in candidates:
                 if SIZING_MAP[a] >= floor:
                     return a
         return action

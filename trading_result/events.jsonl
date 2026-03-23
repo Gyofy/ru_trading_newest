@@ -227,3 +227,391 @@
 {"ts": "2026-03-19T07:10:15.900925+00:00", "event": "model_trained", "coin": "BTC", "combo": "et+cb", "cv_score": 0.5524, "samples": 488}
 {"ts": "2026-03-19T07:10:18.715827+00:00", "event": "model_trained", "coin": "ETH", "combo": "et+tabm", "cv_score": 0.5707, "samples": 488}
 {"ts": "2026-03-19T07:10:20.189257+00:00", "event": "cycle_complete", "cycle": 1, "elapsed_s": 38.6, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T07:40:55.239135+00:00", "event": "bot_started", "mode": "live", "equity": 67.63635501, "coins": ["TAO", "DOT", "ADA", "XRP", "SOL", "LINK", "BTC", "ETH"], "version": "v4.3-1m", "recovered_positions": 0, "loaded_models": ["TAO", "DOT", "ADA", "XRP", "SOL", "LINK", "BTC", "ETH"]}
+{"ts": "2026-03-19T07:41:45.797116+00:00", "event": "model_trained", "coin": "TAO", "combo": null, "cv_score": 0.5326, "samples": 940}
+{"ts": "2026-03-19T07:41:47.653092+00:00", "event": "model_trained", "coin": "DOT", "combo": "et+tabm", "cv_score": 0.5662, "samples": 940}
+{"ts": "2026-03-19T07:41:53.957649+00:00", "event": "model_trained", "coin": "ADA", "combo": "et+cb", "cv_score": 0.5294, "samples": 940}
+{"ts": "2026-03-19T07:42:00.094850+00:00", "event": "model_trained", "coin": "XRP", "combo": "et+cb", "cv_score": 0.5495, "samples": 940}
+{"ts": "2026-03-19T07:42:06.113428+00:00", "event": "model_trained", "coin": "SOL", "combo": "et+cb", "cv_score": 0.5423, "samples": 940}
+{"ts": "2026-03-19T07:42:14.854669+00:00", "event": "model_trained", "coin": "LINK", "combo": "et+xgb", "cv_score": 0.5012, "samples": 940}
+{"ts": "2026-03-19T07:42:18.514630+00:00", "event": "model_trained", "coin": "BTC", "combo": "et+cb", "cv_score": 0.4846, "samples": 940}
+{"ts": "2026-03-19T07:42:24.930334+00:00", "event": "model_trained", "coin": "ETH", "combo": "et+cb", "cv_score": 0.5775, "samples": 940}
+{"ts": "2026-03-19T07:42:26.990074+00:00", "event": "cycle_error", "error": "'NoneType' object has no attribute 'qty'"}
+{"ts": "2026-03-19T07:43:19.057727+00:00", "event": "bot_started", "mode": "live", "equity": 67.63635501, "coins": ["TAO", "DOT", "ADA", "XRP", "SOL", "LINK", "BTC", "ETH"], "version": "v4.3-1m", "recovered_positions": 0, "loaded_models": ["TAO", "DOT", "ADA", "XRP", "SOL", "LINK", "BTC", "ETH"]}
+{"ts": "2026-03-19T07:44:15.526359+00:00", "event": "model_trained", "coin": "TAO", "combo": null, "cv_score": 0.4956, "samples": 940}
+{"ts": "2026-03-19T07:44:18.247938+00:00", "event": "model_trained", "coin": "DOT", "combo": "et+tabm", "cv_score": 0.5983, "samples": 940}
+{"ts": "2026-03-19T07:44:25.143712+00:00", "event": "model_trained", "coin": "ADA", "combo": "et+cb", "cv_score": 0.5147, "samples": 940}
+{"ts": "2026-03-19T07:44:31.683444+00:00", "event": "model_trained", "coin": "XRP", "combo": "et+cb", "cv_score": 0.5531, "samples": 940}
+{"ts": "2026-03-19T07:44:39.044273+00:00", "event": "model_trained", "coin": "SOL", "combo": "et+cb", "cv_score": 0.5528, "samples": 940}
+{"ts": "2026-03-19T07:44:44.102685+00:00", "event": "model_trained", "coin": "LINK", "combo": "et+xgb", "cv_score": 0.479, "samples": 940}
+{"ts": "2026-03-19T07:44:50.404540+00:00", "event": "model_trained", "coin": "BTC", "combo": "et+cb", "cv_score": 0.4936, "samples": 940}
+{"ts": "2026-03-19T07:44:57.209010+00:00", "event": "model_trained", "coin": "ETH", "combo": "et+cb", "cv_score": 0.5696, "samples": 940}
+{"ts": "2026-03-19T07:44:58.971836+00:00", "event": "cycle_complete", "cycle": 1, "elapsed_s": 99.5, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T07:45:47.405417+00:00", "event": "cycle_complete", "cycle": 2, "elapsed_s": 38.4, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T07:47:00.366696+00:00", "event": "cycle_complete", "cycle": 3, "elapsed_s": 51.4, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T07:48:02.267732+00:00", "event": "cycle_complete", "cycle": 4, "elapsed_s": 51.9, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T07:49:08.857508+00:00", "event": "cycle_complete", "cycle": 5, "elapsed_s": 56.5, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T07:50:06.139720+00:00", "event": "cycle_complete", "cycle": 6, "elapsed_s": 47.3, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T07:51:09.985928+00:00", "event": "cycle_complete", "cycle": 7, "elapsed_s": 51.1, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T07:52:09.825621+00:00", "event": "cycle_complete", "cycle": 8, "elapsed_s": 49.8, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T07:53:10.744518+00:00", "event": "cycle_complete", "cycle": 9, "elapsed_s": 50.7, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T07:54:10.656009+00:00", "event": "cycle_complete", "cycle": 10, "elapsed_s": 49.9, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T07:55:11.987136+00:00", "event": "cycle_complete", "cycle": 11, "elapsed_s": 51.1, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T07:56:14.499901+00:00", "event": "cycle_complete", "cycle": 12, "elapsed_s": 52.5, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T07:57:15.916442+00:00", "event": "cycle_complete", "cycle": 13, "elapsed_s": 51.4, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T07:58:13.859367+00:00", "event": "cycle_complete", "cycle": 14, "elapsed_s": 47.9, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T07:59:14.079482+00:00", "event": "cycle_complete", "cycle": 15, "elapsed_s": 48.1, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T08:00:15.171676+00:00", "event": "cycle_complete", "cycle": 16, "elapsed_s": 49.2, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T08:01:12.305569+00:00", "event": "cycle_complete", "cycle": 17, "elapsed_s": 46.3, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T08:02:15.752853+00:00", "event": "cycle_complete", "cycle": 18, "elapsed_s": 49.6, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T08:03:08.326518+00:00", "event": "cycle_complete", "cycle": 19, "elapsed_s": 42.2, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T08:04:09.880061+00:00", "event": "cycle_complete", "cycle": 20, "elapsed_s": 43.7, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T08:05:12.142626+00:00", "event": "cycle_complete", "cycle": 21, "elapsed_s": 46.0, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T08:06:09.954361+00:00", "event": "cycle_complete", "cycle": 22, "elapsed_s": 43.8, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T08:07:09.626262+00:00", "event": "cycle_complete", "cycle": 23, "elapsed_s": 43.4, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T08:08:14.676191+00:00", "event": "cycle_complete", "cycle": 24, "elapsed_s": 48.4, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T08:09:13.510629+00:00", "event": "cycle_complete", "cycle": 25, "elapsed_s": 47.2, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T08:10:13.327728+00:00", "event": "cycle_complete", "cycle": 26, "elapsed_s": 47.0, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T08:11:09.817255+00:00", "event": "cycle_complete", "cycle": 27, "elapsed_s": 43.4, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T08:12:05.833659+00:00", "event": "cycle_complete", "cycle": 28, "elapsed_s": 39.4, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T08:13:14.269670+00:00", "event": "cycle_complete", "cycle": 29, "elapsed_s": 47.7, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T08:14:11.806821+00:00", "event": "cycle_complete", "cycle": 30, "elapsed_s": 45.3, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T08:15:03.861326+00:00", "event": "cycle_complete", "cycle": 31, "elapsed_s": 37.3, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T08:16:10.647245+00:00", "event": "cycle_complete", "cycle": 32, "elapsed_s": 44.1, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T08:17:18.374252+00:00", "event": "cycle_complete", "cycle": 33, "elapsed_s": 51.8, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T08:18:10.656336+00:00", "event": "cycle_complete", "cycle": 34, "elapsed_s": 42.3, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T08:19:11.165877+00:00", "event": "cycle_complete", "cycle": 35, "elapsed_s": 42.8, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T08:20:21.385453+00:00", "event": "cycle_complete", "cycle": 36, "elapsed_s": 53.0, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T08:21:21.972699+00:00", "event": "cycle_complete", "cycle": 37, "elapsed_s": 50.5, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T08:22:14.214855+00:00", "event": "cycle_complete", "cycle": 38, "elapsed_s": 42.2, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T08:23:11.810811+00:00", "event": "cycle_complete", "cycle": 39, "elapsed_s": 39.8, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T08:24:11.287263+00:00", "event": "cycle_complete", "cycle": 40, "elapsed_s": 39.2, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T08:25:18.359234+00:00", "event": "cycle_complete", "cycle": 41, "elapsed_s": 46.3, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T08:26:19.001183+00:00", "event": "cycle_complete", "cycle": 42, "elapsed_s": 46.8, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T08:27:19.578479+00:00", "event": "cycle_complete", "cycle": 43, "elapsed_s": 47.4, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T08:28:21.743103+00:00", "event": "cycle_complete", "cycle": 44, "elapsed_s": 49.5, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T08:29:18.643475+00:00", "event": "cycle_complete", "cycle": 45, "elapsed_s": 46.4, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T08:30:17.480307+00:00", "event": "cycle_complete", "cycle": 46, "elapsed_s": 45.1, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T08:31:16.451544+00:00", "event": "cycle_complete", "cycle": 47, "elapsed_s": 44.1, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T08:32:19.630679+00:00", "event": "cycle_complete", "cycle": 48, "elapsed_s": 47.2, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T08:33:20.505929+00:00", "event": "cycle_complete", "cycle": 49, "elapsed_s": 48.1, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T08:34:18.362293+00:00", "event": "cycle_complete", "cycle": 50, "elapsed_s": 45.9, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T08:35:11.085120+00:00", "event": "cycle_complete", "cycle": 51, "elapsed_s": 38.6, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T08:36:20.109864+00:00", "event": "cycle_complete", "cycle": 52, "elapsed_s": 47.6, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T08:37:17.740462+00:00", "event": "cycle_complete", "cycle": 53, "elapsed_s": 45.2, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T08:38:16.128237+00:00", "event": "cycle_complete", "cycle": 54, "elapsed_s": 43.6, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T08:39:16.664449+00:00", "event": "cycle_complete", "cycle": 55, "elapsed_s": 44.1, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T08:40:14.801858+00:00", "event": "cycle_complete", "cycle": 56, "elapsed_s": 42.3, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T08:41:19.190834+00:00", "event": "cycle_complete", "cycle": 57, "elapsed_s": 46.6, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T08:42:14.216883+00:00", "event": "cycle_complete", "cycle": 58, "elapsed_s": 41.6, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T08:43:15.295495+00:00", "event": "cycle_complete", "cycle": 59, "elapsed_s": 42.6, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T08:44:13.211918+00:00", "event": "cycle_complete", "cycle": 60, "elapsed_s": 40.5, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T08:45:17.740237+00:00", "event": "cycle_complete", "cycle": 61, "elapsed_s": 45.0, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T08:46:16.330175+00:00", "event": "cycle_complete", "cycle": 62, "elapsed_s": 43.5, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T08:47:14.970131+00:00", "event": "cycle_complete", "cycle": 63, "elapsed_s": 42.2, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T08:48:11.708861+00:00", "event": "cycle_complete", "cycle": 64, "elapsed_s": 38.9, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T08:49:16.127768+00:00", "event": "cycle_complete", "cycle": 65, "elapsed_s": 43.3, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T08:50:16.829957+00:00", "event": "cycle_complete", "cycle": 66, "elapsed_s": 44.0, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T08:51:13.872653+00:00", "event": "cycle_complete", "cycle": 67, "elapsed_s": 41.0, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T08:52:12.206094+00:00", "event": "cycle_complete", "cycle": 68, "elapsed_s": 39.4, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T08:53:16.088788+00:00", "event": "cycle_complete", "cycle": 69, "elapsed_s": 43.2, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T08:54:19.901244+00:00", "event": "cycle_complete", "cycle": 70, "elapsed_s": 47.0, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T08:55:16.934162+00:00", "event": "cycle_complete", "cycle": 71, "elapsed_s": 44.0, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T08:56:16.271201+00:00", "event": "cycle_complete", "cycle": 72, "elapsed_s": 43.3, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T08:57:16.714062+00:00", "event": "cycle_complete", "cycle": 73, "elapsed_s": 43.6, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T08:58:14.256962+00:00", "event": "cycle_complete", "cycle": 74, "elapsed_s": 41.2, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T08:59:13.992923+00:00", "event": "cycle_complete", "cycle": 75, "elapsed_s": 40.8, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T09:00:17.261156+00:00", "event": "cycle_complete", "cycle": 76, "elapsed_s": 44.0, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T09:01:15.491683+00:00", "event": "cycle_complete", "cycle": 77, "elapsed_s": 42.2, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T09:02:15.953161+00:00", "event": "cycle_complete", "cycle": 78, "elapsed_s": 42.7, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T09:03:11.873109+00:00", "event": "cycle_complete", "cycle": 79, "elapsed_s": 38.4, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T09:04:17.408704+00:00", "event": "cycle_complete", "cycle": 80, "elapsed_s": 43.9, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T09:05:14.635749+00:00", "event": "cycle_complete", "cycle": 81, "elapsed_s": 41.1, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T09:06:16.741718+00:00", "event": "cycle_complete", "cycle": 82, "elapsed_s": 43.0, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T09:07:13.736155+00:00", "event": "cycle_complete", "cycle": 83, "elapsed_s": 40.0, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T09:08:13.410271+00:00", "event": "cycle_complete", "cycle": 84, "elapsed_s": 39.7, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T09:09:18.560830+00:00", "event": "cycle_complete", "cycle": 85, "elapsed_s": 44.8, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T09:10:16.502621+00:00", "event": "cycle_complete", "cycle": 86, "elapsed_s": 42.7, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T09:11:16.604511+00:00", "event": "cycle_complete", "cycle": 87, "elapsed_s": 42.8, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T09:12:17.367829+00:00", "event": "cycle_complete", "cycle": 88, "elapsed_s": 43.6, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T09:13:14.833820+00:00", "event": "cycle_complete", "cycle": 89, "elapsed_s": 40.9, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T09:14:15.263542+00:00", "event": "cycle_complete", "cycle": 90, "elapsed_s": 41.4, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T09:15:18.246835+00:00", "event": "cycle_complete", "cycle": 91, "elapsed_s": 44.3, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T09:16:15.098991+00:00", "event": "cycle_complete", "cycle": 92, "elapsed_s": 41.2, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T09:17:15.791774+00:00", "event": "cycle_complete", "cycle": 93, "elapsed_s": 41.9, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T09:18:15.279003+00:00", "event": "cycle_complete", "cycle": 94, "elapsed_s": 41.3, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T09:19:22.046099+00:00", "event": "cycle_complete", "cycle": 95, "elapsed_s": 48.1, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T09:20:16.527061+00:00", "event": "cycle_complete", "cycle": 96, "elapsed_s": 42.5, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T09:21:19.209664+00:00", "event": "cycle_complete", "cycle": 97, "elapsed_s": 45.2, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T09:22:15.155646+00:00", "event": "cycle_complete", "cycle": 98, "elapsed_s": 41.1, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T09:23:16.520800+00:00", "event": "cycle_complete", "cycle": 99, "elapsed_s": 42.3, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T09:24:18.101468+00:00", "event": "cycle_complete", "cycle": 100, "elapsed_s": 43.8, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T09:25:13.898916+00:00", "event": "cycle_complete", "cycle": 101, "elapsed_s": 39.6, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T09:26:16.454500+00:00", "event": "cycle_complete", "cycle": 102, "elapsed_s": 42.0, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T09:27:15.193739+00:00", "event": "cycle_complete", "cycle": 103, "elapsed_s": 40.7, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T09:28:12.769127+00:00", "event": "cycle_complete", "cycle": 104, "elapsed_s": 38.2, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T09:29:14.543268+00:00", "event": "cycle_complete", "cycle": 105, "elapsed_s": 39.9, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T09:30:13.385955+00:00", "event": "cycle_complete", "cycle": 106, "elapsed_s": 38.8, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T09:31:17.377076+00:00", "event": "cycle_complete", "cycle": 107, "elapsed_s": 42.6, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T09:32:14.792725+00:00", "event": "cycle_complete", "cycle": 108, "elapsed_s": 40.1, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T09:33:19.035494+00:00", "event": "cycle_complete", "cycle": 109, "elapsed_s": 44.3, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T09:34:17.814614+00:00", "event": "cycle_complete", "cycle": 110, "elapsed_s": 43.0, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T09:35:15.443503+00:00", "event": "cycle_complete", "cycle": 111, "elapsed_s": 40.4, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T09:36:19.222146+00:00", "event": "cycle_complete", "cycle": 112, "elapsed_s": 44.2, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T09:37:16.403633+00:00", "event": "cycle_complete", "cycle": 113, "elapsed_s": 41.4, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T09:38:18.546919+00:00", "event": "cycle_complete", "cycle": 114, "elapsed_s": 43.5, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T09:39:17.156369+00:00", "event": "cycle_complete", "cycle": 115, "elapsed_s": 42.1, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T09:40:17.843837+00:00", "event": "cycle_complete", "cycle": 116, "elapsed_s": 42.7, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T09:41:17.555188+00:00", "event": "cycle_complete", "cycle": 117, "elapsed_s": 42.4, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T09:42:16.381733+00:00", "event": "cycle_complete", "cycle": 118, "elapsed_s": 41.2, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T09:43:19.091438+00:00", "event": "cycle_complete", "cycle": 119, "elapsed_s": 43.9, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T09:44:18.734328+00:00", "event": "cycle_complete", "cycle": 120, "elapsed_s": 43.5, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T09:45:18.017264+00:00", "event": "cycle_complete", "cycle": 121, "elapsed_s": 42.7, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T09:46:21.039639+00:00", "event": "cycle_complete", "cycle": 122, "elapsed_s": 45.8, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T09:47:18.472842+00:00", "event": "cycle_complete", "cycle": 123, "elapsed_s": 43.2, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T09:48:12.844234+00:00", "event": "cycle_complete", "cycle": 124, "elapsed_s": 37.5, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T09:49:14.098401+00:00", "event": "cycle_complete", "cycle": 125, "elapsed_s": 38.7, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T09:50:19.686030+00:00", "event": "cycle_complete", "cycle": 126, "elapsed_s": 44.3, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T09:51:17.536086+00:00", "event": "cycle_complete", "cycle": 127, "elapsed_s": 42.1, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T09:52:14.373116+00:00", "event": "cycle_complete", "cycle": 128, "elapsed_s": 38.9, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T09:53:17.192876+00:00", "event": "cycle_complete", "cycle": 129, "elapsed_s": 41.7, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T09:54:15.735262+00:00", "event": "cycle_complete", "cycle": 130, "elapsed_s": 40.2, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T09:55:15.492904+00:00", "event": "cycle_complete", "cycle": 131, "elapsed_s": 40.0, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T09:56:14.163496+00:00", "event": "cycle_complete", "cycle": 132, "elapsed_s": 38.5, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T09:57:13.943132+00:00", "event": "cycle_complete", "cycle": 133, "elapsed_s": 38.3, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T09:58:14.705307+00:00", "event": "cycle_complete", "cycle": 134, "elapsed_s": 38.9, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T09:59:18.355576+00:00", "event": "cycle_complete", "cycle": 135, "elapsed_s": 42.6, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T10:00:21.488900+00:00", "event": "cycle_complete", "cycle": 136, "elapsed_s": 45.7, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T10:01:24.160993+00:00", "event": "cycle_complete", "cycle": 137, "elapsed_s": 48.4, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T10:02:19.505148+00:00", "event": "cycle_complete", "cycle": 138, "elapsed_s": 43.6, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T10:03:19.148090+00:00", "event": "cycle_complete", "cycle": 139, "elapsed_s": 43.3, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T10:04:18.977699+00:00", "event": "cycle_complete", "cycle": 140, "elapsed_s": 43.1, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T10:05:27.290433+00:00", "event": "cycle_complete", "cycle": 141, "elapsed_s": 51.4, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T10:06:18.060679+00:00", "event": "cycle_complete", "cycle": 142, "elapsed_s": 40.8, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T10:07:28.690937+00:00", "event": "cycle_complete", "cycle": 143, "elapsed_s": 51.4, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T10:08:15.289390+00:00", "event": "cycle_complete", "cycle": 144, "elapsed_s": 36.6, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T10:09:18.350562+00:00", "event": "cycle_complete", "cycle": 145, "elapsed_s": 39.6, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T10:10:17.948662+00:00", "event": "cycle_complete", "cycle": 146, "elapsed_s": 39.2, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T10:11:16.835754+00:00", "event": "cycle_complete", "cycle": 147, "elapsed_s": 38.1, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T10:12:17.570689+00:00", "event": "cycle_complete", "cycle": 148, "elapsed_s": 38.8, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T10:13:17.899179+00:00", "event": "cycle_complete", "cycle": 149, "elapsed_s": 39.2, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T10:14:17.116502+00:00", "event": "cycle_complete", "cycle": 150, "elapsed_s": 38.4, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T10:15:18.366830+00:00", "event": "cycle_complete", "cycle": 151, "elapsed_s": 39.6, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T10:16:18.345700+00:00", "event": "cycle_complete", "cycle": 152, "elapsed_s": 39.6, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T10:17:18.911345+00:00", "event": "cycle_complete", "cycle": 153, "elapsed_s": 40.2, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T10:18:21.733055+00:00", "event": "cycle_complete", "cycle": 154, "elapsed_s": 43.0, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T10:19:16.553163+00:00", "event": "cycle_complete", "cycle": 155, "elapsed_s": 37.8, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T10:20:20.242363+00:00", "event": "cycle_complete", "cycle": 156, "elapsed_s": 41.5, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T10:21:19.786407+00:00", "event": "cycle_complete", "cycle": 157, "elapsed_s": 41.0, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T10:22:15.344534+00:00", "event": "cycle_complete", "cycle": 158, "elapsed_s": 36.6, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T10:23:20.019147+00:00", "event": "cycle_complete", "cycle": 159, "elapsed_s": 41.3, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T10:23:57.418421+00:00", "event": "bot_started", "mode": "live", "equity": 67.63635501, "coins": ["TAO", "DOT", "ADA", "XRP", "SOL", "LINK", "BTC", "ETH"], "version": "v4.3-1m", "recovered_positions": 0, "loaded_models": ["TAO", "DOT", "ADA", "XRP", "SOL", "LINK", "BTC", "ETH"]}
+{"ts": "2026-03-19T10:24:38.803259+00:00", "event": "model_trained", "coin": "TAO", "combo": null, "cv_score": 0.5182, "samples": 940}
+{"ts": "2026-03-19T10:24:42.900014+00:00", "event": "model_trained", "coin": "DOT", "combo": "et+tabm", "cv_score": 0.5202, "samples": 940}
+{"ts": "2026-03-19T10:24:48.560396+00:00", "event": "model_trained", "coin": "ADA", "combo": "et+cb", "cv_score": 0.5912, "samples": 940}
+{"ts": "2026-03-19T10:24:54.141411+00:00", "event": "model_trained", "coin": "XRP", "combo": "et+cb", "cv_score": 0.5433, "samples": 940}
+{"ts": "2026-03-19T10:24:59.524497+00:00", "event": "model_trained", "coin": "SOL", "combo": "et+cb", "cv_score": 0.5283, "samples": 940}
+{"ts": "2026-03-19T10:25:06.009098+00:00", "event": "model_trained", "coin": "LINK", "combo": "et+xgb", "cv_score": 0.5037, "samples": 940}
+{"ts": "2026-03-19T10:25:11.525171+00:00", "event": "model_trained", "coin": "BTC", "combo": "et+cb", "cv_score": 0.5407, "samples": 940}
+{"ts": "2026-03-19T10:25:16.807404+00:00", "event": "model_trained", "coin": "ETH", "combo": "et+cb", "cv_score": 0.535, "samples": 940}
+{"ts": "2026-03-19T10:25:18.304245+00:00", "event": "cycle_complete", "cycle": 1, "elapsed_s": 80.6, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T10:26:08.893762+00:00", "event": "cycle_complete", "cycle": 2, "elapsed_s": 40.6, "equity": 67.64, "positions": []}
+{"ts": "2026-03-19T10:27:00.652088+00:00", "event": "bot_started", "mode": "live", "equity": 67.63635501, "coins": ["TAO", "DOT", "ADA", "XRP", "SOL", "LINK", "BTC", "ETH"], "version": "v4.3-1m", "recovered_positions": 0, "loaded_models": ["TAO", "DOT", "ADA", "XRP", "SOL", "LINK", "BTC", "ETH"]}
+{"ts": "2026-03-19T10:27:45.907201+00:00", "event": "model_trained", "coin": "TAO", "combo": null, "cv_score": 0.5103, "samples": 940}
+{"ts": "2026-03-19T10:27:49.724835+00:00", "event": "model_trained", "coin": "DOT", "combo": "et+tabm", "cv_score": 0.5281, "samples": 940}
+{"ts": "2026-03-19T10:27:54.675108+00:00", "event": "model_trained", "coin": "ADA", "combo": "et+cb", "cv_score": 0.5871, "samples": 940}
+{"ts": "2026-03-19T10:28:00.671101+00:00", "event": "model_trained", "coin": "XRP", "combo": "et+cb", "cv_score": 0.5692, "samples": 940}
+{"ts": "2026-03-19T10:28:05.599014+00:00", "event": "model_trained", "coin": "SOL", "combo": "et+cb", "cv_score": 0.5173, "samples": 940}
+{"ts": "2026-03-19T10:28:11.971797+00:00", "event": "model_trained", "coin": "LINK", "combo": "et+xgb", "cv_score": 0.4819, "samples": 940}
+{"ts": "2026-03-19T10:28:17.224474+00:00", "event": "model_trained", "coin": "BTC", "combo": "et+cb", "cv_score": 0.5193, "samples": 940}
+{"ts": "2026-03-19T10:28:22.538853+00:00", "event": "model_trained", "coin": "ETH", "combo": "et+cb", "cv_score": 0.5534, "samples": 940}
+{"ts": "2026-03-19T10:28:43.117687+00:00", "event": "position_opened", "coin": "ADA", "side": "BUY", "entry": 0.2884, "qty": 35.0, "sl": 0.2881, "tp1": 0.2887, "tp2": 0.289, "tp3": 0.2893, "mode": "live", "p_trade": 0.4657, "p_dir": 0.7642}
+{"ts": "2026-03-19T10:28:52.983493+00:00", "event": "position_closed", "coin": "ADA", "reason": "SL_HIT", "side": "BUY", "entry": 0.2884, "exit": 0.2711, "pnl_pct": -0.059986, "pnl_usdt": -0.6055, "bars": 0}
+{"ts": "2026-03-19T10:29:05.119406+00:00", "event": "cycle_complete", "cycle": 1, "elapsed_s": 123.9, "equity": 67.62, "positions": []}
+{"ts": "2026-03-19T10:30:18.279260+00:00", "event": "cycle_complete", "cycle": 2, "elapsed_s": 63.2, "equity": 67.61, "positions": []}
+{"ts": "2026-03-19T10:31:21.977385+00:00", "event": "position_opened", "coin": "ADA", "side": "BUY", "entry": 0.2884, "qty": 35.0, "sl": 0.2881, "tp1": 0.2887, "tp2": 0.289, "tp3": 0.2893, "mode": "live", "p_trade": 0.7241, "p_dir": 0.7954}
+{"ts": "2026-03-19T10:31:22.529789+00:00", "event": "cycle_complete", "cycle": 3, "elapsed_s": 54.2, "equity": 67.57, "positions": ["ADA"]}
+{"ts": "2026-03-19T10:40:06.116028+00:00", "event": "bot_started", "mode": "live", "equity": 67.39785782, "coins": ["TAO", "DOT", "ADA", "XRP", "SOL", "LINK", "BTC", "ETH"], "version": "v4.3-1m", "recovered_positions": 1, "loaded_models": ["TAO", "DOT", "ADA", "XRP", "SOL", "LINK", "BTC", "ETH"]}
+{"ts": "2026-03-19T10:40:08.245323+00:00", "event": "position_closed", "coin": "ADA", "reason": "SL_HIT", "side": "BUY", "entry": 0.2884, "exit": 0.2702, "pnl_pct": -0.063107, "pnl_usdt": -0.637, "bars": 0}
+{"ts": "2026-03-19T10:40:50.619386+00:00", "event": "model_trained", "coin": "TAO", "combo": null, "cv_score": 0.493, "samples": 940}
+{"ts": "2026-03-19T10:40:54.617511+00:00", "event": "model_trained", "coin": "DOT", "combo": "et+tabm", "cv_score": 0.5577, "samples": 940}
+{"ts": "2026-03-19T10:40:59.588085+00:00", "event": "model_trained", "coin": "ADA", "combo": "et+cb", "cv_score": 0.5839, "samples": 940}
+{"ts": "2026-03-19T10:41:04.700593+00:00", "event": "model_trained", "coin": "XRP", "combo": "et+cb", "cv_score": 0.5741, "samples": 940}
+{"ts": "2026-03-19T10:41:09.742611+00:00", "event": "model_trained", "coin": "SOL", "combo": "et+cb", "cv_score": 0.5028, "samples": 940}
+{"ts": "2026-03-19T10:41:16.997916+00:00", "event": "model_trained", "coin": "LINK", "combo": "et+xgb", "cv_score": 0.497, "samples": 940}
+{"ts": "2026-03-19T10:41:22.574250+00:00", "event": "model_trained", "coin": "BTC", "combo": "et+cb", "cv_score": 0.507, "samples": 940}
+{"ts": "2026-03-19T10:41:27.859390+00:00", "event": "model_trained", "coin": "ETH", "combo": "et+cb", "cv_score": 0.5162, "samples": 940}
+{"ts": "2026-03-19T10:41:52.028183+00:00", "event": "cycle_complete", "cycle": 1, "elapsed_s": 105.5, "equity": 67.34, "positions": []}
+{"ts": "2026-03-19T10:43:13.146842+00:00", "event": "position_opened", "coin": "XRP", "side": "BUY", "entry": 1.4627, "qty": 30.7, "sl": 1.4612, "tp1": 1.4638, "tp2": 1.4649, "tp3": 1.466, "mode": "live", "p_trade": 0.788, "p_dir": 0.5497}
+{"ts": "2026-03-19T10:43:13.608590+00:00", "event": "cycle_complete", "cycle": 2, "elapsed_s": 71.6, "equity": 67.26, "positions": ["XRP"]}
+{"ts": "2026-03-19T10:44:27.203670+00:00", "event": "cycle_complete", "cycle": 3, "elapsed_s": 63.6, "equity": 67.38, "positions": ["XRP"]}
+{"ts": "2026-03-19T10:45:40.087180+00:00", "event": "cycle_complete", "cycle": 4, "elapsed_s": 62.9, "equity": 67.41, "positions": ["XRP"]}
+{"ts": "2026-03-19T10:46:48.099537+00:00", "event": "cycle_complete", "cycle": 5, "elapsed_s": 58.0, "equity": 67.39, "positions": ["XRP"]}
+{"ts": "2026-03-19T10:46:56.867438+00:00", "event": "partial_tp", "coin": "XRP", "stage": 1, "side": "BUY", "entry": 1.4627, "exit": 1.4638, "partial_qty": 10.1, "remaining_qty": 20.6, "pnl_pct": 0.000752, "pnl_usdt": 0.0111, "new_sl": 1.4627}
+{"ts": "2026-03-19T10:48:02.331005+00:00", "event": "cycle_complete", "cycle": 6, "elapsed_s": 64.2, "equity": 67.38, "positions": ["XRP"]}
+{"ts": "2026-03-19T10:48:52.707448+00:00", "event": "cycle_complete", "cycle": 7, "elapsed_s": 40.4, "equity": 67.4, "positions": ["XRP"]}
+{"ts": "2026-03-19T10:49:52.197142+00:00", "event": "cycle_complete", "cycle": 8, "elapsed_s": 39.9, "equity": 67.31, "positions": ["XRP"]}
+{"ts": "2026-03-19T10:50:50.493689+00:00", "event": "position_closed", "coin": "XRP", "reason": "SL_HIT", "side": "BUY", "entry": 1.4627, "exit": 1.4626, "pnl_pct": -6.8e-05, "pnl_usdt": -0.0031, "bars": 7}
+{"ts": "2026-03-19T10:51:13.304189+00:00", "event": "cycle_complete", "cycle": 9, "elapsed_s": 61.0, "equity": 67.14, "positions": []}
+{"ts": "2026-03-19T10:52:05.372223+00:00", "event": "cycle_complete", "cycle": 10, "elapsed_s": 42.1, "equity": 67.24, "positions": []}
+{"ts": "2026-03-19T10:53:26.999576+00:00", "event": "cycle_complete", "cycle": 11, "elapsed_s": 63.7, "equity": 66.91, "positions": []}
+{"ts": "2026-03-19T10:54:40.328232+00:00", "event": "position_opened", "coin": "XRP", "side": "SELL", "entry": 1.4627, "qty": 30.7, "sl": 1.4642, "tp1": 1.4617, "tp2": 1.4606, "tp3": 1.4596, "mode": "live", "p_trade": 0.752, "p_dir": 0.708}
+{"ts": "2026-03-19T10:54:40.785286+00:00", "event": "cycle_complete", "cycle": 12, "elapsed_s": 63.8, "equity": 66.91, "positions": ["XRP"]}
+{"ts": "2026-03-19T10:55:23.482381+00:00", "event": "bot_started", "mode": "live", "equity": 66.89312742, "coins": ["TAO", "DOT", "ADA", "XRP", "SOL", "LINK", "BTC", "ETH"], "version": "v4.3-1m", "recovered_positions": 1, "loaded_models": ["TAO", "DOT", "ADA", "XRP", "SOL", "LINK", "BTC", "ETH"]}
+{"ts": "2026-03-19T10:55:26.736876+00:00", "event": "bot_stopped", "reason": "shutdown"}
+{"ts": "2026-03-19T10:55:27.251830+00:00", "event": "cycle_error", "error": "Cannot operate on a closed database."}
+{"ts": "2026-03-19T10:56:06.900381+00:00", "event": "model_trained", "coin": "TAO", "combo": null, "cv_score": 0.4989, "samples": 940}
+{"ts": "2026-03-19T10:56:10.574737+00:00", "event": "model_trained", "coin": "DOT", "combo": "et+tabm", "cv_score": 0.5682, "samples": 940}
+{"ts": "2026-03-19T10:56:15.496701+00:00", "event": "model_trained", "coin": "ADA", "combo": "et+cb", "cv_score": 0.5545, "samples": 940}
+{"ts": "2026-03-19T10:56:20.773390+00:00", "event": "model_trained", "coin": "XRP", "combo": "et+cb", "cv_score": 0.5789, "samples": 940}
+{"ts": "2026-03-19T10:56:26.448452+00:00", "event": "model_trained", "coin": "SOL", "combo": "et+cb", "cv_score": 0.5041, "samples": 940}
+{"ts": "2026-03-19T10:56:32.927988+00:00", "event": "model_trained", "coin": "LINK", "combo": "et+xgb", "cv_score": 0.5628, "samples": 940}
+{"ts": "2026-03-19T10:56:38.367243+00:00", "event": "model_trained", "coin": "BTC", "combo": "et+cb", "cv_score": 0.53, "samples": 940}
+{"ts": "2026-03-19T10:56:43.382130+00:00", "event": "model_trained", "coin": "ETH", "combo": "et+cb", "cv_score": 0.506, "samples": 940}
+{"ts": "2026-03-19T10:57:07.050452+00:00", "event": "cycle_complete", "cycle": 1, "elapsed_s": 103.2, "equity": 66.87, "positions": ["XRP"]}
+{"ts": "2026-03-19T10:57:57.351995+00:00", "event": "position_opened", "coin": "DOT", "side": "BUY", "entry": 1.531, "qty": 29.3, "sl": 1.529, "tp1": 1.532, "tp2": 1.534, "tp3": 1.537, "mode": "live", "p_trade": 0.4834, "p_dir": 0.5604}
+{"ts": "2026-03-19T10:57:58.535725+00:00", "event": "position_opened", "coin": "ADA", "side": "BUY", "entry": 0.2884, "qty": 35.0, "sl": 0.2694, "tp1": 0.2699, "tp2": 0.2701, "tp3": 0.2705, "mode": "live", "p_trade": 0.661, "p_dir": 0.7287}
+{"ts": "2026-03-19T10:57:59.045472+00:00", "event": "cycle_complete", "cycle": 2, "elapsed_s": 42.0, "equity": 66.9, "positions": ["XRP", "DOT", "ADA"]}
+{"ts": "2026-03-19T10:58:06.368717+00:00", "event": "partial_tp", "coin": "DOT", "stage": 1, "side": "BUY", "entry": 1.531, "exit": 1.532, "partial_qty": 9.6, "remaining_qty": 19.7, "pnl_pct": 0.000653, "pnl_usdt": 0.0096, "new_sl": 1.531}
+{"ts": "2026-03-19T10:58:16.941607+00:00", "event": "position_closed", "coin": "DOT", "reason": "SL_HIT", "side": "BUY", "entry": 1.531, "exit": 1.53, "pnl_pct": -0.000653, "pnl_usdt": -0.0293, "bars": 0}
+{"ts": "2026-03-19T10:58:55.149655+00:00", "event": "position_opened", "coin": "DOT", "side": "BUY", "entry": 1.531, "qty": 29.3, "sl": 1.528, "tp1": 1.531, "tp2": 1.533, "tp3": 1.536, "mode": "live", "p_trade": 0.5447, "p_dir": 0.5809}
+{"ts": "2026-03-19T10:58:55.796758+00:00", "event": "cycle_complete", "cycle": 3, "elapsed_s": 38.5, "equity": 66.81, "positions": ["XRP", "ADA", "DOT"]}
+{"ts": "2026-03-19T10:59:04.318763+00:00", "event": "position_closed", "coin": "ADA", "reason": "SL_HIT", "side": "BUY", "entry": 0.2884, "exit": 0.2694, "pnl_pct": -0.065881, "pnl_usdt": -0.665, "bars": 1}
+{"ts": "2026-03-19T10:59:57.416114+00:00", "event": "position_opened", "coin": "ADA", "side": "BUY", "entry": 0.2884, "qty": 35.0, "sl": 0.2692, "tp1": 0.2696, "tp2": 0.2699, "tp3": 0.2702, "mode": "live", "p_trade": 0.7279, "p_dir": 0.7243}
+{"ts": "2026-03-19T10:59:57.884214+00:00", "event": "cycle_complete", "cycle": 4, "elapsed_s": 40.6, "equity": 66.79, "positions": ["XRP", "DOT", "ADA"]}
+{"ts": "2026-03-19T11:00:58.559624+00:00", "event": "cycle_complete", "cycle": 5, "elapsed_s": 41.3, "equity": 66.78, "positions": ["XRP", "DOT", "ADA"]}
+{"ts": "2026-03-19T11:00:59.173302+00:00", "event": "partial_tp", "coin": "ADA", "stage": 1, "side": "BUY", "entry": 0.2884, "exit": 0.2696, "partial_qty": 11.0, "remaining_qty": 24.0, "pnl_pct": -0.065187, "pnl_usdt": -0.2068, "new_sl": 0.2884}
+{"ts": "2026-03-19T11:01:09.768962+00:00", "event": "position_closed", "coin": "ADA", "reason": "SL_HIT", "side": "BUY", "entry": 0.2884, "exit": 0.2695, "pnl_pct": -0.065534, "pnl_usdt": -0.6615, "bars": 1}
+{"ts": "2026-03-19T11:01:17.720255+00:00", "event": "position_closed", "coin": "XRP", "reason": "KILL_SWITCH", "side": "SELL", "entry": 1.4627, "exit": 1.4627, "pnl_pct": 0.0, "pnl_usdt": 0.0, "bars": 5}
+{"ts": "2026-03-19T11:01:18.564120+00:00", "event": "position_closed", "coin": "DOT", "reason": "KILL_SWITCH", "side": "BUY", "entry": 1.531, "exit": 1.53, "pnl_pct": -0.000653, "pnl_usdt": -0.0293, "bars": 2}
+{"ts": "2026-03-19T11:06:51.439467+00:00", "event": "position_recovered", "coin": "DOT", "side": "BUY", "entry": 1.529, "qty": 29.4, "sl": 1.51371, "tp": 1.57487}
+{"ts": "2026-03-19T11:06:51.440097+00:00", "event": "position_recovered", "coin": "ADA", "side": "BUY", "entry": 0.2694462962964, "qty": 216.0, "sl": 0.266752, "tp": 0.27753}
+{"ts": "2026-03-19T11:06:52.054119+00:00", "event": "bot_started", "mode": "live", "equity": 66.80577474, "coins": ["TAO", "DOT", "ADA", "XRP", "SOL", "LINK", "BTC", "ETH"], "version": "v4.3-1m", "recovered_positions": 2, "loaded_models": ["TAO", "DOT", "ADA", "XRP", "SOL", "LINK", "BTC", "ETH"]}
+{"ts": "2026-03-19T11:07:34.490033+00:00", "event": "model_trained", "coin": "TAO", "combo": null, "cv_score": 0.5557, "samples": 940}
+{"ts": "2026-03-19T11:07:38.379774+00:00", "event": "model_trained", "coin": "DOT", "combo": "et+tabm", "cv_score": 0.5615, "samples": 940}
+{"ts": "2026-03-19T11:07:43.262111+00:00", "event": "model_trained", "coin": "ADA", "combo": "et+cb", "cv_score": 0.5353, "samples": 940}
+{"ts": "2026-03-19T11:07:48.557444+00:00", "event": "model_trained", "coin": "XRP", "combo": "et+cb", "cv_score": 0.5624, "samples": 940}
+{"ts": "2026-03-19T11:07:53.657327+00:00", "event": "model_trained", "coin": "SOL", "combo": "et+cb", "cv_score": 0.5622, "samples": 940}
+{"ts": "2026-03-19T11:08:00.832880+00:00", "event": "model_trained", "coin": "LINK", "combo": "et+xgb", "cv_score": 0.5124, "samples": 940}
+{"ts": "2026-03-19T11:08:06.023881+00:00", "event": "model_trained", "coin": "BTC", "combo": "et+cb", "cv_score": 0.5411, "samples": 940}
+{"ts": "2026-03-19T11:08:12.046882+00:00", "event": "model_trained", "coin": "ETH", "combo": "et+cb", "cv_score": 0.5198, "samples": 940}
+{"ts": "2026-03-19T11:08:12.492557+00:00", "event": "cycle_complete", "cycle": 1, "elapsed_s": 80.0, "equity": 66.76, "positions": ["DOT", "ADA"]}
+{"ts": "2026-03-19T11:08:53.823247+00:00", "event": "cycle_complete", "cycle": 2, "elapsed_s": 31.3, "equity": 66.72, "positions": ["DOT", "ADA"]}
+{"ts": "2026-03-19T11:09:51.933518+00:00", "event": "cycle_complete", "cycle": 3, "elapsed_s": 29.4, "equity": 66.77, "positions": ["DOT", "ADA"]}
+{"ts": "2026-03-19T11:11:02.043565+00:00", "event": "cycle_complete", "cycle": 4, "elapsed_s": 39.5, "equity": 66.78, "positions": ["DOT", "ADA"]}
+{"ts": "2026-03-19T11:11:30.736171+00:00", "event": "bot_started", "mode": "live", "equity": 66.77627686, "coins": ["TAO", "DOT", "ADA", "XRP", "SOL", "LINK", "BTC", "ETH"], "version": "v4.3-1m", "recovered_positions": 2, "loaded_models": ["TAO", "DOT", "ADA", "XRP", "SOL", "LINK", "BTC", "ETH"]}
+{"ts": "2026-03-19T11:12:12.767813+00:00", "event": "model_trained", "coin": "TAO", "combo": null, "cv_score": 0.5435, "samples": 940}
+{"ts": "2026-03-19T11:12:16.669128+00:00", "event": "model_trained", "coin": "DOT", "combo": "et+tabm", "cv_score": 0.5063, "samples": 940}
+{"ts": "2026-03-19T11:12:21.693672+00:00", "event": "model_trained", "coin": "ADA", "combo": "et+cb", "cv_score": 0.5683, "samples": 940}
+{"ts": "2026-03-19T11:12:27.337998+00:00", "event": "model_trained", "coin": "XRP", "combo": "et+cb", "cv_score": 0.5711, "samples": 940}
+{"ts": "2026-03-19T11:12:32.603467+00:00", "event": "model_trained", "coin": "SOL", "combo": "et+cb", "cv_score": 0.5632, "samples": 940}
+{"ts": "2026-03-19T11:12:39.690918+00:00", "event": "model_trained", "coin": "LINK", "combo": "et+xgb", "cv_score": 0.519, "samples": 940}
+{"ts": "2026-03-19T11:12:45.471224+00:00", "event": "model_trained", "coin": "BTC", "combo": "et+cb", "cv_score": 0.5128, "samples": 940}
+{"ts": "2026-03-19T11:12:50.604824+00:00", "event": "model_trained", "coin": "ETH", "combo": "et+cb", "cv_score": 0.5182, "samples": 940}
+{"ts": "2026-03-19T11:12:51.019834+00:00", "event": "cycle_complete", "cycle": 1, "elapsed_s": 79.8, "equity": 66.75, "positions": ["DOT", "ADA"]}
+{"ts": "2026-03-19T11:13:42.983133+00:00", "event": "cycle_complete", "cycle": 2, "elapsed_s": 42.0, "equity": 66.88, "positions": ["DOT", "ADA"]}
+{"ts": "2026-03-19T11:14:41.324420+00:00", "event": "cycle_complete", "cycle": 3, "elapsed_s": 40.3, "equity": 66.76, "positions": ["DOT", "ADA"]}
+{"ts": "2026-03-19T11:15:37.712754+00:00", "event": "cycle_complete", "cycle": 4, "elapsed_s": 36.7, "equity": 66.76, "positions": ["DOT", "ADA"]}
+{"ts": "2026-03-19T11:16:40.590396+00:00", "event": "cycle_complete", "cycle": 5, "elapsed_s": 39.6, "equity": 66.72, "positions": ["DOT", "ADA"]}
+{"ts": "2026-03-19T11:17:38.828808+00:00", "event": "cycle_complete", "cycle": 6, "elapsed_s": 37.8, "equity": 66.82, "positions": ["DOT", "ADA"]}
+{"ts": "2026-03-19T11:18:39.355279+00:00", "event": "cycle_complete", "cycle": 7, "elapsed_s": 38.3, "equity": 66.73, "positions": ["DOT", "ADA"]}
+{"ts": "2026-03-19T11:19:39.445097+00:00", "event": "cycle_complete", "cycle": 8, "elapsed_s": 38.4, "equity": 66.74, "positions": ["DOT", "ADA"]}
+{"ts": "2026-03-19T11:20:38.942121+00:00", "event": "cycle_complete", "cycle": 9, "elapsed_s": 37.9, "equity": 66.78, "positions": ["DOT", "ADA"]}
+{"ts": "2026-03-19T11:21:38.794877+00:00", "event": "cycle_complete", "cycle": 10, "elapsed_s": 37.8, "equity": 66.83, "positions": ["DOT", "ADA"]}
+{"ts": "2026-03-19T11:22:41.252920+00:00", "event": "cycle_complete", "cycle": 11, "elapsed_s": 40.2, "equity": 66.81, "positions": ["DOT", "ADA"]}
+{"ts": "2026-03-19T11:23:38.453643+00:00", "event": "cycle_complete", "cycle": 12, "elapsed_s": 37.4, "equity": 66.8, "positions": ["DOT", "ADA"]}
+{"ts": "2026-03-19T11:24:37.952862+00:00", "event": "cycle_complete", "cycle": 13, "elapsed_s": 36.9, "equity": 66.78, "positions": ["DOT", "ADA"]}
+{"ts": "2026-03-19T11:25:39.472077+00:00", "event": "cycle_complete", "cycle": 14, "elapsed_s": 38.4, "equity": 66.8, "positions": ["DOT", "ADA"]}
+{"ts": "2026-03-19T11:26:38.884474+00:00", "event": "cycle_complete", "cycle": 15, "elapsed_s": 37.8, "equity": 66.8, "positions": ["DOT", "ADA"]}
+{"ts": "2026-03-19T11:27:39.046849+00:00", "event": "cycle_complete", "cycle": 16, "elapsed_s": 38.0, "equity": 66.8, "positions": ["DOT", "ADA"]}
+{"ts": "2026-03-19T11:28:38.690757+00:00", "event": "cycle_complete", "cycle": 17, "elapsed_s": 37.6, "equity": 66.82, "positions": ["DOT", "ADA"]}
+{"ts": "2026-03-19T11:29:40.373465+00:00", "event": "cycle_complete", "cycle": 18, "elapsed_s": 39.3, "equity": 66.82, "positions": ["DOT", "ADA"]}
+{"ts": "2026-03-19T11:30:40.961722+00:00", "event": "position_opened", "coin": "SOL", "side": "SELL", "entry": 93.8, "qty": 0.12, "sl": 90.11, "tp": 89.39, "mode": "live", "p_trade": 0.6376, "p_dir": 0.7907}
+{"ts": "2026-03-19T11:30:41.402491+00:00", "event": "cycle_complete", "cycle": 19, "elapsed_s": 40.4, "equity": 66.86, "positions": ["DOT", "ADA", "SOL"]}
+{"ts": "2026-03-19T11:31:42.349068+00:00", "event": "bot_stopped", "reason": "shutdown"}
+{"ts": "2026-03-19T11:31:42.431539+00:00", "event": "cycle_complete", "cycle": 20, "elapsed_s": 41.4, "equity": 66.83, "positions": ["DOT", "ADA", "SOL"]}
+{"ts": "2026-03-19T14:30:52.906432+00:00", "event": "position_closed", "coin": "SOL", "reason": "EXCHANGE_CLOSED", "side": "SELL", "entry": 93.8, "exit": 87.57, "pnl_pct": 0.066418, "pnl_usdt": 0.7476, "bars": 0}
+{"ts": "2026-03-19T14:30:53.363941+00:00", "event": "position_closed", "coin": "DOT", "reason": "EXCHANGE_CLOSED", "side": "BUY", "entry": 1.529, "exit": 1.507, "pnl_pct": -0.014388, "pnl_usdt": -0.6468, "bars": 19}
+{"ts": "2026-03-19T14:30:53.834195+00:00", "event": "position_closed", "coin": "ADA", "reason": "EXCHANGE_CLOSED", "side": "BUY", "entry": 0.2694462962964, "exit": 0.2641, "pnl_pct": -0.019842, "pnl_usdt": -1.1548, "bars": 19}
+{"ts": "2026-03-19T14:30:54.285783+00:00", "event": "bot_started", "mode": "live", "equity": 65.9763234299776, "coins": ["SOL"], "version": "v4.3-15m", "recovered_positions": 0, "loaded_models": ["SOL"]}
+{"ts": "2026-03-19T14:31:11.643020+00:00", "event": "model_trained", "coin": "SOL", "combo": "et+cb+lgbm+xgb", "cv_score": 0.5658, "samples": 976}
+{"ts": "2026-03-19T14:31:12.054717+00:00", "event": "cycle_complete", "cycle": 1, "elapsed_s": 17.4, "equity": 67.03, "positions": []}
+{"ts": "2026-03-19T14:46:06.867931+00:00", "event": "position_opened", "coin": "SOL", "side": "BUY", "entry": 93.8, "qty": 0.12, "sl": 87.0, "tp": 89.2, "mode": "live", "p_trade": 0.4648, "p_dir": 0.794}
+{"ts": "2026-03-19T14:46:07.543550+00:00", "event": "cycle_complete", "cycle": 2, "elapsed_s": 12.9, "equity": 67.03, "positions": ["SOL"]}
+{"ts": "2026-03-19T15:01:06.133273+00:00", "event": "cycle_complete", "cycle": 3, "elapsed_s": 11.5, "equity": 67.28, "positions": ["SOL"]}
+{"ts": "2026-03-19T15:16:10.528594+00:00", "event": "cycle_complete", "cycle": 4, "elapsed_s": 15.9, "equity": 67.44, "positions": ["SOL"]}
+{"ts": "2026-03-19T15:31:05.890956+00:00", "event": "cycle_complete", "cycle": 5, "elapsed_s": 11.2, "equity": 67.12, "positions": ["SOL"]}
+{"ts": "2026-03-19T15:46:10.036079+00:00", "event": "cycle_complete", "cycle": 6, "elapsed_s": 15.4, "equity": 66.82, "positions": ["SOL"]}
+{"ts": "2026-03-19T16:01:06.195909+00:00", "event": "cycle_complete", "cycle": 7, "elapsed_s": 11.5, "equity": 66.94, "positions": ["SOL"]}
+{"ts": "2026-03-19T16:16:05.973473+00:00", "event": "cycle_complete", "cycle": 8, "elapsed_s": 11.3, "equity": 66.88, "positions": ["SOL"]}
+{"ts": "2026-03-19T16:31:09.223950+00:00", "event": "cycle_complete", "cycle": 9, "elapsed_s": 14.5, "equity": 66.85, "positions": ["SOL"]}
+{"ts": "2026-03-19T16:46:11.223924+00:00", "event": "cycle_complete", "cycle": 10, "elapsed_s": 16.5, "equity": 66.87, "positions": ["SOL"]}
+{"ts": "2026-03-19T17:01:10.047815+00:00", "event": "cycle_complete", "cycle": 11, "elapsed_s": 15.4, "equity": 66.92, "positions": ["SOL"]}
+{"ts": "2026-03-19T17:16:05.901295+00:00", "event": "cycle_complete", "cycle": 12, "elapsed_s": 11.2, "equity": 66.69, "positions": ["SOL"]}
+{"ts": "2026-03-19T17:22:51.959479+00:00", "event": "position_recovered", "coin": "SOL", "side": "BUY", "entry": 87.62, "qty": 0.41, "sl": 86.56856, "tp": 90.2486}
+{"ts": "2026-03-19T17:22:51.959823+00:00", "event": "bot_started", "mode": "live", "equity": 66.96164919, "coins": ["SOL"], "version": "v4.3-15m", "recovered_positions": 1, "loaded_models": ["SOL"]}
+{"ts": "2026-03-19T17:23:09.631074+00:00", "event": "model_trained", "coin": "SOL", "combo": "et+cb+lgbm+xgb", "cv_score": 0.5672, "samples": 976}
+{"ts": "2026-03-19T17:23:09.956028+00:00", "event": "cycle_complete", "cycle": 1, "elapsed_s": 17.3, "equity": 67.02, "positions": ["SOL"]}
+{"ts": "2026-03-19T17:24:35.241239+00:00", "event": "position_recovered", "coin": "SOL", "side": "BUY", "entry": 87.62, "qty": 0.41, "sl": 86.56856, "tp": 90.2486}
+{"ts": "2026-03-19T17:24:35.241434+00:00", "event": "bot_started", "mode": "live", "equity": 67.01800091, "coins": ["SOL"], "version": "v4.3-15m", "recovered_positions": 1, "loaded_models": ["SOL"]}
+{"ts": "2026-03-19T17:24:52.376996+00:00", "event": "model_trained", "coin": "SOL", "combo": "et+cb+lgbm+xgb", "cv_score": 0.5687, "samples": 976}
+{"ts": "2026-03-19T17:24:52.708930+00:00", "event": "cycle_complete", "cycle": 1, "elapsed_s": 16.9, "equity": 67.01, "positions": ["SOL"]}
+{"ts": "2026-03-19T17:39:51.968649+00:00", "event": "cycle_complete", "cycle": 2, "elapsed_s": 16.1, "equity": 66.92, "positions": ["SOL"]}
+{"ts": "2026-03-19T17:54:49.847274+00:00", "event": "cycle_complete", "cycle": 3, "elapsed_s": 14.0, "equity": 67.13, "positions": ["SOL"]}
+{"ts": "2026-03-19T18:09:50.976450+00:00", "event": "cycle_complete", "cycle": 4, "elapsed_s": 15.1, "equity": 67.1, "positions": ["SOL"]}
+{"ts": "2026-03-19T18:24:47.505414+00:00", "event": "cycle_complete", "cycle": 5, "elapsed_s": 11.7, "equity": 67.01, "positions": ["SOL"]}
+{"ts": "2026-03-19T18:39:51.045242+00:00", "event": "cycle_complete", "cycle": 6, "elapsed_s": 15.2, "equity": 67.0, "positions": ["SOL"]}
+{"ts": "2026-03-19T18:54:56.003221+00:00", "event": "cycle_complete", "cycle": 7, "elapsed_s": 20.2, "equity": 67.03, "positions": ["SOL"]}
+{"ts": "2026-03-19T19:09:55.887051+00:00", "event": "cycle_complete", "cycle": 8, "elapsed_s": 20.0, "equity": 67.41, "positions": ["SOL"]}
+{"ts": "2026-03-19T19:24:56.400466+00:00", "event": "cycle_complete", "cycle": 9, "elapsed_s": 20.5, "equity": 67.5, "positions": ["SOL"]}
+{"ts": "2026-03-19T19:39:49.096480+00:00", "event": "cycle_complete", "cycle": 10, "elapsed_s": 13.2, "equity": 67.44, "positions": ["SOL"]}
+{"ts": "2026-03-19T19:54:46.760190+00:00", "event": "cycle_complete", "cycle": 11, "elapsed_s": 10.9, "equity": 67.4, "positions": ["SOL"]}
+{"ts": "2026-03-19T20:09:46.946189+00:00", "event": "cycle_complete", "cycle": 12, "elapsed_s": 11.1, "equity": 67.43, "positions": ["SOL"]}
+{"ts": "2026-03-19T20:24:46.810455+00:00", "event": "cycle_complete", "cycle": 13, "elapsed_s": 11.0, "equity": 67.41, "positions": ["SOL"]}
+{"ts": "2026-03-19T20:39:46.890388+00:00", "event": "cycle_complete", "cycle": 14, "elapsed_s": 11.0, "equity": 67.49, "positions": ["SOL"]}
+{"ts": "2026-03-19T20:54:46.661996+00:00", "event": "cycle_complete", "cycle": 15, "elapsed_s": 10.8, "equity": 67.47, "positions": ["SOL"]}
+{"ts": "2026-03-19T21:09:46.822990+00:00", "event": "cycle_complete", "cycle": 16, "elapsed_s": 11.0, "equity": 67.57, "positions": ["SOL"]}
+{"ts": "2026-03-19T21:24:46.739004+00:00", "event": "cycle_complete", "cycle": 17, "elapsed_s": 10.9, "equity": 67.46, "positions": ["SOL"]}
+{"ts": "2026-03-19T21:39:46.888722+00:00", "event": "cycle_complete", "cycle": 18, "elapsed_s": 11.0, "equity": 67.44, "positions": ["SOL"]}
+{"ts": "2026-03-19T21:54:46.735579+00:00", "event": "cycle_complete", "cycle": 19, "elapsed_s": 10.9, "equity": 67.49, "positions": ["SOL"]}
+{"ts": "2026-03-19T22:09:46.915225+00:00", "event": "cycle_complete", "cycle": 20, "elapsed_s": 11.0, "equity": 67.5, "positions": ["SOL"]}
+{"ts": "2026-03-19T22:24:46.876153+00:00", "event": "cycle_complete", "cycle": 21, "elapsed_s": 11.0, "equity": 67.5, "positions": ["SOL"]}
+{"ts": "2026-03-19T22:39:46.986658+00:00", "event": "cycle_complete", "cycle": 22, "elapsed_s": 11.1, "equity": 67.31, "positions": ["SOL"]}
+{"ts": "2026-03-19T22:54:47.031730+00:00", "event": "cycle_complete", "cycle": 23, "elapsed_s": 11.1, "equity": 67.35, "positions": ["SOL"]}
+{"ts": "2026-03-19T23:09:46.737605+00:00", "event": "cycle_complete", "cycle": 24, "elapsed_s": 10.9, "equity": 67.5, "positions": ["SOL"]}
+{"ts": "2026-03-19T23:10:04.259228+00:00", "event": "position_closed", "coin": "SOL", "reason": "TIME_STOP", "side": "BUY", "entry": 87.62, "exit": 89.04, "pnl_pct": 0.016206, "pnl_usdt": 0.5822, "bars": 24}
+{"ts": "2026-03-19T23:24:55.060711+00:00", "event": "position_opened", "coin": "SOL", "side": "SELL", "entry": 88.84, "qty": 1.13, "sl": 89.33, "tp": 87.57, "mode": "live", "p_trade": 0.792, "p_dir": 0.8146}
+{"ts": "2026-03-19T23:24:55.556605+00:00", "event": "cycle_complete", "cycle": 25, "elapsed_s": 19.7, "equity": 67.45, "positions": ["SOL"]}
+{"ts": "2026-03-19T23:39:46.880367+00:00", "event": "cycle_complete", "cycle": 26, "elapsed_s": 11.0, "equity": 67.66, "positions": ["SOL"]}
+{"ts": "2026-03-19T23:54:46.923967+00:00", "event": "cycle_complete", "cycle": 27, "elapsed_s": 11.0, "equity": 67.51, "positions": ["SOL"]}
+{"ts": "2026-03-20T00:09:51.352412+00:00", "event": "model_trained", "coin": "SOL", "combo": "et+cb+lgbm+xgb", "cv_score": 0.5694, "samples": 976}
+{"ts": "2026-03-20T00:09:51.686722+00:00", "event": "cycle_complete", "cycle": 28, "elapsed_s": 15.8, "equity": 67.1, "positions": ["SOL"]}
+{"ts": "2026-03-20T00:13:26.365287+00:00", "event": "position_closed", "coin": "SOL", "reason": "SL_HIT", "side": "SELL", "entry": 88.84, "exit": 89.33, "pnl_pct": -0.005516, "pnl_usdt": -0.5537, "bars": 3}
+{"ts": "2026-03-20T00:24:54.927225+00:00", "event": "position_opened", "coin": "SOL", "side": "SELL", "entry": 88.98, "qty": 1.12, "sl": 89.49, "tp": 87.67, "mode": "live", "p_trade": 0.792, "p_dir": 0.7729}
+{"ts": "2026-03-20T00:24:55.380949+00:00", "event": "cycle_complete", "cycle": 29, "elapsed_s": 19.5, "equity": 66.84, "positions": ["SOL"]}
+{"ts": "2026-03-20T00:39:46.930335+00:00", "event": "cycle_complete", "cycle": 30, "elapsed_s": 11.0, "equity": 66.45, "positions": ["SOL"]}
+{"ts": "2026-03-20T00:54:46.856444+00:00", "event": "cycle_complete", "cycle": 31, "elapsed_s": 10.9, "equity": 66.56, "positions": ["SOL"]}
+{"ts": "2026-03-20T01:02:07.429934+00:00", "event": "position_closed", "coin": "SOL", "reason": "SL_HIT", "side": "SELL", "entry": 88.98, "exit": 89.54, "pnl_pct": -0.006294, "pnl_usdt": -0.6272, "bars": 2}
+{"ts": "2026-03-20T01:09:55.717911+00:00", "event": "cycle_complete", "cycle": 32, "elapsed_s": 19.8, "equity": 66.24, "positions": []}
+{"ts": "2026-03-20T01:24:55.179329+00:00", "event": "cycle_complete", "cycle": 33, "elapsed_s": 19.3, "equity": 66.24, "positions": []}
+{"ts": "2026-03-20T01:39:46.853212+00:00", "event": "cycle_complete", "cycle": 34, "elapsed_s": 10.9, "equity": 66.24, "positions": []}
+{"ts": "2026-03-20T01:54:46.937029+00:00", "event": "cycle_complete", "cycle": 35, "elapsed_s": 11.0, "equity": 66.24, "positions": []}
+{"ts": "2026-03-20T02:09:46.974733+00:00", "event": "cycle_complete", "cycle": 36, "elapsed_s": 11.1, "equity": 66.24, "positions": []}
+{"ts": "2026-03-20T02:24:46.551780+00:00", "event": "cycle_complete", "cycle": 37, "elapsed_s": 10.6, "equity": 66.24, "positions": []}
+{"ts": "2026-03-20T02:39:46.869260+00:00", "event": "cycle_complete", "cycle": 38, "elapsed_s": 11.0, "equity": 66.24, "positions": []}
+{"ts": "2026-03-20T02:54:46.886454+00:00", "event": "cycle_complete", "cycle": 39, "elapsed_s": 11.0, "equity": 66.24, "positions": []}
+{"ts": "2026-03-20T03:09:46.761144+00:00", "event": "cycle_complete", "cycle": 40, "elapsed_s": 10.8, "equity": 66.24, "positions": []}
+{"ts": "2026-03-20T03:24:47.015876+00:00", "event": "cycle_complete", "cycle": 41, "elapsed_s": 11.1, "equity": 66.24, "positions": []}
+{"ts": "2026-03-20T03:39:46.945319+00:00", "event": "cycle_complete", "cycle": 42, "elapsed_s": 11.0, "equity": 66.24, "positions": []}
+{"ts": "2026-03-20T03:54:46.733461+00:00", "event": "cycle_complete", "cycle": 43, "elapsed_s": 10.8, "equity": 66.24, "positions": []}
+{"ts": "2026-03-20T04:09:50.044701+00:00", "event": "position_opened", "coin": "SOL", "side": "BUY", "entry": 89.69, "qty": 0.38, "sl": 89.27, "tp": 90.77, "mode": "live", "p_trade": 0.5765, "p_dir": 0.5383}
+{"ts": "2026-03-20T04:09:50.490955+00:00", "event": "cycle_complete", "cycle": 44, "elapsed_s": 14.6, "equity": 66.24, "positions": ["SOL"]}
+{"ts": "2026-03-20T04:24:46.584721+00:00", "event": "cycle_complete", "cycle": 45, "elapsed_s": 10.6, "equity": 66.14, "positions": ["SOL"]}
+{"ts": "2026-03-20T04:32:48.248265+00:00", "event": "position_closed", "coin": "SOL", "reason": "SL_HIT", "side": "BUY", "entry": 89.69, "exit": 89.24, "pnl_pct": -0.005017, "pnl_usdt": -0.171, "bars": 1}
+{"ts": "2026-03-20T07:23:30.545749+00:00", "event": "bot_started", "mode": "live", "equity": 66.05857632, "coins": ["SOL"], "version": "v4.3-15m", "recovered_positions": 0, "loaded_models": ["SOL"]}
+{"ts": "2026-03-20T07:23:48.239380+00:00", "event": "model_trained", "coin": "SOL", "combo": "et+cb+lgbm+xgb", "cv_score": 0.5791, "samples": 976}
+{"ts": "2026-03-20T07:24:02.862241+00:00", "event": "position_opened", "coin": "SOL", "side": "BUY", "entry": 88.96, "qty": 1.12, "sl": 88.5, "tp": 90.13, "mode": "live", "p_trade": 0.7532, "p_dir": 0.7973}
+{"ts": "2026-03-20T07:24:03.357356+00:00", "event": "cycle_complete", "cycle": 1, "elapsed_s": 32.4, "equity": 66.04, "positions": ["SOL"]}
+{"ts": "2026-03-20T07:25:02.129629+00:00", "event": "bot_started", "mode": "live", "equity": 65.98264928, "coins": ["SOL"], "version": "v4.3-15m", "recovered_positions": 1, "loaded_models": ["SOL"]}
+{"ts": "2026-03-20T07:25:20.187598+00:00", "event": "model_trained", "coin": "SOL", "combo": "et+cb+lgbm+xgb", "cv_score": 0.5791, "samples": 976}
+{"ts": "2026-03-20T07:25:20.527392+00:00", "event": "cycle_complete", "cycle": 1, "elapsed_s": 17.9, "equity": 65.93, "positions": ["SOL"]}

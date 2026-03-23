@@ -58,7 +58,7 @@ from src.rl.signal_logger import SignalLogger, SIZING_MAP
 from src.rl.rl_gate import RLGate
 
 # ── Constants ──────────────────────────────────────────────
-COINS = ["TAO", "DOT", "ADA", "XRP", "SOL", "LINK", "BTC", "ETH"]
+COINS = ["SOL"]  # SOL 단일 운영 (2026-03-19)
 CYCLE_SECONDS = 2 * 3600  # default; overridden by config bar_minutes
 HEARTBEAT_INTERVAL = 60
 
@@ -90,19 +90,116 @@ logger.addHandler(_sh)
 #  UTILITIES
 # ══════════════════════════════════════════════════════════
 
+_DISCORD_VERSION = "CLAUDE_CRYPTO_AGENT v4.3"
+_discord_state = {"total_trades": 0, "wins": 0, "losses": 0, "total_pnl": 0.0}
+
+
+def _discord_now() -> str:
+    return datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+
+
+def _safe_oid(base: str, suffix: str, maxlen: int = 36) -> str:
+    """Binance clientOrderId 최대 36자 보장."""
+    return (base + suffix)[:maxlen]
+
+
 def send_discord(msg: str) -> None:
+    """단순 텍스트 메시지 전송 (경보/에러용)."""
+    _discord_post({"content": msg})
+
+
+def send_discord_embed(embeds: list) -> None:
+    """Embed 리포트 전송."""
+    _discord_post({"embeds": embeds})
+
+
+def _discord_post(payload: dict) -> None:
     url = os.getenv("DISCORD_WEBHOOK_URL", "")
     if not url:
         return
     try:
-        payload = json.dumps({"content": msg}).encode()
-        req = urllib.request.Request(url, data=payload, headers={
+        data = json.dumps(payload).encode()
+        req = urllib.request.Request(url, data=data, headers={
             "Content-Type": "application/json",
             "User-Agent": "DiscordBot (trading-bot, 1.0)",
         })
         urllib.request.urlopen(req, timeout=5)
     except Exception:
         pass
+
+
+def discord_report_entry(coin: str, side: str, entry: float, qty: float,
+                          sl: float, tp: float, p_trade: float, p_dir: float) -> None:
+    notional = entry * qty
+    sl_pct = abs(entry - sl) / entry * 100 if entry else 0
+    tp_pct = abs(tp - entry) / entry * 100 if (entry and tp) else 0
+    rr = tp_pct / sl_pct if sl_pct > 0 else 0
+    side_label = "🟢 LONG" if side == "BUY" else "🔴 SHORT"
+    color = 0x2ecc71 if side == "BUY" else 0xe74c3c
+    sl_sign = "-" if side == "BUY" else "+"
+    tp_sign = "+" if side == "BUY" else "-"
+    send_discord_embed([{
+        "title": f"📋 진입 리포트 — {coin} {side_label}",
+        "color": color,
+        "fields": [
+            {"name": "진입가", "value": f"${entry:.4f}",                              "inline": True},
+            {"name": "수량",   "value": f"{qty} ({notional:.2f} USDT)",               "inline": True},
+            {"name": "모드",   "value": "LIVE",                                        "inline": True},
+            {"name": "SL",     "value": f"${sl:.4f} ({sl_sign}{sl_pct:.2f}%)",        "inline": True},
+            {"name": "TP",     "value": f"${tp:.4f} ({tp_sign}{tp_pct:.2f}%)",        "inline": True},
+            {"name": "R:R",    "value": f"1 : {rr:.2f}",                               "inline": True},
+            {"name": "S1 확률 (거래여부)", "value": f"{p_trade*100:.1f}%",             "inline": True},
+            {"name": "S2 확률 (방향)",     "value": f"{p_dir*100:.1f}%",               "inline": True},
+        ],
+        "footer": {"text": f"{_DISCORD_VERSION} | {_discord_now()}"},
+    }])
+
+
+def discord_report_close(coin: str, side: str, reason: str,
+                          entry: float, exit_p: float,
+                          pnl_usdt: float, pnl_pct: float, bars: int,
+                          bar_minutes: int = 15) -> None:
+    _discord_state["total_trades"] += 1
+    _discord_state["total_pnl"] += pnl_usdt
+    if pnl_usdt >= 0:
+        _discord_state["wins"] += 1
+    else:
+        _discord_state["losses"] += 1
+    t = _discord_state["total_trades"]
+    w = _discord_state["wins"]
+    l = _discord_state["losses"]
+    win_rate = w / t * 100 if t else 0
+
+    reason_map = {
+        "TP_HIT":   "🎯 TP_HIT",  "TP1_HIT": "🎯 TP1_HIT",
+        "TP2_HIT":  "🎯 TP2_HIT", "TP3_HIT": "🎯 TP3_HIT",
+        "SL_HIT":   "🛑 SL_HIT",
+        "TIME_STOP": "⏱ TTL 만료", "TTL": "⏱ TTL 만료",
+        "SHUTDOWN":  "🔌 종료",    "KILL_SWITCH": "⛔ 킬스위치",
+        "SL/TP(거래소)": "🔔 SL/TP(거래소)",
+    }
+    reason_label = reason_map.get(reason, reason_map.get(reason.upper(), f"❓ {reason}"))
+    result_emoji = "✅ 수익" if pnl_usdt >= 0 else "❌ 손실"
+    color = 0x2ecc71 if pnl_usdt >= 0 else 0xe74c3c
+    side_label = "LONG" if side == "BUY" else "SHORT"
+    hold_h = round(bars * bar_minutes / 60, 1)
+
+    send_discord_embed([{
+        "title": f"🗒️ 청산 리포트 — {coin} {side_label}",
+        "color": color,
+        "fields": [
+            {"name": "청산 사유",  "value": reason_label,                                    "inline": True},
+            {"name": "결과",       "value": result_emoji,                                    "inline": True},
+            {"name": "보유기간",   "value": f"{bars}봉 ({hold_h}h)",                         "inline": True},
+            {"name": "진입가",     "value": f"${entry:.4f}",                                 "inline": True},
+            {"name": "청산가",     "value": f"${exit_p:.4f}",                                "inline": True},
+            {"name": "PnL",        "value": f"{pnl_usdt:+.4f} USDT ({pnl_pct*100:+.2f}%)", "inline": True},
+            {"name": "누적 거래",  "value": f"{t}건",                                        "inline": True},
+            {"name": "승률",       "value": f"{win_rate:.0f}% ({w}W/{l}L)",                  "inline": True},
+            {"name": "누적 PnL",   "value": f"{_discord_state['total_pnl']:+.4f} USDT",     "inline": True},
+        ],
+        "footer": {"text": f"{_DISCORD_VERSION} | {_discord_now()}"},
+    }])
 
 
 def log_event(event_type: str, data: dict) -> None:
@@ -286,17 +383,17 @@ class EquityTracker:
 def compute_risk_frac(
     confidence: float,
     dd_pct: float,
-    tier_high: float = 0.015,
-    tier_mid: float = 0.010,
-    tier_low: float = 0.005,
+    tier_high: float = 0.150,
+    tier_mid: float = 0.100,
+    tier_low: float = 0.050,
     dd_brake_threshold: float = 0.015,
 ) -> float:
     """Dynamic risk_frac: bigger bets on strong signals, brake on drawdown.
 
     Tiers (by confidence = p_trade × p_direction):
-      > 0.65  → 1.5% of equity
-      0.50-0.65 → 1.0%
-      < 0.50  → 0.5%
+      > 0.65  → 15% of equity
+      0.50-0.65 → 10%
+      < 0.50  → 5%
 
     DD brake: if daily DD > 1.5%, halve everything.
     """
@@ -325,11 +422,11 @@ def apply_micro_sizing(qty: float, df, side: str, cfg: dict) -> float:
             q25 = df[cvd_cols[0]].quantile(0.25)
             q75 = df[cvd_cols[0]].quantile(0.75)
             if side == "BUY":
-                if val > q75:   qty *= cfg.get("cvd_long_mult_high", 0.6)
-                elif val < q25: qty *= cfg.get("cvd_long_mult_low", 1.2)
+                if val > q75:   qty *= cfg.get("cvd_long_mult_high", 1.2)   # 매수압력 강함 → 증가
+                elif val < q25: qty *= cfg.get("cvd_long_mult_low",  0.6)   # 매도압력 강함 → 감소
             else:
-                if val < q25:   qty *= cfg.get("cvd_long_mult_high", 0.6)
-                elif val > q75: qty *= cfg.get("cvd_long_mult_low", 1.2)
+                if val < q25:   qty *= cfg.get("cvd_long_mult_high", 1.2)   # 매도압력 강함 → 증가
+                elif val > q75: qty *= cfg.get("cvd_long_mult_low",  0.6)   # 매수압력 강함 → 감소
     if cfg.get("ofi_timing_enabled"):
         ofi_cols = [c for c in df.columns if c.startswith("ofi_sum_")]
         if ofi_cols:
@@ -352,7 +449,7 @@ class LiveTradingBot:
         self._shutdown_event = asyncio.Event()
 
         # Config
-        cfg_path = Path(config_path) if config_path else PROJECT_ROOT / "config" / "frozen_params_v4_3.yaml"
+        cfg_path = Path(config_path) if config_path else PROJECT_ROOT / "config" / "frozen_params_v4_3_15m.yaml"
         with open(cfg_path, encoding="utf-8") as f:
             self.config = yaml.safe_load(f)
         self.common = self.config["common"]
@@ -457,13 +554,15 @@ class LiveTradingBot:
         if self.mode == "live":
             await self._sync_exchange_positions()
 
-        # Start SL/TP monitor
+        # Start SL/TP monitor — 1m 모드는 빠른 폴링 필요
         poll_s = self.monitor_cfg.get("sl_tp_poll_seconds", 30)
+        if self.common.get("bar_minutes", 240) <= 5:
+            poll_s = min(poll_s, 10)  # 1m/5m bar → 10s polling
         self.monitor = SlTpMonitor(
             exchange=self.exchange,
             pos_manager=self.pos_manager,
             close_callback=self._close_position,
-            partial_tp_callback=self._partial_close_position,
+            partial_tp_callback=None,  # 분할 익절 비활성화
             poll_seconds=poll_s,
             bar_minutes=self.common["bar_minutes"],
         )
@@ -486,12 +585,23 @@ class LiveTradingBot:
         logger.info(f"  SL/TP:     every {poll_s}s")
         logger.info(f"{'='*60}")
         if self.mode == "live":
-            send_discord("🤖 **자동매매 시작**\n이제부터 매수/매도 체결 시 알림을 보냅니다.")
+            coins_str = " · ".join(COINS)
+            send_discord_embed([{
+                "title": "🚀 봇 시작 — LIVE 모드",
+                "color": 0x3498db,
+                "fields": [
+                    {"name": "잔고",    "value": f"{self.equity.current:.2f} USDT", "inline": True},
+                    {"name": "모드",    "value": "LIVE",                             "inline": True},
+                    {"name": "버전",    "value": _DISCORD_VERSION,                   "inline": True},
+                    {"name": "거래 코인", "value": coins_str,                        "inline": False},
+                ],
+                "footer": {"text": f"{_DISCORD_VERSION} | {_discord_now()}"},
+            }])
 
     async def _sync_exchange_positions(self):
         """봇 재시작 시 거래소 실제 포지션과 position_store 동기화.
 
-        1. 거래소에 있으나 store에 없는 포지션 → 추가 (고아 복구)
+        1. 거래소에 있으나 store에 없는 포지션 → 추가 (미등록 포지션 복구)
         2. store에 있으나 거래소에 없는 포지션 → 제거 (이미 청산됨)
         3. 포지션 없는 코인의 잔여 주문 → 취소
         """
@@ -511,7 +621,7 @@ class LiveTradingBot:
             ex_open = {
                 p["symbol"].split("/")[0]: p
                 for p in ex_positions
-                if _pos_qty(p) > 0
+                if _pos_qty(p) > 0 and p["symbol"].split("/")[0] in COINS
             }
         except Exception as e:
             logger.warning(f"[Sync] 거래소 포지션 조회 실패: {e}")
@@ -520,9 +630,37 @@ class LiveTradingBot:
         store_coins = set(self.pos_manager.positions.keys())
         ex_coins    = set(ex_open.keys())
 
-        # ── 거래소에 없는데 store에 있는 포지션 제거 ──────
+        # ── 거래소에 없는데 store에 있는 포지션 제거 (SL/TP 거래소 체결) ──
         for coin in store_coins - ex_coins:
-            logger.warning(f"[Sync] {coin}: store에 있으나 거래소에 없음 → 제거")
+            pos = self.pos_manager.get_position(coin)
+            if pos:
+                # 현재가 조회해서 PnL 추정
+                try:
+                    ticker = await self.exchange.fetch_ticker(coin)
+                    exit_price = ticker["last"]
+                except Exception:
+                    exit_price = pos.entry_price
+                if pos.side == "BUY":
+                    pnl_pct = (exit_price - pos.entry_price) / pos.entry_price
+                else:
+                    pnl_pct = (pos.entry_price - exit_price) / pos.entry_price
+                pnl_usdt = pnl_pct * pos.qty * pos.entry_price
+                self.risk_engine.record_pnl(pnl_usdt)
+                self.equity.record_pnl(pnl_usdt)
+                self.ledger.record_pnl(coin, pnl_usdt, 0.0)
+                log_event("position_closed", {
+                    "coin": coin, "reason": "EXCHANGE_CLOSED", "side": pos.side,
+                    "entry": pos.entry_price, "exit": exit_price,
+                    "pnl_pct": round(pnl_pct, 6), "pnl_usdt": round(pnl_usdt, 4),
+                    "bars": pos.bars_held,
+                })
+                logger.warning(
+                    f"[Sync] {coin}: 거래소에서 자동 청산됨 (SL/TP 체결 추정) "
+                    f"pnl={pnl_pct:.2%} ({pnl_usdt:+.2f} USDT)"
+                )
+                discord_report_close(coin, pos.side, "SL/TP(거래소)", pos.entry_price,
+                                     exit_price, pnl_usdt, pnl_pct, pos.bars_held,
+                                     bar_minutes=self.common.get("bar_minutes", 15))
             self.pos_manager.remove_position(coin)
 
         # ── 거래소에 있는데 store에 없는 포지션 복구 ──────
@@ -557,9 +695,34 @@ class LiveTradingBot:
             )
             self.pos_manager.add_position(pos)
             logger.warning(
-                f"[Sync] {coin} 고아 포지션 복구: {side} {qty} @ {entry} "
+                f"[Sync] {coin} 미등록 포지션 복구: {side} {qty} @ {entry} "
                 f"| SL={sl:.4f} TP={tp:.4f}"
             )
+
+            # Live 모드: 거래소에 SL/TP 주문 재등록 (closePosition=True, Position 탭 표시)
+            if self.mode == "live":
+                exit_side = "SELL" if side == "BUY" else "BUY"
+                sl_oid = ExchangeAdapter.make_order_id(coin, exit_side, prefix="rec-sl")
+                tp_oid = ExchangeAdapter.make_order_id(coin, exit_side, prefix="rec-tp")
+                sl_result = await self.exchange.place_protective_stop(
+                    coin, exit_side, qty, sl, sl_oid
+                )
+                if sl_result.get("success"):
+                    pos.sl_order_id = sl_oid
+                    self.pos_manager.add_position(pos)  # order_id 업데이트 저장
+                    logger.info(f"[Sync] {coin} SL 재등록 완료: {sl:.4f}")
+                else:
+                    logger.error(f"[Sync] {coin} SL 재등록 실패: {sl_result.get('error')}")
+                tp_result = await self.exchange.place_take_profit(
+                    coin, exit_side, qty, tp, tp_oid
+                )
+                if tp_result.get("success"):
+                    pos.tp_order_id = tp_oid
+                    self.pos_manager.add_position(pos)  # order_id 업데이트 저장
+                    logger.info(f"[Sync] {coin} TP 재등록 완료: {tp:.4f}")
+                else:
+                    logger.warning(f"[Sync] {coin} TP 재등록 실패: {tp_result.get('error')}")
+
             log_event("position_recovered", {
                 "coin": coin, "side": side, "entry": entry, "qty": qty,
                 "sl": sl, "tp": tp,
@@ -612,6 +775,10 @@ class LiveTradingBot:
                 logger.info(f"{'='*60}")
 
                 self.risk_engine.maybe_reset(self.equity.current)
+                # Gate 5/6 제거 보완: 루프 진입 전 일일/주간 DD 체크
+                _dd_ok, _dd_msg = self.risk_engine.check_drawdown()
+                if not _dd_ok:
+                    logger.warning(f"[KillSwitch] {_dd_msg}")
                 if self.risk_engine.is_killed:
                     logger.warning(f"[KillSwitch] {self.risk_engine.kill_reason}")
                     for coin in list(self.pos_manager.positions.keys()):
@@ -986,17 +1153,12 @@ class LiveTradingBot:
         sl_price    = self.exchange.round_price(coin, c["sl_price"])
         tp_price    = self.exchange.round_price(coin, c["tp_price"])
 
-        # 3단계 분할 익절 가격 계산
-        atr_val = c.get("atr", 0) or entry_price * 0.01
-        k_u = self.common["k_upper"]  # 3.0
-        if pred.side == "BUY":
-            tp1_price = self.exchange.round_price(coin, entry_price + atr_val * (k_u / 3))
-            tp2_price = self.exchange.round_price(coin, entry_price + atr_val * (k_u * 2 / 3))
-            tp3_price = tp_price
-        else:
-            tp1_price = self.exchange.round_price(coin, entry_price - atr_val * (k_u / 3))
-            tp2_price = self.exchange.round_price(coin, entry_price - atr_val * (k_u * 2 / 3))
-            tp3_price = tp_price
+        # 단일 TP 사용 (분할 익절 제거 — 수수료가 2.35배 더 드는 구조)
+        # tp1/tp2 = 0.0 → partial_tp_enabled=False → 모니터가 단일 TP 체크
+        tp1_price = 0.0
+        tp2_price = 0.0
+        tp3_price = tp_price
+        atr_val   = c.get("atr", 0.0)
 
         if qty < self.exchange.get_min_qty(coin):
             return
@@ -1102,7 +1264,7 @@ class LiveTradingBot:
 
         fill = await self.exchange.wait_fill_or_cancel(coin, oid, ttl_sec=20.0)
         if not fill:
-            # WaitFill None 반환 시 거래소 포지션 직접 확인 (orphan 방지)
+            # WaitFill None 반환 시 거래소 포지션 직접 확인 (미등록 포지션 방지)
             try:
                 ex_pos = await self.exchange.fetch_position(coin)
                 if ex_pos and float(ex_pos.get("qty", 0)) > 0:
@@ -1113,74 +1275,79 @@ class LiveTradingBot:
                     exit_side = "SELL" if pred.side == "BUY" else "BUY"
                     await self.exchange.market_close(
                         coin, exit_side, float(ex_pos["qty"]),
-                        oid + "-orphan-close",
+                        _safe_oid(oid, "-unreg"),
                     )
-                    send_discord(f"⚠️ **[고아 포지션 강제 청산]** {coin} — WaitFill 실패로 자동 청산")
+                    send_discord_embed([{"title": f"⚠️ 미등록 포지션 강제 청산 — {coin}",
+                        "color": 0xe67e22, "description": "체결 확인 실패 → 거래소에 포지션 존재 → 즉시 시장가 청산",
+                        "footer": {"text": f"{_DISCORD_VERSION} | {_discord_now()}"}}])
             except Exception as ce:
-                logger.error(f"[Entry] {coin} orphan check failed: {ce}")
+                logger.error(f"[Entry] {coin} 미등록 포지션 확인 실패: {ce}")
             logger.info(f"[Entry] {coin} TIMEOUT, cancelled")
             self.ledger.update_order_status(oid, "CANCELLED")
             return
 
         fill_price = fill["fill_price"]
         fill_qty   = fill["fill_qty"]
+
+        # fill_price 검증: 0이거나 의도 진입가 대비 5% 이상 괴리 시 거래소 포지션에서 실체결가 조회
+        if fill_price <= 0 or abs(fill_price - entry) / max(entry, 1e-8) > 0.05:
+            try:
+                ex_pos = await self.exchange.fetch_position(coin)
+                if ex_pos and ex_pos.get("entry_price", 0) > 0:
+                    corrected = ex_pos["entry_price"]
+                    logger.warning(
+                        f"[Entry] {coin} fill_price 보정: {fill_price} → {corrected} "
+                        f"(의도진입가={entry}, 거래소 entryPrice 기준)"
+                    )
+                    fill_price = corrected
+            except Exception as ep:
+                logger.warning(f"[Entry] {coin} fill_price 보정 실패: {ep}, fallback={entry}")
+                fill_price = entry
+
         self.ledger.update_order_status(oid, "FILLED", result.get("exchange_order_id"))
         self.ledger.insert_fill(oid, fill_price, fill_qty, fill.get("fee", 0))
 
-        # Recalculate barriers at fill price (atr_val passed from _execute_entry)
-        if not atr_val or atr_val < 1e-10:
-            atr_val = fill_price * 0.01
-        sl_new, tp_new = RiskEngine.compute_barriers(
-            fill_price, atr_val, pred.side,
-            self.common["k_upper"], self.common["k_lower"], self.common["min_barrier_pct"],
-        )
-        sl = self.exchange.round_price(coin, sl_new)
-        tp = self.exchange.round_price(coin, tp_new)
-
-        # 분할 익절 가격 재계산 (fill price 기준)
-        k_u = self.common["k_upper"]
-        if pred.side == "BUY":
-            tp1 = self.exchange.round_price(coin, fill_price + atr_val * (k_u / 3))
-            tp2 = self.exchange.round_price(coin, fill_price + atr_val * (k_u * 2 / 3))
-        else:
-            tp1 = self.exchange.round_price(coin, fill_price - atr_val * (k_u / 3))
-            tp2 = self.exchange.round_price(coin, fill_price - atr_val * (k_u * 2 / 3))
+        # 단일 TP 사용 — tp1/tp2 = 0 으로 partial_tp_enabled=False
         tp3 = tp
 
         exit_side = "SELL" if pred.side == "BUY" else "BUY"
         sl_oid = oid + "-sl"
-        # TP는 모니터가 관리 — 거래소 TP 주문 미사용
         sl_result = await self.exchange.place_protective_stop(coin, exit_side, fill_qty, sl, sl_oid, oid)
         if not sl_result.get("success"):
             logger.error(f"[Entry] {coin} SL 주문 실패: {sl_result.get('error')} — 즉시 시장가 청산")
-            send_discord(f"🚨 **[SL 주문 실패]** {coin} — 시장가 즉시 청산 실행")
-            await self.exchange.market_close(coin, exit_side, fill_qty, oid + "-sl-fail-close")
+            send_discord_embed([{"title": f"🚨 SL 주문 실패 — {coin}",
+                "color": 0xe74c3c, "description": "SL 거래소 등록 실패 → 즉시 시장가 청산 실행",
+                "footer": {"text": f"{_DISCORD_VERSION} | {_discord_now()}"}}])
+            await self.exchange.market_close(coin, exit_side, fill_qty, _safe_oid(oid, "-slf"))
             self.ledger.update_order_status(oid, "SL_FAIL_CLOSED")
             return
+
+        # TP3를 거래소에 TAKE_PROFIT_MARKET 주문으로 즉시 등록 (30s 모니터 의존 제거)
+        tp_oid = oid + "-tp"
+        tp_result = await self.exchange.place_take_profit(coin, exit_side, fill_qty, tp3, tp_oid, oid)
+        if not tp_result.get("success"):
+            logger.warning(f"[Entry] {coin} TP 주문 실패 (모니터 폴백): {tp_result.get('error')}")
+            tp_oid = ""
 
         pos = OpenPosition(
             coin=coin, side=pred.side, entry_price=fill_price, qty=fill_qty,
             sl_price=sl, tp_price=tp3,
             entry_time=datetime.now(timezone.utc).isoformat(),
             ttl_bars=self.common["max_horizon"],
-            entry_order_id=oid, sl_order_id=sl_oid,
-            tp1_price=tp1, tp2_price=tp2, tp3_price=tp3,
+            entry_order_id=oid, sl_order_id=sl_oid, tp_order_id=tp_oid,
         )
         self.pos_manager.add_position(pos)
         log_event("position_opened", {
             "coin": coin, "side": pred.side, "entry": fill_price, "qty": fill_qty,
-            "sl": sl, "tp1": tp1, "tp2": tp2, "tp3": tp3, "mode": "live",
+            "sl": sl, "tp": tp3, "mode": "live",
             "p_trade": round(pred.p_trade, 4), "p_dir": round(pred.p_direction, 4),
         })
         logger.info(
             f"[Live] {coin} {pred.side} FILLED @ {fill_price} "
-            f"| SL={sl} TP1={tp1} TP2={tp2} TP3={tp3}"
+            f"| SL={sl} TP={tp3}"
         )
-        send_discord(
-            f"**[LIVE 체결]** {coin} {pred.side} @ ${fill_price}\n"
-            f"Qty={fill_qty} | SL={sl} | TP1={tp1} TP2={tp2} TP3={tp3}\n"
-            f"p_trade={pred.p_trade:.3f} p_dir={pred.p_direction:.3f}"
-        )
+        discord_report_entry(coin, pred.side, fill_price, fill_qty, sl, tp3,
+                             pred.p_trade, pred.p_direction)
 
     # ── Partial Close (분할 익절) ───────────────────────────
 
@@ -1259,16 +1426,29 @@ class LiveTradingBot:
         # 거래소 SL 주문 갱신 (cancel + replace)
         if self.mode == "live" and pos.sl_order_id:
             exit_side = "SELL" if pos.side == "BUY" else "BUY"
+            # SL 주문 갱신 (cancel + replace at new SL, reduced qty)
             try:
                 await self.exchange.cancel_order(coin, order_link_id=pos.sl_order_id)
             except Exception:
                 pass
-            new_sl_oid = pos.sl_order_id + f"-tp{stage}"
+            new_sl_oid = pos.sl_order_id + f"-s{stage}"
             await self.exchange.place_protective_stop(
                 coin, exit_side, pos.remaining_qty,
                 self.exchange.round_price(coin, new_sl), new_sl_oid, pos.entry_order_id,
             )
             pos.sl_order_id = new_sl_oid
+            # TP 주문 갱신 (cancel + replace at TP3, reduced qty)
+            if pos.tp_order_id:
+                try:
+                    await self.exchange.cancel_order(coin, order_link_id=pos.tp_order_id)
+                except Exception:
+                    pass
+                new_tp_oid = pos.entry_order_id + f"-tp-s{stage}"
+                tp_r = await self.exchange.place_take_profit(
+                    coin, exit_side, pos.remaining_qty,
+                    self.exchange.round_price(coin, pos.tp3_price), new_tp_oid, pos.entry_order_id,
+                )
+                pos.tp_order_id = new_tp_oid if tp_r.get("success") else ""
 
         pos.sl_price = new_sl
         self.pos_manager._save()
@@ -1356,12 +1536,9 @@ class LiveTradingBot:
             f"entry={pos.entry_price:.4f} exit={exit_price:.4f} | "
             f"pnl={pnl_pct:.2%} ({pnl_usdt:+.2f} USDT)"
         )
-        emoji = "🟢" if pnl_usdt >= 0 else "🔴"
-        send_discord(
-            f"{emoji} **[LIVE 청산]** {coin} {pos.side} ({reason})\n"
-            f"진입 ${pos.entry_price} → 청산 ${exit_price:.4f}\n"
-            f"PnL: {pnl_pct:.2%} ({pnl_usdt:+.2f} USDT)"
-        )
+        discord_report_close(coin, pos.side, reason, pos.entry_price, exit_price,
+                             pnl_usdt, pnl_pct, pos.bars_held,
+                             bar_minutes=self.common.get("bar_minutes", 15))
         ok, msg = self.risk_engine.check_drawdown()
         if not ok:
             logger.warning(f"[KillSwitch] {msg}")

@@ -16,11 +16,11 @@ source: "v4.2 + 1m bar retraining"
 # ── Common Parameters ──────────────────────────────────────
 common:
   k_upper: 3.0
-  k_lower: 0.6
+  k_lower: 1.0                    # 0.6→1.0: SL 확대로 수수료 대비 R:R 개선
   risk_frac: 0.005
   bar_minutes: 1                  # 1분봉
   max_horizon: 60                 # 1h = 60 × 1min bars
-  min_barrier_pct: 0.001          # 0.1% (1m 전용)
+  min_barrier_pct: 0.002          # 0.1%→0.2%: SL 최소 0.2%, TP 최소 0.6% (R:R 3:1)
   min_cv_score: 0.52              # 최소 CV balanced_accuracy
 
 # ── OHLCV Fetch ────────────────────────────────────────────
@@ -57,72 +57,9 @@ blocked_regimes:
   - RANGE_LOW
   - UNKNOWN
 
-# ── Coin-Specific Parameters (Mega Search v2 best combos 유지) ──
+# ── Coin-Specific Parameters (SOL 단일 운영 — 2026-03-19) ──
 coins:
-  BTC:
-    stage1_threshold: 0.45
-    max_features: 120
-    n_estimators: 300
-    max_depth_tree: 8
-    min_child_samples: 10
-    model_combo: "et+cb"
-    model_weights: { et: 0.5, cb: 0.5 }
-
-  ETH:
-    stage1_threshold: 0.45
-    max_features: 120
-    n_estimators: 300
-    max_depth_tree: 8
-    min_child_samples: 10
-    model_combo: "et+cb"
-    model_weights: { et: 0.5, cb: 0.5 }
-
-  DOT:
-    stage1_threshold: 0.45
-    max_features: 120
-    n_estimators: 300
-    max_depth_tree: 8
-    min_child_samples: 10
-    model_combo: "et+tabm"
-    model_weights: { et: 0.7, tabm: 0.3 }
-
-  ADA:
-    stage1_threshold: 0.40
-    max_features: 120
-    n_estimators: 300
-    max_depth_tree: 8
-    min_child_samples: 10
-    model_combo: "et+cb"
-    model_weights: { et: 0.5, cb: 0.5 }
-
-  XRP:
-    stage1_threshold: 0.45
-    max_features: 120
-    n_estimators: 300
-    max_depth_tree: 8
-    min_child_samples: 10
-    model_combo: "et+cb"
-    model_weights: { et: 0.5, cb: 0.5 }
-
   SOL:
-    stage1_threshold: 0.45
-    max_features: 120
-    n_estimators: 300
-    max_depth_tree: 8
-    min_child_samples: 10
-    model_combo: "et+cb"
-    model_weights: { et: 0.5, cb: 0.5 }
-
-  LINK:
-    stage1_threshold: 0.45
-    max_features: 120
-    n_estimators: 300
-    max_depth_tree: 8
-    min_child_samples: 10
-    model_combo: "et+xgb"
-    model_weights: { et: 0.5, xgb: 0.5 }
-
-  DOGE:
     stage1_threshold: 0.45
     max_features: 120
     n_estimators: 300

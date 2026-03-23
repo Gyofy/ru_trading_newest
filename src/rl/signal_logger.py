@@ -16,11 +16,8 @@ from typing import Optional
 
 logger = logging.getLogger("live_bot.rl.logger")
 
-SIZING_MAP = {0: 0.0, 1: 0.50, 2: 0.75, 3: 1.0, 4: 1.25, 5: 1.50, 6: 2.0}
-ACTION_NAMES = {
-    0: "REJECT", 1: "ACCEPT_0.50", 2: "ACCEPT_0.75", 3: "ACCEPT_1.00",
-    4: "ACCEPT_1.25", 5: "ACCEPT_1.50", 6: "ACCEPT_2.00",
-}
+# Single source of truth: bandit.py
+from src.rl.bandit import SIZING_MAP, ACTION_NAMES  # noqa: E402
 
 
 @dataclass
@@ -100,7 +97,7 @@ class SignalLogger:
             p_trade=p_trade, p_direction=p_direction,
             confidence=p_trade * p_direction,
             action=action,
-            action_name=ACTION_NAMES.get(action, f"UNKNOWN_{action}"),
+            action_name=ACTION_NAMES[action] if 0 <= action < len(ACTION_NAMES) else f"UNKNOWN_{action}",
             rl_score=rl_score,
             sizing_mult=SIZING_MAP.get(action, 0.0),
             entry_price=entry_price, sl_price=sl_price, tp_price=tp_price,
