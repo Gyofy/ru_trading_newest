@@ -19,9 +19,12 @@ from src.rl.state_builder import STATE_DIM, STATE_NAMES
 
 logger = logging.getLogger("live_bot.rl.bandit")
 
-N_ACTIONS = 4
-ACTION_NAMES = ["REJECT", "ACCEPT_0.75", "ACCEPT_1.00", "ACCEPT_1.25"]
-SIZING_MAP = {0: 0.0, 1: 0.75, 2: 1.0, 3: 1.25}
+N_ACTIONS = 7
+ACTION_NAMES = [
+    "REJECT", "ACCEPT_0.50", "ACCEPT_0.75", "ACCEPT_1.00",
+    "ACCEPT_1.25", "ACCEPT_1.50", "ACCEPT_2.00",
+]
+SIZING_MAP = {0: 0.0, 1: 0.50, 2: 0.75, 3: 1.0, 4: 1.25, 5: 1.50, 6: 2.0}
 
 
 class LinUCB:

@@ -1,8 +1,16 @@
-"""Build 30-dim state vector for LinUCB from pipeline data.
+"""Build 31-dim state vector for LinUCB from pipeline data.
 
+v5.0: TSMOM rule-based signals (no ML probabilities).
 State = [signal(6) + market(4) + micro(3) + cost(2) + portfolio(4)
          + coin_history(4) + cross(2) + coin_id(5) + intercept(1)] = 31 dim
-(30 features + 1 intercept, but we call it "30-dim" by convention.)
+
+v4.3 → v5.0 signal quality 변경:
+  p_trade      → tsmom_strength  (|28d return|, 모멘텀 크기)
+  p_direction  → rsi_normalized  (RSI/100)
+  confidence   → cvd_extremeness (CVD가 얼마나 극단인지)
+  trade_margin → oi_zscore       (OI 과열 정도)
+  dir_margin   → tsmom_rsi_agree (TSMOM-RSI 방향 일치)
+  side_sign    → side_sign       (동일)
 """
 
 from __future__ import annotations
@@ -10,7 +18,7 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
-COIN_INDEX = {"DOT": 0, "ADA": 1, "XRP": 2, "SOL": 3, "LINK": 4}
+COIN_INDEX = {"BTC": 0, "ETH": 1, "SOL": 2, "XRP": 3, "ADA": 4, "DOT": 5, "LINK": 6}
 
 
 def _clip(val: float, lo: float, hi: float) -> float:
@@ -29,9 +37,6 @@ def _safe_col(df: pd.DataFrame, col: str, default: float = 0.0) -> float:
 def build_rl_state(
     df: pd.DataFrame,
     pred_side: str,
-    p_trade: float,
-    p_direction: float,
-    s1_threshold: float,
     coin: str,
     equity: float,
     daily_pnl: float,
@@ -42,19 +47,30 @@ def build_rl_state(
     coin_avg_pnl_5: float,
     coin_streak: int,
     bars_since_last: int,
-    max_horizon: int = 18,
+    # v5.0 TSMOM signal inputs
+    tsmom_strength: float = 0.0,
+    rsi_value: float = 50.0,
+    cvd_extremeness: float = 0.0,
+    oi_zscore: float = 0.0,
+    tsmom_rsi_agree: bool = True,
+    # legacy compat (ignored in v5.0, kept for API stability)
+    p_trade: float = 0.0,
+    p_direction: float = 0.0,
+    s1_threshold: float = 0.0,
+    max_horizon: int = 24,
     last_funding: float = 0.0,
     btc_df: pd.DataFrame = None,
 ) -> np.ndarray:
-    """Build 30-dim + intercept state vector.
+    """Build 30-dim + intercept state vector (v5.0 TSMOM).
 
     All features are clipped/normalized to stable ranges for LinUCB.
     """
-    confidence = p_trade * p_direction
-
-    # Signal quality (6)
-    trade_margin = _clip(p_trade - s1_threshold, -0.5, 0.5)
-    dir_margin = _clip(abs(p_direction - 0.5) * 2, 0.0, 1.0)
+    # Signal quality (6) — v5.0 TSMOM-based
+    tsmom_str = _clip(tsmom_strength, 0.0, 0.3)
+    rsi_norm = _clip(rsi_value / 100.0, 0.0, 1.0)
+    cvd_ext = _clip(cvd_extremeness, 0.0, 1.0)
+    oi_z = _clip(oi_zscore, -3.0, 3.0)
+    agree = 1.0 if tsmom_rsi_agree else 0.0
     side_sign = 1.0 if pred_side == "BUY" else -1.0
 
     # Market regime (4)
@@ -99,8 +115,8 @@ def build_rl_state(
         btc_ret = _clip(float(src["close"].pct_change(6).iloc[-1]), -0.10, 0.10)
     corr_btc = _clip(_safe_col(df, "corr_btc", 0.0), -1.0, 1.0)
 
-    # Coin identity (5)
-    coin_oh = [0.0] * 5
+    # Coin identity (7 coins in v5.0)
+    coin_oh = [0.0] * 7
     if coin in COIN_INDEX:
         coin_oh[COIN_INDEX[coin]] = 1.0
 
@@ -108,7 +124,7 @@ def build_rl_state(
     intercept = 1.0
 
     return np.array([
-        p_trade, p_direction, confidence, trade_margin, dir_margin, side_sign,
+        tsmom_str, rsi_norm, cvd_ext, oi_z, agree, side_sign,
         regime_trend, regime_up, atr_pct, hurst,
         cvd_ratio, ofi_norm, ms_composite,
         spread_proxy, funding_clipped,
@@ -117,18 +133,19 @@ def build_rl_state(
         btc_ret, corr_btc,
         *coin_oh,
         intercept,
-    ], dtype=np.float64)  # shape: (31,)
+    ], dtype=np.float64)  # shape: (33,)
 
 
-STATE_DIM = 31  # 30 features + 1 intercept
+STATE_DIM = 33  # 32 features + 1 intercept (7 coins instead of 5)
 STATE_NAMES = [
-    "p_trade", "p_direction", "confidence", "trade_margin", "dir_margin", "side_sign",
+    "tsmom_strength", "rsi_normalized", "cvd_extremeness",
+    "oi_zscore", "tsmom_rsi_agree", "side_sign",
     "regime_trend", "regime_up", "atr_pct", "hurst",
     "cvd_ratio", "ofi_norm", "ms_composite",
     "spread_proxy", "last_funding",
     "open_positions", "daily_pnl_pct", "weekly_pnl_pct", "dd_ratio",
     "coin_win_rate_5", "coin_avg_pnl_5", "coin_streak", "bars_since_last",
     "btc_return_24h", "corr_btc",
-    "is_dot", "is_ada", "is_xrp", "is_sol", "is_link",
+    "is_btc", "is_eth", "is_sol", "is_xrp", "is_ada", "is_dot", "is_link",
     "intercept",
 ]

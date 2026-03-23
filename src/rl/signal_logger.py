@@ -16,8 +16,11 @@ from typing import Optional
 
 logger = logging.getLogger("live_bot.rl.logger")
 
-SIZING_MAP = {0: 0.0, 1: 0.75, 2: 1.0, 3: 1.25}
-ACTION_NAMES = {0: "REJECT", 1: "ACCEPT_0.75", 2: "ACCEPT_1.00", 3: "ACCEPT_1.25"}
+SIZING_MAP = {0: 0.0, 1: 0.50, 2: 0.75, 3: 1.0, 4: 1.25, 5: 1.50, 6: 2.0}
+ACTION_NAMES = {
+    0: "REJECT", 1: "ACCEPT_0.50", 2: "ACCEPT_0.75", 3: "ACCEPT_1.00",
+    4: "ACCEPT_1.25", 5: "ACCEPT_1.50", 6: "ACCEPT_2.00",
+}
 
 
 @dataclass

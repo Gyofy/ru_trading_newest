@@ -33,6 +33,10 @@ logging.basicConfig(
 )
 log = logging.getLogger("tsmom_paper")
 
+from src.rl.state_builder import build_rl_state
+from src.rl.signal_logger import SignalLogger
+from src.rl.bandit import SIZING_MAP
+
 # ══════════════════════════════════════════════════════════
 # Config
 # ══════════════════════════════════════════════════════════
@@ -93,6 +97,8 @@ class PaperBot:
         self.equity = INITIAL_EQUITY
         self.positions: dict[str, Position] = {}
         self.trade_count = 0
+        self.signal_logger = SignalLogger(STATE_DIR / "signal_log.jsonl")
+        self.coin_history: dict[str, list[float]] = {}  # last 5 PnLs per coin
         self.load_state()
 
     def load_state(self):
@@ -246,15 +252,31 @@ class PaperBot:
             if abs(oi_z) > CFG["oi_zscore_max"]:
                 return 0, {"reason": "oi_crowded", "oi_zscore": oi_z}
 
+        # Compute CVD extremeness for RL state
+        cvd_range = q_hi - q_lo if q_hi != q_lo else 1.0
+        cvd_ext = abs(cvd_now - (q_hi + q_lo) / 2) / (cvd_range / 2 + 1e-10)
+        cvd_ext = min(cvd_ext, 1.0)
+
+        # TSMOM strength
+        past_ret = df["close"].pct_change(CFG["lookback_days"] * 6).iloc[-1]
+        tsmom_str = abs(past_ret) if not np.isnan(past_ret) else 0.0
+
+        # OI z-score (already fetched or 0)
+        oi_z = self.fetch_binance_oi(coin) if CFG["use_oi"] else 0.0
+
         return direction, {
             "tsmom": direction, "rsi": rsi, "cvd": cvd_now,
             "q_hi": q_hi, "q_lo": q_lo,
             "side": "LONG" if direction == 1 else "SHORT",
+            "tsmom_strength": tsmom_str,
+            "cvd_extremeness": cvd_ext,
+            "oi_zscore": oi_z,
+            "tsmom_rsi_agree": True,  # already filtered
         }
 
     # ── Position Management ──
 
-    def open_position(self, coin: str, side: int, df: pd.DataFrame):
+    def open_position(self, coin: str, side: int, df: pd.DataFrame, signal_info: dict = None):
         price = df["close"].iloc[-1]
         atr = df["atr_14"].iloc[-1]
 
@@ -276,6 +298,39 @@ class PaperBot:
             atr_at_entry=atr, size_usd=size_usd,
         )
         self.positions[coin] = pos
+
+        # RL state logging
+        if signal_info:
+            hist = self.coin_history.get(coin, [])
+            wr5 = sum(1 for p in hist[-5:] if p > 0) / max(len(hist[-5:]), 1)
+            avg5 = np.mean(hist[-5:]) if hist else 0.0
+            streak = 0
+            for p in reversed(hist):
+                if p > 0: streak += 1
+                else: break
+
+            state = build_rl_state(
+                df=df, pred_side="BUY" if side == 1 else "SELL", coin=coin,
+                equity=self.equity, daily_pnl=0.0, weekly_pnl=0.0,
+                dd_ratio=0.0, open_count=len(self.positions),
+                coin_win_rate_5=wr5, coin_avg_pnl_5=avg5,
+                coin_streak=streak, bars_since_last=0,
+                tsmom_strength=signal_info.get("tsmom_strength", 0.0),
+                rsi_value=signal_info.get("rsi", 50.0),
+                cvd_extremeness=signal_info.get("cvd_extremeness", 0.0),
+                oi_zscore=signal_info.get("oi_zscore", 0.0),
+                tsmom_rsi_agree=signal_info.get("tsmom_rsi_agree", True),
+            )
+
+            self.signal_logger.log(
+                coin=coin, side="BUY" if side == 1 else "SELL",
+                regime="UNKNOWN", state=state.tolist(),
+                p_trade=signal_info.get("tsmom_strength", 0.0),
+                p_direction=signal_info.get("rsi", 50.0) / 100.0,
+                action=3, rl_score=0.0, sizing_mult=1.0,
+                entry_price=price, sl_price=sl, tp_price=tp,
+                risk_gate_passed=True, executed=True,
+            )
 
         side_str = "LONG" if side == 1 else "SHORT"
         log.info(f"OPEN {side_str} {coin} @ ${price:.4f} | TP=${tp:.4f} SL=${sl:.4f} | "
@@ -344,6 +399,18 @@ class PaperBot:
             "leverage": CFG["leverage"],
         }
         self.log_trade(trade)
+
+        # RL signal result backfill
+        self.signal_logger.update_result(
+            coin=coin, pnl_pct=pnl_pct_net,
+            exit_reason=exit_type, bars_held=pos.bars_held,
+        )
+
+        # Update coin history for RL state
+        if coin not in self.coin_history:
+            self.coin_history[coin] = []
+        self.coin_history[coin].append(pnl_pct_net)
+
         del self.positions[coin]
 
     # ── Main Loop ──
@@ -377,7 +444,7 @@ class PaperBot:
                     signal, info = self.generate_signal(df, coin)
 
                     if signal != 0:
-                        self.open_position(coin, signal, df)
+                        self.open_position(coin, signal, df, signal_info=info)
                     elif info.get("reason") not in ("insufficient_bars",):
                         pass  # normal filter rejection
 
