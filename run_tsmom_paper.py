@@ -10,7 +10,7 @@ Strategy: v5.0 TSMOM Enhanced
 Validated: IS Sharpe 2.67, OOS Sharpe 2.80, p-value 0.006
 """
 
-import sys, os, json, time, logging, asyncio
+import sys, os, json, time, logging, asyncio, multiprocessing
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
 from dataclasses import dataclass, asdict
@@ -49,20 +49,23 @@ COINS = {
 
 # Strategy params (best OOS config)
 CFG = {
-    "lookback_days": 7,          # single TSMOM (fast, Sharpe 4.88)
-    "lookback_long_days": 28,    # unused (dual disabled)
-    "dual_lookback": False,      # v5.1r: single > dual (Sharpe 4.88 vs 4.35)
+    "lookback_days": 7,          # short-term TSMOM (direction)
+    "lookback_long_days": 28,    # long-term TSMOM (regime gate)
+    "dual_lookback": False,      # not used as filter — used for regime classification
     "volume_weighted": False,
     "cvd_quantile": 0.75,
     "cvd_roll_window": 120,
     "k_upper": 5.0,
-    "k_lower": 1.5,
+    "k_lower": 2.0,
     "max_hold_bars": 24,
     "use_oi": True,
     "oi_zscore_max": 2.0,
     "cost_roundtrip": 0.0020,
-    "leverage": 2,
-    "equity_risk_pct": 0.02,  # 2% risk per trade
+    "leverage_a": 4,             # v5.3: sniper (7d+28d agree + CVD Q90) → 4x
+    "leverage_b": 2,             # v5.3: steady (7d only + CVD Q75) → 2x
+    "cvd_quantile_a": 0.90,     # sniper: extreme CVD only (top/bottom 10%)
+    "leverage": 2,               # fallback default
+    "equity_risk_pct": 0.02,     # 2% risk per trade
     "max_positions": 3,
 }
 
@@ -74,6 +77,7 @@ LOCK_FILE = STATE_DIR / "bot.lock"
 INITIAL_EQUITY = 1000.0  # paper equity
 BAR_SECONDS = 4 * 3600   # 4h
 POLL_SECONDS = 30         # SL/TP check interval
+N_WORKERS = max(1, int(multiprocessing.cpu_count() * 0.7))  # 70% of cores
 
 
 # ══════════════════════════════════════════════════════════
@@ -169,7 +173,10 @@ class PaperBot:
 
         # Resample to 4h
         df = df.resample("4h").agg({
-            "open":"first","high":"max","low":"min","close":"last","volume":"sum"
+            "open": lambda x: x.iloc[0] if len(x) > 0 else np.nan,
+            "high": "max", "low": "min",
+            "close": lambda x: x.iloc[-1] if len(x) > 0 else np.nan,
+            "volume": "sum",
         }).dropna()
 
         # ATR
@@ -296,6 +303,23 @@ class PaperBot:
         # OI z-score (already fetched or 0)
         oi_z = self.fetch_binance_oi(coin) if CFG["use_oi"] else 0.0
 
+        # Regime classification: 28d agree + CVD Q90 = sniper (A), else steady (B)
+        lb_long = CFG["lookback_long_days"] * 6
+        past_ret_long = df["close"].pct_change(lb_long).iloc[-1]
+        tsmom_long = np.sign(past_ret_long) if not np.isnan(past_ret_long) else 0
+        regime_agree = (direction == int(tsmom_long))
+
+        # A sniper requires stricter CVD (Q90)
+        if regime_agree:
+            cq_a = CFG.get("cvd_quantile_a", 0.90)
+            q_hi_a = cvd.rolling(cw, min_periods=30).quantile(cq_a).iloc[-1]
+            q_lo_a = cvd.rolling(cw, min_periods=30).quantile(1 - cq_a).iloc[-1]
+            cvd_extreme_a = (direction == -1 and cvd_now > q_hi_a) or \
+                            (direction == 1 and cvd_now < q_lo_a)
+            strategy_type = "A_sniper" if cvd_extreme_a else "B_steady"
+        else:
+            strategy_type = "B_steady"
+
         return direction, {
             "tsmom": direction, "rsi": rsi, "cvd": cvd_now,
             "q_hi": q_hi, "q_lo": q_lo,
@@ -303,7 +327,9 @@ class PaperBot:
             "tsmom_strength": tsmom_str,
             "cvd_extremeness": cvd_ext,
             "oi_zscore": oi_z,
-            "tsmom_rsi_agree": True,  # already filtered
+            "tsmom_rsi_agree": True,
+            "strategy_type": strategy_type,
+            "regime_agree": regime_agree,
         }
 
     # ── Position Management ──
@@ -318,10 +344,17 @@ class PaperBot:
         tp = price + tp_dist * side
         sl = price - sl_dist * side
 
+        # v5.3 Dual leverage: A(sniper 3x) vs B(steady 2x)
+        strategy_type = signal_info.get("strategy_type", "B_steady") if signal_info else "B_steady"
+        if strategy_type == "A_sniper":
+            leverage = CFG["leverage_a"]
+        else:
+            leverage = CFG["leverage_b"]
+
         # Position sizing: risk_pct * equity / sl_distance
         risk_usd = self.equity * CFG["equity_risk_pct"]
         sl_pct = sl_dist / price
-        size_usd = min(risk_usd / sl_pct, self.equity * 0.2) * CFG["leverage"]
+        size_usd = min(risk_usd / sl_pct, self.equity * 0.2) * leverage
 
         pos = Position(
             coin=coin, side=side, entry_price=price,
@@ -366,7 +399,7 @@ class PaperBot:
 
         side_str = "LONG" if side == 1 else "SHORT"
         log.info(f"OPEN {side_str} {coin} @ ${price:.4f} | TP=${tp:.4f} SL=${sl:.4f} | "
-                 f"size=${size_usd:.2f} ({CFG['leverage']}x)")
+                 f"size=${size_usd:.2f} ({leverage}x {strategy_type})")
 
     def check_exit(self, coin: str, df: pd.DataFrame) -> bool:
         """Check if position should be closed."""
@@ -459,18 +492,28 @@ class PaperBot:
                 log.info(f"=== Cycle @ {now.strftime('%H:%M')} UTC | "
                          f"equity=${self.equity:.2f} | pos={len(self.positions)} ===")
 
-                for coin in COINS:
+                # Parallel data fetch (all coins at once)
+                from concurrent.futures import ThreadPoolExecutor
+                coin_data = {}
+                with ThreadPoolExecutor(max_workers=min(len(COINS), N_WORKERS)) as pool:
+                    futures = {pool.submit(self.fetch_4h, c): c for c in COINS}
+                    for future in futures:
+                        coin = futures[future]
+                        try:
+                            coin_data[coin] = future.result()
+                        except Exception as e:
+                            log.warning(f"[{coin}] Fetch error: {e}")
+
+                # Process signals sequentially (order matters for position limits)
+                for coin, df in coin_data.items():
                     try:
-                        df = self.fetch_4h(coin)
                         if df.empty:
                             continue
 
-                        # Check exits first
                         if coin in self.positions:
                             self.check_exit(coin, df)
                             continue
 
-                        # Check entries
                         if len(self.positions) >= CFG["max_positions"]:
                             continue
 

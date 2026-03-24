@@ -6,9 +6,12 @@ Single source of truth for strategy logic.
 
 from __future__ import annotations
 
+import multiprocessing
 import numpy as np
 import pandas as pd
 from dataclasses import dataclass
+
+N_WORKERS = max(1, int(multiprocessing.cpu_count() * 0.7))
 
 COST_ROUNDTRIP = 0.0020
 
@@ -191,50 +194,108 @@ def calc_metrics(pnls) -> StrategyResult:
 
 # ── Data Loading ─────────────────────────────────────────
 
-def load_ohlcv_10(period: str = "365d") -> dict[str, pd.DataFrame]:
-    """Load 10 coins with OHLCV + indicators + microstructure + Binance metrics."""
+def _load_single_coin(args):
+    """Load a single coin (for multiprocessing)."""
     import os
     from src.data.crawlers.crypto_ohlcv import fetch_ohlcv, resample_to_4h, add_technical_indicators
     from src.data.crawlers.microstructure_rollup import add_microstructure_rollup
 
+    coin, yahoo_sym, binance_sym, period = args
+
+    df = fetch_ohlcv(coin, yahoo_sym, period=period, interval="1h")
+    if df.empty:
+        return coin, None
+
+    df = resample_to_4h(df)
+    df = add_technical_indicators(df)
+    df = add_microstructure_rollup(df, verbose=False)
+
+    # Binance metrics
+    metrics_dir = f"data/raw/binance_public/metrics/{binance_sym}"
+    if os.path.exists(metrics_dir):
+        csvs = sorted([f for f in os.listdir(metrics_dir) if f.endswith(".csv")])
+        if csvs:
+            dfs_m = []
+            for f in csvs:
+                try:
+                    dfs_m.append(pd.read_csv(os.path.join(metrics_dir, f)))
+                except Exception:
+                    continue
+            if dfs_m:
+                merged = pd.concat(dfs_m, ignore_index=True)
+                merged["create_time"] = pd.to_datetime(merged["create_time"])
+                merged = merged.sort_values("create_time").set_index("create_time")
+                merged = merged.drop(columns=["symbol"], errors="ignore")
+                m4h = merged.resample("4h").last().dropna(how="all")
+                if df.index.tz is not None and m4h.index.tz is None:
+                    m4h.index = m4h.index.tz_localize(df.index.tz)
+                elif df.index.tz is None and m4h.index.tz is not None:
+                    m4h.index = m4h.index.tz_localize(None)
+                ma = m4h.reindex(df.index, method="ffill")
+                if "sum_open_interest_value" in ma.columns:
+                    oi = ma["sum_open_interest_value"].astype(float)
+                    df["oi_zscore"] = (oi - oi.rolling(48, min_periods=12).mean()) / \
+                        oi.rolling(48, min_periods=12).std()
+
+    return coin, df
+
+
+def load_ohlcv_10(period: str = "365d", n_jobs: int = N_WORKERS) -> dict[str, pd.DataFrame]:
+    """Load 10 coins with multiprocessing (default 70% of cores)."""
+    from concurrent.futures import ProcessPoolExecutor, as_completed
+
+    args_list = [
+        (coin, yahoo_sym, COINS_10[coin], period)
+        for coin, yahoo_sym in YAHOO_MAP.items()
+    ]
+
     data = {}
-    for coin, yahoo_sym in YAHOO_MAP.items():
-        df = fetch_ohlcv(coin, yahoo_sym, period=period, interval="1h")
-        if df.empty:
-            continue
-        df = resample_to_4h(df)
-        df = add_technical_indicators(df)
-        df = add_microstructure_rollup(df)
+    with ProcessPoolExecutor(max_workers=n_jobs) as pool:
+        futures = {pool.submit(_load_single_coin, args): args[0] for args in args_list}
+        for future in as_completed(futures):
+            coin = futures[future]
+            try:
+                name, df = future.result()
+                if df is not None:
+                    data[name] = df
+            except Exception as e:
+                print(f"  [FAIL] {coin}: {e}")
 
-        # Binance metrics
-        metrics_dir = f"data/raw/binance_public/metrics/{COINS_10[coin]}"
-        if os.path.exists(metrics_dir):
-            csvs = sorted([f for f in os.listdir(metrics_dir) if f.endswith(".csv")])
-            if csvs:
-                dfs_m = []
-                for f in csvs:
-                    try:
-                        dfs_m.append(pd.read_csv(os.path.join(metrics_dir, f)))
-                    except Exception:
-                        continue
-                if dfs_m:
-                    merged = pd.concat(dfs_m, ignore_index=True)
-                    merged["create_time"] = pd.to_datetime(merged["create_time"])
-                    merged = merged.sort_values("create_time").set_index("create_time")
-                    merged = merged.drop(columns=["symbol"], errors="ignore")
-                    m4h = merged.resample("4h").last().dropna(how="all")
-                    if df.index.tz is not None and m4h.index.tz is None:
-                        m4h.index = m4h.index.tz_localize(df.index.tz)
-                    elif df.index.tz is None and m4h.index.tz is not None:
-                        m4h.index = m4h.index.tz_localize(None)
-                    ma = m4h.reindex(df.index, method="ffill")
-                    if "sum_open_interest_value" in ma.columns:
-                        oi = ma["sum_open_interest_value"].astype(float)
-                        df["oi_zscore"] = (oi - oi.rolling(48, min_periods=12).mean()) / \
-                            oi.rolling(48, min_periods=12).std()
-
-        data[coin] = df
     return data
+
+
+def backtest_multi(data: dict, signal_fn, k_upper=5.0, k_lower=2.0,
+                   max_hold=24, n_jobs: int = N_WORKERS) -> dict[str, np.ndarray]:
+    """Run backtest on multiple coins in parallel."""
+    from concurrent.futures import ProcessPoolExecutor, as_completed
+
+    def _bt_single(args):
+        coin, df_bytes, ku, kl, mh = args
+        df = pd.read_pickle(df_bytes)  # deserialize
+        sig = signal_fn(df)
+        pnls = run_backtest(df, sig, k_upper=ku, k_lower=kl, max_hold=mh)
+        return coin, pnls
+
+    # For ProcessPoolExecutor, we need to serialize DataFrames
+    # Use simpler ThreadPoolExecutor instead (avoids pickling issues)
+    from concurrent.futures import ThreadPoolExecutor
+
+    results = {}
+    with ThreadPoolExecutor(max_workers=n_jobs) as pool:
+        futures = {}
+        for coin, df in data.items():
+            sig = signal_fn(df)
+            future = pool.submit(run_backtest, df, sig, k_upper, k_lower, max_hold)
+            futures[future] = coin
+
+        for future in as_completed(futures):
+            coin = futures[future]
+            try:
+                results[coin] = future.result()
+            except Exception as e:
+                print(f"  [BT FAIL] {coin}: {e}")
+
+    return results
 
 
 def split_is_oos(data: dict, ratio: float = 0.70):
