@@ -4,26 +4,38 @@ Binance Public Data Downloader
 Binance public data repo에서 Futures UM 데이터를 다운로드합니다.
 https://github.com/binance/binance-public-data
 
+실제 S3 버킷 구조 (data.binance.vision):
+  daily/
+    metrics/          ← OI + L/S ratio + taker vol 통합 (1파일에 다 있음)
+    aggTrades/        ← 체결 데이터
+    bookDepth/        ← 호가 스냅샷
+    klines/           ← OHLCV
+  monthly/
+    fundingRate/      ← 펀딩비 (monthly만 존재, daily 없음)
+
+metrics 컬럼:
+  create_time, symbol,
+  sum_open_interest, sum_open_interest_value,
+  count_toptrader_long_short_ratio, sum_toptrader_long_short_ratio,
+  count_long_short_ratio, sum_taker_long_short_vol_ratio
+
 지원 타입:
-  - funding_rate       (8h, ~10MB / 7coins / 365d)
-  - open_interest      (5m,  ~500MB / 7coins / 365d)
-  - long_short_ratio   (5m,  ~200MB / 7coins / 365d)
-  - taker_volume       (5m,  ~200MB / 7coins / 365d)
-  - liquidation        (tick, ~100MB / 7coins / 180d)
-  - agg_trades         (tick, ~15GB / BTC / 180d)
-  - book_depth         (snap, ~30-50GB / 3coins / 90d)
-  - klines_1m          (1m,  ~2GB / 3coins / 90d)
+  - metrics          (일별, ~200MB / 7coins / 365d) ← OI+L/S+taker 통합
+  - funding_rate     (월별, ~10MB / 7coins / 전체)
+  - agg_trades       (일별, ~15GB / BTC / 180d)
+  - book_depth       (일별, ~30-50GB / 3coins / 90d)
+  - klines_1m        (일별, ~2GB / 3coins / 90d)
 
 사용법:
+  # 최소 시작 세트 (~200MB)
   python src/data/crawlers/binance_public_data_downloader.py \\
-      --types funding_rate open_interest long_short_ratio \\
+      --types metrics funding_rate \\
       --symbols BTCUSDT ETHUSDT SOLUSDT XRPUSDT ADAUSDT DOTUSDT LINKUSDT \\
       --days 365 \\
       --output data/raw/binance_public
 """
 
 import argparse
-import os
 import time
 import zipfile
 import logging
@@ -38,35 +50,43 @@ from tqdm import tqdm
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 log = logging.getLogger(__name__)
 
-BASE_URL = "https://data.binance.vision/data/futures/um/daily"
+BASE_DAILY   = "https://data.binance.vision/data/futures/um/daily"
+BASE_MONTHLY = "https://data.binance.vision/data/futures/um/monthly"
 
 # 재시도 정책: 연결 오류 / 5xx 에 대해 최대 5회, 지수 백오프
 _RETRY = Retry(
     total=5,
-    backoff_factor=1.5,        # 1.5, 3, 4.5, ... 초
+    backoff_factor=1.5,
     status_forcelist=[500, 502, 503, 504],
     allowed_methods=["GET"],
     raise_on_status=False,
 )
 
-# data type → (url_path_segment, file_suffix)
+# data type → (base, dir_name, suffix)
+# base: "daily" | "monthly"
 TYPE_MAP = {
-    "funding_rate":     ("fundingRate",                    "fundingRate"),
-    "open_interest":    ("openInterestHist",               "openInterestHist"),
-    "long_short_ratio": ("globalLongShortAccountRatio",    "globalLongShortAccountRatio"),
-    "taker_volume":     ("takerlongshortRatio",            "takerlongshortRatio"),
-    "liquidation":      ("forceOrders",                    "forceOrders"),
-    "agg_trades":       ("aggTrades",                      "aggTrades"),
-    "book_depth":       ("bookDepth",                      "bookDepth_T5"),  # top-5 레벨
-    "klines_1m":        ("klines/{symbol}/1m",             "1m"),
+    "metrics":      ("daily",   "metrics",    "metrics"),
+    "funding_rate": ("monthly", "fundingRate","fundingRate"),
+    "agg_trades":   ("daily",   "aggTrades",  "aggTrades"),
+    "book_depth":   ("daily",   "bookDepth",  "bookDepth_T5"),
+    "klines_1m":    ("daily",   "klines",     "1m"),          # 특수 처리
 }
 
 
 def build_url(data_type: str, symbol: str, day: date) -> str:
-    path_tmpl, suffix = TYPE_MAP[data_type]
-    path = path_tmpl.replace("{symbol}", symbol)
+    freq, dirname, suffix = TYPE_MAP[data_type]
+    base = BASE_MONTHLY if freq == "monthly" else BASE_DAILY
+
+    if data_type == "klines_1m":
+        date_str = day.strftime("%Y-%m-%d")
+        return f"{base}/klines/{symbol}/1m/{symbol}-1m-{date_str}.zip"
+
+    if freq == "monthly":
+        date_str = day.strftime("%Y-%m")
+        return f"{base}/{dirname}/{symbol}/{symbol}-{suffix}-{date_str}.zip"
+
     date_str = day.strftime("%Y-%m-%d")
-    return f"{BASE_URL}/{path}/{symbol}/{symbol}-{suffix}-{date_str}.zip"
+    return f"{base}/{dirname}/{symbol}/{symbol}-{suffix}-{date_str}.zip"
 
 
 def _make_session() -> requests.Session:
@@ -123,6 +143,18 @@ def date_range(days: int) -> list[date]:
     return [today - timedelta(days=i) for i in range(1, days + 1)]
 
 
+def month_range(days: int) -> list[date]:
+    """days 기간에 해당하는 월의 첫째 날 목록 (중복 제거)."""
+    dates = date_range(days)
+    seen, months = set(), []
+    for d in dates:
+        key = (d.year, d.month)
+        if key not in seen:
+            seen.add(key)
+            months.append(date(d.year, d.month, 1))
+    return months
+
+
 def download(
     data_types: list[str],
     symbols: list[str],
@@ -132,21 +164,24 @@ def download(
 ) -> None:
     out = Path(output_dir)
     session = _make_session()
-    dates = date_range(days)
 
     for dtype in data_types:
         if dtype not in TYPE_MAP:
-            log.warning("알 수 없는 타입 무시: %s", dtype)
+            log.warning("알 수 없는 타입 무시: %s  (사용 가능: %s)", dtype, list(TYPE_MAP))
             continue
 
+        freq = TYPE_MAP[dtype][0]
+        periods = month_range(days) if freq == "monthly" else date_range(days)
+        unit = "개월" if freq == "monthly" else "일"
+
         for symbol in symbols:
-            log.info("[%s] %s 다운로드 시작 (%d일)", dtype, symbol, days)
+            log.info("[%s] %s 다운로드 시작 (%d%s)", dtype, symbol, len(periods), unit)
             sym_dir = out / dtype / symbol
             sym_dir.mkdir(parents=True, exist_ok=True)
 
             missing = 0
-            for day in tqdm(dates, desc=f"{dtype}/{symbol}", leave=False):
-                url = build_url(dtype, symbol, day)
+            for period in tqdm(periods, desc=f"{dtype}/{symbol}", leave=False):
+                url = build_url(dtype, symbol, period)
                 zip_path = sym_dir / Path(url).name
                 ok = download_file(url, zip_path, session)
                 if not ok:
@@ -155,7 +190,7 @@ def download(
                 if extract and zip_path.exists():
                     extract_zip(zip_path, sym_dir)
 
-            log.info("[%s] %s 완료 (누락 %d일)", dtype, symbol, missing)
+            log.info("[%s] %s 완료 (누락 %d%s)", dtype, symbol, missing, unit)
 
 
 def main() -> None:
@@ -163,8 +198,8 @@ def main() -> None:
     parser.add_argument(
         "--types",
         nargs="+",
-        default=["funding_rate", "open_interest", "long_short_ratio"],
-        help="다운로드할 데이터 타입 (공백 구분)",
+        default=["metrics", "funding_rate"],
+        help="다운로드할 데이터 타입 (공백 구분). 선택: metrics funding_rate agg_trades book_depth klines_1m",
     )
     parser.add_argument(
         "--symbols",

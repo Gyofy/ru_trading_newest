@@ -1,290 +1,201 @@
 # CLAUDE_CRYPTO_AGENT
 
-Autonomous crypto trading system — Dual TSMOM direction + CVD timing + OI crowding filter + RL sizing.
+Autonomous crypto trading system — 2-Stage Binary ML + Microstructure + Binance Public Data + RL Sizing.
 
-**Binance USDT-M Futures | 10 coins | Dual TSMOM(7d+28d)+RSI+CVD+OI | OOS Sharpe 4.03 | Paper Trading Active**
-
----
-
-## Current Status (2026-03-23)
-
-### v5.1 TSMOM Enhanced Strategy
-
-Feature leakage discovery (2026-03-20) invalidated all ML direction predictions. v5.1 uses **rule-based dual TSMOM direction** + 10-coin universe + compact RL sizing.
-
-```
-Direction:  Dual TSMOM (7-day + 28-day must agree)
-Filter:     RSI > 50 (LONG valid) / RSI < 50 (SHORT valid)
-Timing:     CVD Q75 extreme (counter-direction overextension)
-Crowding:   OI z-score < 2.0 (Binance metrics)
-Barrier:    TP = 5 x ATR, SL = 1.0 x ATR, TTL = 24 bars (96h)
-Universe:   10 coins (BTC ETH SOL XRP ADA DOT LINK DOGE AVAX BNB)
-Leverage:   2x (paper), max 3x (live)
-```
-
-### Validation Results
-
-| Metric | IS (70%, 9mo) | OOS (30%, 3.5mo) |
-|--------|---------------|-------------------|
-| Configs tested | 6,480 grid | Top-20 IS |
-| Best Sharpe | 2.67 | **4.03** (10 coins) |
-| Best avg PnL | +1.12%/trade | **+2.85%/trade** |
-| Positive configs | many | **20/20 (100%)** |
-| Permutation test | — | **p = 0.006** |
-| Bootstrap P(Sharpe>1) | — | **99.8%** |
-
-| Test | Result |
-|------|--------|
-| Permutation test | **p = 0.006** (statistically significant) |
-| Bootstrap P(Sharpe > 1) | **99.8%** |
-| Cost sensitivity | Positive up to **50 bps** roundtrip |
-| Drop-one-out | All coins removable, min Sharpe 2.34 |
-| Optimal leverage | **3x** (Monte Carlo, P(MDD>50%) < 8%) |
-
-### OOS Performance by Coin (v5.1, 10 coins)
-
-| Coin | Trades | WR | Avg PnL | Sharpe |
-|------|--------|-----|---------|--------|
-| BTC | 4 | 75.0% | +5.34% | 1.82 |
-| ETH | 5 | 80.0% | +4.67% | 2.41 |
-| SOL | 4 | 50.0% | +2.89% | 0.89 |
-| XRP | 4 | 50.0% | +1.65% | 0.55 |
-| ADA | 2 | 100% | +6.13% | - |
-| DOT | 7 | 28.6% | -0.60% | -0.20 |
-| LINK | 4 | 50.0% | +2.63% | 0.82 |
-| DOGE | 13 | 46.2% | +2.17% | 1.69 |
-| AVAX | 11 | 45.5% | +2.48% | 1.48 |
-| BNB | 6 | 50.0% | +1.58% | 0.77 |
+**Binance USDT-M Futures | 4 coins | 1분봉 ML Ensemble | LIVE 실거래 중 (2026-03-24~)**
 
 ---
 
-## Architecture (v5.1)
+## Current Status (2026-03-24)
+
+### v4.3-1m ML Bot — LIVE 실거래 중
 
 ```
-run_tsmom_paper.py              Paper bot (ACTIVE, 10 coins, RL logging)
-run_monitor.py                  Dashboard + healthcheck + auto-restart
-run_live_bot_v2.py              v4.3 ML bot (SUSPENDED)
-run_btc_spike_paper.py          v4.4 BTC spike bot (SUPERSEDED)
+Bot:        run_live_bot_v2.py
+Config:     config/frozen_params_v4_3_1m.yaml
+Mode:       LIVE (Binance USDT-M Futures)
+Coins:      SOL, XRP, ADA, DOT  (4코인)
+Timeframe:  1분봉, 1000 bars
+Equity:     ~65 USDT
+Position:   자본의 10% per trade
+Daily Halt: -10% 손실 시 당일 거래 중단
+SL/TP:      10s polling (Post-Only → Limit 폴백)
+```
+
+### ML Pipeline
+
+```
+Phase 1: Data Collection
+  ├── OHLCV: Binance ccxt 1분봉 1000bars (4코인 + BTC/ETH 참조)
+  ├── 마이크로스트럭처: CVD, OFI, VPIN, Roll Spread, Amihud
+  └── Binance 공개 데이터: OI, Long/Short Ratio, Taker Vol, Funding Rate
+
+Phase 2: Feature Engineering
+  ├── 기술지표 ~60개 → technical_analysis.py
+  ├── 시그널 피처 → signal_features.py (wavelet, FFT, entropy)
+  ├── 마이크로스트럭처 ~71개 → microstructure_rollup.py
+  └── Binance Public Features → binance_public_features.py
+
+Phase 3: 2-Stage Binary ML (per-coin)
+  ├── Stage 1: Trade/NoTrade (ET + CatBoost)
+  ├── Stage 2: Long/Short   (ET + CatBoost)
+  ├── S2 Deadzone: |p_long - 0.5| < 0.10 → HOLD
+  └── CV: TimeSeriesSplit(n_splits=3, gap=12)
+
+Phase 4: Execution
+  ├── Post-Only entry → -5022 시 limit 폴백
+  ├── STOP_MARKET SL + TAKE_PROFIT_MARKET TP
+  ├── 10s SL/TP polling
+  └── Risk engine 9-gate pre-trade check
+```
+
+### Risk Settings
+
+| 항목 | 값 |
+|------|-----|
+| 포지션 크기 | 자본의 10% (notional) |
+| 일일 손실 한도 | -10% halt |
+| 주간 손실 한도 | 비활성화 |
+| 레버리지 | 4x |
+| 최소 SL 거리 | 0.18% |
+
+### 거래 코인 선정 이유
+
+Binance USDT-M Futures 최소 주문 금액 기준:
+
+| 코인 | 최소 주문 | 선정 |
+|------|-----------|------|
+| SOL | 5 USDT | ✅ |
+| XRP | 5 USDT | ✅ |
+| ADA | 5 USDT | ✅ |
+| DOT | 5 USDT | ✅ |
+| ETH | 20 USDT | ❌ (자본 부족) |
+| LINK | 20 USDT | ❌ (자본 부족) |
+| BTC | 100 USDT | ❌ (자본 부족) |
+
+---
+
+## Architecture
+
+```
+run_live_bot_v2.py              LIVE ML bot (v4.3-1m, ACTIVE)
 
 src/
   data/crawlers/
-    crypto_ohlcv.py             OHLCV + technical indicators (causal)
-    signal_features.py          Wavelet/FFT/entropy (leakage fixed)
-    microstructure_rollup.py    CVD/OFI/VPIN/Roll Spread/Amihud (BVC)
-    binance_public_data_downloader.py   Binance metrics downloader
+    crypto_ohlcv.py             OHLCV + technical indicators
+    signal_features.py          Wavelet/FFT/entropy
+    microstructure_rollup.py    CVD/OFI/VPIN/Roll Spread/Amihud
+    binance_public_features.py  OI/LSR/Taker/Funding (merge_asof)
+    binance_public_data_downloader.py  Binance 공개 데이터 다운로더
   execution/
-    exchange_adapter.py         Binance USDT-M Futures (ccxt)
-    live_predictor.py           2-Stage Binary (v4.3, suspended)
-    sl_tp_monitor.py            SL/TP polling
-    risk_engine.py              9-gate pre-trade check
-    position_store.py           Crash-safe persistence
+    exchange_adapter.py         Binance USDT-M Futures (ccxt, Post-Only→Limit 폴백)
+    live_predictor.py           2-Stage Binary ML combo
+    sl_tp_monitor.py            10s SL/TP polling
+    risk_engine.py              9-gate pre-trade check + sizing
+    position_store.py           Crash-safe JSON persistence
     cost_model.py               Fee + slippage + funding
+    order_ledger.py             SQLite order/fill/PnL
   models/
     masking_loop.py             Triple Barrier labeling
-    regime_filter.py            4-state regime (TREND_UP/DOWN, RANGE_LOW/HIGH)
-  strategy/
-    tsmom_core.py               Shared signal gen, backtest, metrics (v5.1)
   rl/
-    bandit.py                   LinUCB 7-action (v5.1)
-    state_builder.py            33-dim full / 7-dim compact state (v5.1)
-    signal_logger.py            JSONL signal logging + counterfactual
-    rl_gate.py                  Shadow/active mode with safety
-    counterfactual.py           Rejected signal PnL estimation
-    offline_train.py            CLI training pipeline
+    bandit.py                   LinUCB 7-action (shadow mode)
+    signal_logger.py            JSONL signal logging
+    rl_gate.py                  Shadow/active mode + safety
   signals/
     contract.py                 Signal dataclass
     policy.py                   SignalPolicy regime-aware filtering
 
-experiments/
-  tsmom_ml_enhanced.py          Phase 1: TSMOM base + filters
-  tsmom_rsi_cvd_deep.py         Phase 2: 6,480 config grid search
-  tsmom_rigorous_v2.py          Phase 3: IS/OOS split + permutation test
-  download_and_integrate.py     Binance data download + integration
-  v5_1_full_upgrade.py          Phase 4: 10 coins + trailing + trend score + RL
-  rl_state_analysis.py          PCA + feature importance (33→6 dim reduction)
-
 config/
-  frozen_params_v4_3.yaml       Config (v4.3, RL section reused)
+  frozen_params_v4_3_1m.yaml   현재 운영 config
 
-data/
-  raw/binance_public/metrics/   OI/LSR/Taker (7 coins x 365d)
-  reports/tsmom_paper/          Paper bot logs + signal_log
-  reports/tsmom_*.csv           Backtest results
+trading_result/
+  daily_pnl.csv                 일별 손익
+  equity_state.json             현재 자산 상태
+  fills.csv                     체결 기록
+  orders.csv                    주문 기록
+  events.jsonl                  이벤트 로그
 ```
 
 ---
 
-## Strategy Design (v5.0)
+## Quick Start
 
-### Layer 1: Direction (Rule-Based)
-```
-TSMOM: sign(28-day return) -> LONG or SHORT
-- Volume-weighted variant available
-- No ML prediction (S2 = random after leakage fix)
-- Academic basis: Sharpe 1.5-2.2 (Huang et al. 2024)
-```
+```bash
+# 의존성 설치
+pip install ccxt scikit-learn catboost xgboost ta pandas numpy joblib pyyaml requests tqdm python-dotenv
 
-### Layer 2: Quality Filter (Rule + Optional ML)
-```
-RSI > 50 confirms LONG, RSI < 50 confirms SHORT
-- RSI as trend filter, NOT overbought/oversold
-- PMC study: RSI trend filter 773% vs B&H 275%
-```
+# .env 설정
+BINANCE_API_KEY=...
+BINANCE_API_SECRET=...
 
-### Layer 3: Entry Timing (CVD Extreme)
-```
-SHORT signal + CVD > Q75 (buy-side overextended) = enter SHORT
-LONG signal + CVD < Q25 (sell-side overextended) = enter LONG
-- Spearman rho = -0.21 (CVD mean reversion)
-- Counter-direction overextension = better fill price
-```
+# Binance 공개 데이터 다운로드 (선택 — 없으면 graceful skip)
+python src/data/crawlers/binance_public_data_downloader.py \
+  --types metrics funding_rate \
+  --symbols SOLUSDT XRPUSDT ADAUSDT DOTUSDT BTCUSDT ETHUSDT LINKUSDT \
+  --days 365
 
-### Layer 4: Crowding Filter (Binance OI)
-```
-|OI z-score| > 2.0 = skip (crowded positioning)
-- Avoids entering at extreme OI where liquidation cascades likely
-- Data: Binance public metrics (5-min, resampled to 4h)
-```
+# 봇 시작 (LIVE)
+python run_live_bot_v2.py --mode live --equity <USDT잔고> --yes
 
-### Layer 5: RL Enhancement (Shadow Mode)
-```
-LinUCB contextual bandit, 33-dim state, 7 actions
-- Actions: REJECT, 0.5x, 0.75x, 1.0x, 1.25x, 1.5x, 2.0x
-- State: TSMOM strength + RSI + CVD + OI + regime + microstructure
-- Training: offline from signal_log.jsonl (200+ signals needed)
-- Status: shadow mode (logging only, not applied)
+# 로그 확인
+tail -f logs/live_bot_*.log
 ```
 
 ---
 
 ## Development History
 
-### v4.3-1m Live Session (2026-03-24) — 실거래 첫 가동
-
-**배경**: v5.1 TSMOM paper bot과 별도로, v4.3 ML bot(`run_live_bot_v2.py`)을 Binance USDT-M Futures에 실거래 가동.
-
-**왜 SOL 단일 종목인가?**
-
-GitHub 원본에는 5코인(DOT/ADA/XRP/SOL/LINK) 다중 종목이 설정되어 있었으나, `run_live_bot_v2.py` line 62에서 아래와 같이 변경됨:
-
-```python
-COINS = ["SOL"]  # SOL 단일 운영 (2026-03-19)
-```
-
-**이유**: 2026-03-19 실거래 전환 직전 진행한 coin-by-coin backtest에서 SOL만 손익분기에 근접한 결과를 보였고, 나머지 4개 코인(DOT/ADA/XRP/LINK)은 수수료 대비 기대수익이 마이너스였음. 실자본 66 USDT로 다중 종목 분산 시 코인당 포지션이 너무 작아 수수료 비중이 과다해지는 문제도 있었음.
-
-**오늘 수행한 작업 (2026-03-24)**:
+### 2026-03-24 — v4.3-1m LIVE 첫 실거래
 
 | 항목 | 내용 |
 |------|------|
-| Post-Only 폴백 | -5022 거부 시 일반 limit 주문으로 자동 재시도 (exchange_adapter.py) |
-| Binance 공개 데이터 통합 | OI/L/S/Taker/Funding 피처를 compute_features()에 연결 |
-| datetime dtype 버그 | ms vs us 불일치 → `datetime64[ns]` 통일 |
-| merge_asof 버그 | `reset_index().rename({"index": "_ts"})` → `pd.DataFrame({"_ts": ...})` |
-| 일일 손실 한도 | 6% → **10%** |
-| 포지션 크기 | 자본의 150% 상한 → **자본의 10%** |
+| Post-Only 폴백 | -5022 거부 시 limit 주문 자동 재시도 |
+| Binance 공개 데이터 통합 | OI/L&S/Taker/Funding → compute_features() |
+| datetime dtype 버그 수정 | ms vs us 불일치 → datetime64[ns] 통일 |
+| 일일 손실 한도 | 6% → 10% |
+| 포지션 크기 | 자본 150% 상한 → 자본 10% |
 | --yes 플래그 | 백그라운드 실행 시 확인 프롬프트 우회 |
-| 종목 확장 | SOL 단일 → **BTC, ETH, SOL, XRP, ADA, DOT, LINK (7코인)** |
+| Discord 종료 알림 | 봇 종료 시 시작 알림과 동일 형식으로 발송 |
+| 거래 코인 | SOL → SOL/XRP/ADA/DOT (최소주문금액 기준 4코인) |
+| 첫 체결 | SOL SELL @ 89.67 / SL=89.83 / TP=89.11 |
 
-**첫 체결**:
-```
-SOL SELL FILLED @ 89.67 | SL=89.83 TP=89.11
-equity: 66 USDT → 65.96 USDT
-```
+### 2026-03-23 — v5.1 TSMOM (Paper Bot, 별도 운영)
 
-**현재 상태**: 실거래 중지 (2026-03-24 기록 보존)
+- 피처 누수 발견(2026-03-20) 후 rule-based 방향으로 피봇
+- Dual TSMOM(7d+28d) + RSI + CVD + OI 필터
+- 10코인 paper trading (`run_tsmom_paper.py`)
+- OOS Sharpe 4.03 (permutation p=0.006)
 
----
+### 2026-03-20 — Feature Leakage Discovery
 
-### v5.1 (2026-03-23) — TSMOM Enhanced (Current)
-- Universe expansion: 7 → 10 coins (Sharpe 3.42 → 4.03)
-- Dual TSMOM (7d+28d) for trend transition handling
-- Compact LinUCB (6-dim) trained, lift +0.85%p
-- tsmom_core.py: shared strategy module (anti-spaghetti)
-- run_monitor.py: dashboard + healthcheck
+- STL decomposition, Ichimoku .shift(26), SVD → 미래 데이터 누수
+- v4.0~v4.3 백테스트 결과 무효화
+- 15,120 조합 전수 검색 → BTC spike만 유일한 edge
 
-### v5.0 (2026-03-23) — TSMOM Base
-- Pivot from ML direction to rule-based TSMOM
-- 6,480 config grid search + rigorous IS/OOS validation
-- Permutation test p=0.006, Bootstrap P(Sharpe>1)=99.8%
-- Binance OI/LSR/Taker data integrated
-- RL state_builder adapted for TSMOM inputs
+### 2026-03-18 — v4.3 ML 2-Stage
 
-### v4.4 (2026-03-20) — BTC Spike
-- Feature leakage discovered (STL, Ichimoku, SVD)
-- 15,120 exhaustive search: only BTC spike survived
-- Paper bot: avg +0.11%/trade (weak, superseded by v5.0)
+- Mega Search v2: ET+CB 콤보 최적화
+- 1분봉 재학습 (v4.3-1m)
+- RL meta-layer 7-action (shadow mode)
 
-### v4.3 (2026-03-18) — ML 2-Stage (INVALIDATED)
-- 8 coins, Mega Search v3, RL meta-layer
-- All results based on leaked features
+### 2026-03-17 — v3.4 → v4.0 진화
 
-### v4.0-4.2 (2026-03-17) — ML Evolution (INVALIDATED)
-- 2-Stage Binary, Triple Barrier, walk-forward
-- Invalidated by leakage discovery
+- 5코인 DOT/ADA/XRP/SOL/LINK
+- 2-Stage Binary, Triple Barrier 라벨링
 
 ---
 
-## Paper Bot & Monitoring
+## Key Rules
 
-```bash
-# Start paper trading (v5.1, 10 coins)
-nohup python -X utf8 run_tsmom_paper.py > data/reports/tsmom_paper/nohup.log 2>&1 &
-
-# Monitor dashboard (equity, positions, trades, RL status)
-python run_monitor.py
-
-# Healthcheck (returns exit code 0/1)
-python run_monitor.py --check
-
-# Auto-restart if stopped
-python run_monitor.py --restart
-```
-
-Files:
-- `data/reports/tsmom_paper/state.json` — bot state (equity, positions)
-- `data/reports/tsmom_paper/trades.jsonl` — trade history
-- `data/reports/tsmom_paper/signal_log.jsonl` — RL signal log
-- `data/reports/tsmom_paper/bot.log` — execution log
-
----
-
-## Data Pipeline
-
-### OHLCV (yfinance)
-- 10 coins: BTC, ETH, SOL, XRP, ADA, DOGE, AVAX, DOT, LINK, BNB
-- 1h fetch -> 4h resample
-- 365 days history
-
-### Binance Public Metrics
-```bash
-python src/data/crawlers/binance_public_data_downloader.py \
-  --types funding_rate open_interest long_short_ratio \
-  --symbols BTCUSDT ETHUSDT SOLUSDT XRPUSDT ADAUSDT DOTUSDT LINKUSDT \
-  --days 365
-```
-
-Data includes: OI, Long/Short Ratio, Top Trader Ratio, Taker Buy/Sell Volume (5-min resolution)
-
----
-
-## Reports & Documentation
-
-| Report | Path | Content |
-|--------|------|---------|
-| **Performance Summary** | `docs/performance_summary_v5_1.md` | Full WR, Sharpe, PnL, risk analysis |
-| **Strategy Report** | `docs/strategy_report_v5.md` | Architecture, signal flow, parameters |
-| **Model Status** | `docs/model_status_report_20260323.md` | Validation details, RL spec |
-| **Binance Data Spec** | `docs/binance_public_data_spec.md` | Data types, columns, download guide |
+1. `paper` 모드 검증 없이 `live` 전환 금지
+2. 데이터 5분 이상 지연 시 주문 차단
+3. 일일 손실 -10% 초과 시 당일 거래 중단
+4. OHLCV → feature → prediction → signal → order 파이프라인 순서 준수
 
 ---
 
 ## Environment
 
 - **Python** 3.10+ | **Exchange** Binance USDT-M Futures (ccxt)
-- **ML** scikit-learn, CatBoost, XGBoost | **RL** LinUCB (custom)
-- **Data** yfinance (paper) + Binance public data | **OS** Windows 11
-
-```bash
-pip install ccxt yfinance scikit-learn catboost xgboost ta pandas numpy joblib pyyaml requests tqdm
-```
+- **ML** scikit-learn, CatBoost, XGBoost | **RL** LinUCB (custom, shadow mode)
+- **OS** Linux (WSL2)

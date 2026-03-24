@@ -59,7 +59,7 @@ from src.rl.signal_logger import SignalLogger, SIZING_MAP
 from src.rl.rl_gate import RLGate
 
 # ── Constants ──────────────────────────────────────────────
-COINS = ["BTC", "ETH", "SOL", "XRP", "ADA", "DOT", "LINK"]
+COINS = ["SOL", "XRP", "ADA", "DOT"]
 CYCLE_SECONDS = 2 * 3600  # default; overridden by config bar_minutes
 HEARTBEAT_INTERVAL = 60
 
