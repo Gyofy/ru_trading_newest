@@ -235,6 +235,29 @@ class ExchangeAdapter:
                 "raw": order,
             }
         except Exception as e:
+            # -5022: Post-Only 거부 → 일반 limit 주문으로 폴백
+            if "-5022" in str(e):
+                logger.warning(f"[Entry] {symbol} Post-Only FAILED, fallback to limit: {e}")
+                try:
+                    fallback_params = {"newClientOrderId": order_link_id}
+                    order = await self._exchange.create_order(
+                        symbol=ccxt_sym,
+                        type="limit",
+                        side=side.lower(),
+                        amount=qty,
+                        price=price,
+                        params=fallback_params,
+                    )
+                    return {
+                        "success": True,
+                        "order_id": order_link_id,
+                        "exchange_order_id": order.get("id", ""),
+                        "status": order.get("status", "open"),
+                        "raw": order,
+                    }
+                except Exception as e2:
+                    logger.error(f"[Entry] {symbol} {side} limit fallback failed: {e2}")
+                    return {"success": False, "order_id": order_link_id, "error": str(e2)}
             logger.error(f"[Entry] {symbol} {side} failed: {e}")
             return {"success": False, "order_id": order_link_id, "error": str(e)}
 

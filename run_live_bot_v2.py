@@ -492,11 +492,11 @@ class LiveTradingBot:
         # Risk engine
         self.risk_engine = RiskEngine(RiskConfig(
             risk_frac=self.common["risk_frac"],
-            daily_drawdown_pct=0.06,   # 6% (= rf×3, 3연패 허용)
-            weekly_drawdown_pct=0.12,  # 12% (= rf×6)
+            daily_drawdown_pct=0.10,   # -10% 일일 손실 한도
+            weekly_drawdown_pct=1.0,   # 비활성화
             leverage=4.0,
             min_stop_distance_pct=self.common.get("min_barrier_pct", 0.003) * 0.9,
-            max_notional_usdt=initial_equity * 1.5,  # 계좌 크기 기반 포지션 상한
+            max_notional_usdt=initial_equity * 0.10,  # 자본의 10%
         ))
 
         # Components
@@ -1260,7 +1260,7 @@ class LiveTradingBot:
                                  purpose="entry", metadata={"p_trade": pred.p_trade, "mode": "live"})
         result = await self.exchange.place_post_only_entry(coin, pred.side, qty, entry, oid)
         if not result.get("success"):
-            logger.warning(f"[Entry] {coin} Post-Only FAILED: {result.get('error')}")
+            logger.warning(f"[Entry] {coin} order FAILED: {result.get('error')}")
             self.ledger.update_order_status(oid, "REJECTED")
             return
 
@@ -1566,6 +1566,7 @@ def parse_args():
     parser.add_argument("--mode", choices=["paper", "live"], default="paper")
     parser.add_argument("--equity", type=float, default=10000.0)
     parser.add_argument("--config", type=str, default=None, help="config yaml path (relative to project root)")
+    parser.add_argument("--yes", action="store_true", help="skip live mode confirmation prompt")
     return parser.parse_args()
 
 
@@ -1598,7 +1599,7 @@ async def async_main(args):
 
 def main():
     args = parse_args()
-    if args.mode == "live":
+    if args.mode == "live" and not args.yes:
         print("\n" + "!" * 60)
         print("  WARNING: LIVE MODE -- REAL MONEY AT RISK")
         print("!" * 60)
