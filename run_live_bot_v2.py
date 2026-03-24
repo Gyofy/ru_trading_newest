@@ -92,7 +92,29 @@ logger.addHandler(_sh)
 # ══════════════════════════════════════════════════════════
 
 _DISCORD_VERSION = "CLAUDE_CRYPTO_AGENT v4.3"
+_DISCORD_STATE_FILE = PROJECT_ROOT / "trading_result" / "discord_state.json"
 _discord_state = {"total_trades": 0, "wins": 0, "losses": 0, "total_pnl": 0.0}
+
+
+def _load_discord_state() -> None:
+    """봇 시작 시 누적 승패 복구."""
+    global _discord_state
+    try:
+        if _DISCORD_STATE_FILE.exists():
+            _discord_state = json.loads(_DISCORD_STATE_FILE.read_text(encoding="utf-8"))
+    except Exception:
+        pass
+
+
+def _save_discord_state() -> None:
+    """청산 후 누적 승패 저장."""
+    try:
+        _DISCORD_STATE_FILE.parent.mkdir(parents=True, exist_ok=True)
+        _DISCORD_STATE_FILE.write_text(
+            json.dumps(_discord_state, ensure_ascii=False), encoding="utf-8"
+        )
+    except Exception:
+        pass
 
 
 def _discord_now() -> str:
@@ -166,6 +188,7 @@ def discord_report_close(coin: str, side: str, reason: str,
         _discord_state["wins"] += 1
     else:
         _discord_state["losses"] += 1
+    _save_discord_state()
     t = _discord_state["total_trades"]
     w = _discord_state["wins"]
     l = _discord_state["losses"]
@@ -1584,6 +1607,7 @@ def parse_args():
 
 
 async def async_main(args):
+    _load_discord_state()
     bot = LiveTradingBot(mode=args.mode, initial_equity=args.equity, config_path=args.config)
     shutdown_triggered = False
 
