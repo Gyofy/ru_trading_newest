@@ -1,57 +1,50 @@
 # CLAUDE_CRYPTO_AGENT
 
-Autonomous crypto trading system — Dual Regime TSMOM + CVD timing + OI crowding filter.
+Crypto trading system — BTC global direction + relative strength alt selection.
 
-**Binance USDT-M Futures | 10 coins | A(sniper 4x) + B(steady 2x) | Paper Trading Active**
-
----
-
-## Current Strategy: v5.3 Dual Regime
-
-```
-A (Sniper):  7d+28d TSMOM agree + RSI + CVD Q90 + OI → 4x leverage
-B (Steady):  7d TSMOM only + RSI + CVD Q75 + OI      → 2x leverage
-
-Barrier:     TP = 5×ATR, SL = 2×ATR, TTL = 24 bars
-Coins:       BTC ETH SOL XRP ADA DOT LINK DOGE AVAX BNB
-```
-
-### A Sniper (확실한 자리, 강한 베팅)
-- 7일 + 28일 모멘텀 방향 일치 (레짐 확인)
-- CVD가 상위/하위 10% 극단 (Q90)
-- OOS: 25 trades, **WR 80%**, PF 9.68, MDD -19%
-- 월 2~3건, 4x 레버리지
-
-### B Steady (잔잔한 추세 추종)
-- 7일 모멘텀 방향만
-- CVD가 상위/하위 25% (Q75)
-- OOS: ~70 trades, WR 58%, avg +3.0%
-- 월 ~10건, 2x 레버리지
-
-### Validation
-
-| Metric | IS (9개월) | OOS (3.5개월) |
-|--------|-----------|-------------|
-| per-trade Sharpe | +0.072 | +0.552 |
-| Profit Factor | 1.19 | 3.73 |
-| Permutation p-value | — | 0.0000 |
+**Binance USDT-M Futures | 10 coins | v6.0 Honest Portfolio | 1h resolution**
 
 ---
 
-## Signal Logic
+## Strategy: v6.0 → v6.1
 
+### v6.0 (Current)
 ```
-  7-day return → direction (LONG/SHORT)
-       │
-  RSI > 50 (LONG) / RSI < 50 (SHORT) → trend confirm
-       │
-  CVD extreme? → entry timing
-    Q90 + 28d agree → A (sniper 4x)
-    Q75 only        → B (steady 2x)
-       │
-  |OI z-score| < 2.0 → crowding check
-       │
-  ENTER: TP=5×ATR, SL=2×ATR, TTL=24bars
+1. BTC 7-day return → Global Direction (LONG/SHORT/FLAT)
+2. Alt 9 coins: relative strength vs BTC → top 2 only
+3. RSI + CVD Q75 + OI filters
+4. BTC direction flip → instant exit (DIR_FLIP)
+5. TP=5×ATR, SL=2×ATR, TTL=24bars, max 2 positions, 2x leverage
+```
+
+### v6.1 (In Development)
+```
+Same strategy, 1h resolution instead of 4h:
+- 진입: 1h 봉 기준 시그널 (4x more signals)
+- 청산: 실시간 WebSocket 모니터링
+- 목표: 조건 충족 즉시 진입 (봉 마감 대기 없음)
+```
+
+### Validated Performance
+
+| | IS (9mo) | OOS (3.5mo) |
+|---|---|---|
+| per-trade Sharpe | +0.058 | +0.208 |
+| WR | 42.4% | 47.2% |
+| PF | 1.15 | 1.71 |
+| MDD | -67.4% | -13.5% |
+
+**IS + OOS 둘 다 양수** (이전 v5.3은 IS 마이너스)
+
+### Why v6 (Fake Diversification Removed)
+```
+v5.3: 10코인 독립 시그널 → 상관관계 0.80, 방향 일치 99%
+      = "BTC 1종목에 10x 베팅"과 동일
+      Sharpe 4.88 → 실질 0.55 (8.6x 과대평가)
+
+v6.0: BTC 방향 → 상대 강도 상위 2코인만
+      = 정직한 포트폴리오
+      per-trade Sharpe 0.208 (현실)
 ```
 
 ---
@@ -59,107 +52,66 @@ Coins:       BTC ETH SOL XRP ADA DOT LINK DOGE AVAX BNB
 ## Architecture
 
 ```
-run_tsmom_paper.py              Paper bot v5.3 (ACTIVE, 10 coins, dual regime)
-run_live_bot_v2.py              v4.3 ML live bot (separate session)
+run_tsmom_paper.py              v6.0 Paper bot (yfinance/Binance dual)
+run_live_bot_v2.py              v4.3 ML bot (Binance live, separate)
 
-src/strategy/
-  tsmom_core.py                 Shared signal/backtest/metrics (multiprocessing)
-
-src/rl/
-  bandit.py                     LinUCB 7-action sizing (shadow mode)
-  state_builder.py              33-dim / 7-dim compact state
-  signal_logger.py              JSONL signal logging
-  rl_gate.py                    Shadow/active mode
-
-src/data/crawlers/
-  crypto_ohlcv.py               OHLCV + technical indicators
-  signal_features.py            Wavelet/FFT/entropy
-  microstructure_rollup.py      CVD/OFI/VPIN (BVC)
-  binance_public_data_downloader.py   OI/LSR/Taker metrics
-  binance_public_features.py    Binance feature integration
-
+src/strategy/tsmom_core.py      Shared signal/backtest/metrics
 src/execution/
   exchange_adapter.py           Binance USDT-M Futures (ccxt)
-  risk_engine.py                9-gate pre-trade check
   sl_tp_monitor.py              SL/TP polling
-  cost_model.py                 Fee + slippage + funding
+  risk_engine.py                9-gate check
   position_store.py             Crash-safe persistence
+  cost_model.py                 Fee + slippage model
 
-experiments/
-  test_paper_bot.py             Quick test
-  download_and_integrate.py     Binance data pipeline
-  v5_2_exit_optimization.py     Exit strategy comparison
-  archive/                      Past experiments (9 scripts)
+src/rl/                         RL meta-layer (shadow mode)
+experiments/                    Backtest scripts + archive
 
 docs/
-  strategy_v5_1r_final.md       v5.1r strategy spec
-  v5_3_regime_dual_strategy.md  v5.3 dual regime design
-  v5_2_exit_test_results.md     Exit optimization results
-  v5_2_filter_relaxation_results.md   RSI/CVD sensitivity
-  performance_summary_v5_1.md   Performance metrics
-  brainstorm_v5_1_next_steps.md Data-driven analysis
+  v6_honest_portfolio_report.md v6.0 results
+  adaptive_exit_rl_brainstorm.md RL exit research (30+ papers)
+  binance_implementation_spec.md Binance API implementation plan
+  strategy_v5_1r_final.md       v5.1r spec (superseded)
 ```
 
 ---
 
-## What We Tried and Rejected
-
-| Approach | Result | Why Rejected |
-|----------|--------|-------------|
-| ML S2 direction (v4.0~4.3) | bal_acc 0.518 | Feature leakage |
-| BTC spike strategy (v4.4) | avg +0.11% | Below cost |
-| Dual TSMOM 7+28d filter (v5.1) | OOS 0 trades | 28d return ≈ 0 deadlock |
-| GARCH dynamic SL | No improvement | ATR(14) sufficient at 4h |
-| Trailing stop | Sharpe 3.16 (worse) | 4h noise triggers too often |
-| Scale-out exit | MDD -10.7% (better) but avg -0.23%p | Net negative |
-| Smart TTL | Sharpe 4.00 (worse) | Extensions hurt |
-| ML S1 quality filter | CV 0.543 | Near random |
-| 5x leverage | MDD -82% | Unviable |
-
----
-
-## Paper Bot
+## Data Source
 
 ```bash
-# Start (single instance, lock enforced)
-nohup python -X utf8 run_tsmom_paper.py > data/reports/tsmom_paper/nohup.log 2>&1 &
+# Binance (production)
+DATA_SOURCE=binance BINANCE_API_KEY=xxx BINANCE_API_SECRET=yyy python run_tsmom_paper.py
 
-# Test single cycle
-python -X utf8 experiments/test_paper_bot.py
-
-# Check state
-cat data/reports/tsmom_paper/state.json
-cat data/reports/tsmom_paper/trades.jsonl
+# yfinance (local dev fallback)
+python run_tsmom_paper.py
 ```
 
 ---
 
-## Performance
+## Binance Implementation Plan
 
-```
-Multiprocessing: 70% of CPU cores (12 → 8 workers)
-Data fetch: 10 coins parallel (ThreadPoolExecutor)
-Backtest: parallel per-coin (backtest_multi)
-```
+See `docs/binance_implementation_spec.md` for full details:
+
+1. **Data**: ccxt `fetch_ohlcv()` + WebSocket `watch_ticker()`
+2. **Orders**: Post-Only entry + STOP_MARKET SL + TAKE_PROFIT_MARKET TP
+3. **Real-time**: WebSocket price stream → SL/TP/DIR_FLIP instant
+4. **Safety**: max 2 pos, 2% risk/trade, -10% daily halt
 
 ---
 
 ## Version History
 
-| Version | Strategy | Result | Status |
-|---------|----------|--------|--------|
+| Version | Strategy | Real Metric | Status |
+|---------|----------|-------------|--------|
 | v4.0~4.3 | ML 2-Stage | INVALID (leakage) | Dead |
-| v4.4 | BTC Spike | avg +0.11% | Dead |
-| v5.0 | TSMOM 28d | OOS Sharpe 2.80 | Superseded |
-| v5.1 | Dual 7+28d, 10 coins | OOS Sharpe 4.03 | Superseded (deadlock) |
-| v5.1r | Single 7d, 10 coins | OOS Sharpe 4.88 | Superseded |
-| **v5.3** | **Dual regime A(4x)+B(2x)** | **WR 80% (A), IS+OOS 양수** | **Active** |
+| v5.0~5.3 | TSMOM 10 coins | ptS 0.504 (fake, corr 0.80) | Dead |
+| **v6.0** | **BTC dir + RS top 2** | **ptS 0.208 (honest)** | **Active** |
+| v6.1 | 1h resolution | Testing | In dev |
 
 ---
 
 ## Environment
 
 ```
-Python 3.10+ | Binance USDT-M Futures (ccxt) | scikit-learn | yfinance
-pip install ccxt yfinance scikit-learn catboost xgboost ta pandas numpy joblib pyyaml requests tqdm arch
+Python 3.10+ | ccxt | pandas | numpy | scikit-learn | lifelines | arch
+pip install ccxt pandas numpy scikit-learn lifelines arch joblib pyyaml
 ```
