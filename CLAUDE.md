@@ -2,15 +2,15 @@
 
 ## Agent Memory (ALWAYS READ FIRST)
 - **Development Index**: `docs/INDEX.md` -- devlog, checkpoints, brainstorm
-- **Current Config**: `config/frozen_params_v4_2.yaml` (v4.2 — Mega Search v2 best 반영)
-- **Previous Config**: `config/frozen_params_v4_1.yaml`, `config/frozen_params_v3_4.yaml` (보존)
-- **Live Bot**: `run_live_bot_v2.py` (v4.2, 2-Stage + Multi-Model + 30s SL/TP)
+- **Current Config**: `config/frozen_params_v4_3_1m.yaml` (v4.3-1m — 1분봉, 7코인)
+- **Previous Config**: `config/frozen_params_v4_2.yaml`, `config/frozen_params_v3_4.yaml` (보존)
+- **Live Bot**: `run_live_bot_v2.py` (v4.3, 2-Stage + Multi-Model + 10s SL/TP, LIVE 실거래 중)
 - **Live Criteria**: `config/live_promotion_criteria.yaml`
-- **Active Coins**: SOL (단일 운영 — 2026-03-19, 백테스트 결과 SOL만 손익분기 근접)
+- **Active Coins**: BTC, ETH, SOL, XRP, ADA, DOT, LINK (7코인 — 2026-03-24)
 
 ## Overview
-크립토 5코인(DOT/ADA/XRP/SOL/LINK) 자동 예측·매매 시스템.
-Binance USDT-M Futures 4h봉 + 마이크로스트럭처(CVD/OFI/VPIN) 223개 피처,
+크립토 7코인(BTC/ETH/SOL/XRP/ADA/DOT/LINK) 자동 예측·매매 시스템.
+Binance USDT-M Futures 1분봉 + 마이크로스트럭처(CVD/OFI/VPIN) + Binance 공개 데이터(OI/L&S/Taker/Funding),
 2-Stage Binary(Trade/NoTrade → Long/Short) ML Ensemble로 방향 분류.
 Claude Code를 오케스트레이터로 사용하고, 데이터·모델·주문은 분리된 파이썬 서비스로 운영.
 

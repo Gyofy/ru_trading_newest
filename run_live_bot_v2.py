@@ -59,7 +59,7 @@ from src.rl.signal_logger import SignalLogger, SIZING_MAP
 from src.rl.rl_gate import RLGate
 
 # ── Constants ──────────────────────────────────────────────
-COINS = ["SOL", "ADA", "XRP", "DOT", "LINK"]
+COINS = ["BTC", "ETH", "SOL", "XRP", "ADA", "DOT", "LINK"]
 CYCLE_SECONDS = 2 * 3600  # default; overridden by config bar_minutes
 HEARTBEAT_INTERVAL = 60
 
@@ -752,17 +752,6 @@ class LiveTradingBot:
         logger.info("[Shutdown] Starting...")
         self.running = False
         self._shutdown_event.set()
-        if self.monitor:
-            await self.monitor.stop()
-        if self.mode == "paper":
-            for coin in list(self.pos_manager.positions.keys()):
-                await self._close_position(coin, "SHUTDOWN")
-        if self.exchange:
-            await self.exchange.close()
-        self.ledger.close()
-        write_heartbeat(LOG_DIR / "heartbeat.json", "stopped")
-        log_event("bot_stopped", {"reason": "shutdown"})
-        logger.info("[Shutdown] Complete")
         if self.mode == "live":
             coins_str = " · ".join(COINS)
             send_discord_embed([{
@@ -776,6 +765,17 @@ class LiveTradingBot:
                 ],
                 "footer": {"text": f"{_DISCORD_VERSION} | {_discord_now()}"},
             }])
+        if self.monitor:
+            await self.monitor.stop()
+        if self.mode == "paper":
+            for coin in list(self.pos_manager.positions.keys()):
+                await self._close_position(coin, "SHUTDOWN")
+        if self.exchange:
+            await self.exchange.close()
+        self.ledger.close()
+        write_heartbeat(LOG_DIR / "heartbeat.json", "stopped")
+        log_event("bot_stopped", {"reason": "shutdown"})
+        logger.info("[Shutdown] Complete")
 
     # ── Main Loop ──────────────────────────────────────────
 
