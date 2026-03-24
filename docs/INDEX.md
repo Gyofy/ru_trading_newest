@@ -14,31 +14,32 @@ docs/
   brainstorm/           <-- ideas, experiments, design notes
 ```
 
-## Current State (2026-03-20)
+## Current State (2026-03-24)
 
-### CRITICAL: Feature Leakage Discovered (2026-03-20)
-- STL decomposition, Ichimoku .shift(26), SVD interpolation → 미래 데이터 누수
-- **S2 방향 예측: 0.687 → 0.518 (누수 제거 후 거의 랜덤)**
-- **v4.0~v4.3 모든 백테스트 결과 무효**
-- 15,120 조합 전수 검색 → BTC spike만 유일한 edge
+### Active: v4.3-1m ML Bot — LIVE 실거래 중
+- **Bot**: `run_live_bot_v2.py` (LIVE 모드, 실거래 진행 중)
+- **Config**: `config/frozen_params_v4_3_1m.yaml`
+- **Coins**: BTC, ETH, SOL, XRP, ADA, DOT, LINK (7코인)
+- **Timeframe**: 1분봉, 1000 bars
+- **Equity**: ~65 USDT (Binance USDT-M Futures)
+- **Settings**: 일일 손실 -10% halt, 포지션당 자본 10%, Post-Only→Limit 폴백
 
-### Active Strategy: BTC Spike → Alt Follow (v4.4)
-- **Bot**: `run_btc_spike_paper.py` (paper trading, 백그라운드 실행 중)
-- **Config**: `config/frozen_params_v4_3.yaml` (누수 수정 + rf=2%)
-- **Coins**: SOL, ETH, XRP, ADA
-- **Trigger**: BTC 1h |ret| > 1.2% + alt confirmation
-- **Evidence**: 180d, n=276, WR 48.6%, avg +0.11% (하락장 -38.5%)
+### 2026-03-24 주요 변경사항
+- Binance 공개 데이터(OI/L&S/Taker/Funding) 피처 통합
+- Post-Only -5022 에러 시 limit 주문 자동 폴백
+- 7코인 확장 (SOL 단일 → BTC/ETH/SOL/XRP/ADA/DOT/LINK)
+- Discord 봇 종료 알림 추가
 
 ### Suspended
-- v4.3 ML bot (`run_live_bot_v2.py`) — 누수 수정 적용됨, ML 방향 예측 신뢰 불가
+- v5.1 TSMOM paper bot (`run_tsmom_paper.py`) — 별도 전략
 - RL meta-layer — shadow mode 유지, 데이터 축적 중
-- Mega Search v3 결과 — 누수 feature 기반이므로 무효
 
 ## Devlog Files
 
 | Date | File | Summary |
 |------|------|---------|
-| **2026-03-20** | **[devlog/2026-03-20.md](devlog/2026-03-20.md)** | **Feature leakage discovery, strategy pivot, BTC spike bot** |
+| **2026-03-24** | *(README.md 참조)* | **7코인 LIVE 실거래, Binance 피처 통합, Post-Only 폴백** |
+| 2026-03-20 | [devlog/2026-03-20.md](devlog/2026-03-20.md) | Feature leakage discovery, strategy pivot, BTC spike bot |
 | 2026-03-18 | [devlog/2026-03-18.md](devlog/2026-03-18.md) | v4.1 config, Mega Search v1 results, Frozen OOS framework |
 | 2026-03-17 | [devlog/2026-03-17.md](devlog/2026-03-17.md) | v3.1->v3.4 evolution, OOS validation, strategy diagnosis |
 
