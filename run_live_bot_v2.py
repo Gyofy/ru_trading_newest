@@ -91,7 +91,7 @@ logger.addHandler(_sh)
 #  UTILITIES
 # ══════════════════════════════════════════════════════════
 
-_DISCORD_VERSION = "CLAUDE_CRYPTO_AGENT v4.3"
+_DISCORD_VERSION = "CLAUDE_CRYPTO_AGENT v4.3-1m"
 _DISCORD_STATE_FILE = PROJECT_ROOT / "trading_result" / "discord_state.json"
 _discord_state = {"total_trades": 0, "wins": 0, "losses": 0, "total_pnl": 0.0}
 
@@ -777,14 +777,21 @@ class LiveTradingBot:
         self._shutdown_event.set()
         if self.mode == "live":
             coins_str = " · ".join(COINS)
+            t = _discord_state["total_trades"]
+            w = _discord_state["wins"]
+            l = _discord_state["losses"]
+            win_rate = w / t * 100 if t else 0
             send_discord_embed([{
                 "title": "🛑 봇 종료 — LIVE 모드",
                 "color": 0xe74c3c,
                 "fields": [
-                    {"name": "잔고",    "value": f"{self.equity.current:.2f} USDT", "inline": True},
-                    {"name": "모드",    "value": "LIVE",                             "inline": True},
-                    {"name": "버전",    "value": _DISCORD_VERSION,                   "inline": True},
-                    {"name": "거래 코인", "value": coins_str,                        "inline": False},
+                    {"name": "잔고",      "value": f"{self.equity.current:.2f} USDT",                "inline": True},
+                    {"name": "모드",      "value": "LIVE",                                            "inline": True},
+                    {"name": "버전",      "value": _DISCORD_VERSION,                                  "inline": True},
+                    {"name": "누적 거래", "value": f"{t}건",                                          "inline": True},
+                    {"name": "승률",      "value": f"{win_rate:.0f}% ({w}W/{l}L)",                    "inline": True},
+                    {"name": "누적 PnL",  "value": f"{_discord_state['total_pnl']:+.4f} USDT",       "inline": True},
+                    {"name": "거래 코인", "value": coins_str,                                         "inline": False},
                 ],
                 "footer": {"text": f"{_DISCORD_VERSION} | {_discord_now()}"},
             }])
