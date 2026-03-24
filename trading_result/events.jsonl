@@ -1277,3 +1277,11 @@
 {"ts": "2026-03-24T01:50:54.037485+00:00", "event": "position_opened", "coin": "DOT", "side": "BUY", "entry": 1.409, "qty": 4.6, "sl": 1.407, "tp": 1.419, "mode": "live", "p_trade": 0.4699, "p_dir": 0.7104}
 {"ts": "2026-03-24T01:50:54.469611+00:00", "event": "cycle_complete", "cycle": 9, "elapsed_s": 26.5, "equity": 65.25, "positions": ["SOL", "XRP", "DOT"]}
 {"ts": "2026-03-24T01:51:50.861965+00:00", "event": "cycle_complete", "cycle": 10, "elapsed_s": 22.9, "equity": 65.26, "positions": ["SOL", "XRP", "DOT"]}
+{"ts": "2026-03-24T01:52:45.436327+00:00", "event": "position_closed", "coin": "SOL", "reason": "EXCHANGE_CLOSED", "side": "BUY", "entry": 90.29, "exit": 90.55, "pnl_pct": 0.00288, "pnl_usdt": 0.0182, "bars": 7}
+{"ts": "2026-03-24T01:52:46.120256+00:00", "event": "bot_started", "mode": "live", "equity": 65.28711817000001, "coins": ["SOL", "XRP", "ADA", "DOT"], "version": "v4.3-1m", "recovered_positions": 2, "loaded_models": ["SOL", "XRP", "ADA", "DOT"]}
+{"ts": "2026-03-24T01:53:15.255676+00:00", "event": "model_trained", "coin": "SOL", "combo": "et+cb", "cv_score": 0.5801, "samples": 940}
+{"ts": "2026-03-24T01:53:21.136918+00:00", "event": "model_trained", "coin": "XRP", "combo": "et+cb", "cv_score": 0.5437, "samples": 940}
+{"ts": "2026-03-24T01:53:26.246939+00:00", "event": "model_trained", "coin": "ADA", "combo": "et+cb", "cv_score": 0.4786, "samples": 940}
+{"ts": "2026-03-24T01:53:32.202632+00:00", "event": "model_trained", "coin": "DOT", "combo": "et+cb", "cv_score": 0.536, "samples": 940}
+{"ts": "2026-03-24T01:53:32.694673+00:00", "event": "cycle_complete", "cycle": 1, "elapsed_s": 46.2, "equity": 65.27, "positions": ["XRP", "DOT"]}
+{"ts": "2026-03-24T01:54:09.592632+00:00", "event": "cycle_complete", "cycle": 2, "elapsed_s": 23.1, "equity": 65.28, "positions": ["XRP", "DOT"]}
