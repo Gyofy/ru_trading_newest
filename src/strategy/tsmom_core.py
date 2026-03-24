@@ -1,7 +1,7 @@
-"""TSMOM v5.1 Core — shared signal generation, backtest, metrics.
+"""TSMOM v5.3 Core — shared signal generation, backtest, metrics.
 
-All experiment scripts and paper bot import from here.
 Single source of truth for strategy logic.
+Used by: experiments, paper bot, backtesting scripts.
 """
 
 from __future__ import annotations
@@ -266,19 +266,8 @@ def load_ohlcv_10(period: str = "365d", n_jobs: int = N_WORKERS) -> dict[str, pd
 
 def backtest_multi(data: dict, signal_fn, k_upper=5.0, k_lower=2.0,
                    max_hold=24, n_jobs: int = N_WORKERS) -> dict[str, np.ndarray]:
-    """Run backtest on multiple coins in parallel."""
-    from concurrent.futures import ProcessPoolExecutor, as_completed
-
-    def _bt_single(args):
-        coin, df_bytes, ku, kl, mh = args
-        df = pd.read_pickle(df_bytes)  # deserialize
-        sig = signal_fn(df)
-        pnls = run_backtest(df, sig, k_upper=ku, k_lower=kl, max_hold=mh)
-        return coin, pnls
-
-    # For ProcessPoolExecutor, we need to serialize DataFrames
-    # Use simpler ThreadPoolExecutor instead (avoids pickling issues)
-    from concurrent.futures import ThreadPoolExecutor
+    """Run backtest on multiple coins in parallel (ThreadPoolExecutor)."""
+    from concurrent.futures import ThreadPoolExecutor, as_completed
 
     results = {}
     with ThreadPoolExecutor(max_workers=n_jobs) as pool:
