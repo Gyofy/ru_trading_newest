@@ -53,7 +53,7 @@ v6.0: BTC 방향 → 상대 강도 상위 2코인만
 
 ```
 run_tsmom_paper.py              v6.0 Paper bot (yfinance/Binance dual)
-run_live_bot_v2.py              v4.3 ML bot (Binance live, separate)
+run_live_bot_v2.py              Legacy ML bot (superseded by v6.0)
 
 src/strategy/tsmom_core.py      Shared signal/backtest/metrics
 src/execution/
@@ -131,7 +131,7 @@ cat data/reports/tsmom_paper/signal_log.jsonl  # RL 시그널 로그
 | `trades.jsonl` | 모든 거래 (진입/청산/PnL) | JSON Lines |
 | `state.json` | 현재 equity, 포지션 | JSON |
 | `signal_log.jsonl` | RL state + action 기록 | JSON Lines |
-| `trading_result/` | v4.3 실거래 기록 | CSV + JSONL |
+| `trading_result/` | v6.0 실거래 기록 | CSV + JSONL |
 
 ---
 
