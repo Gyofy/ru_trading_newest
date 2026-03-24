@@ -49,9 +49,9 @@ COINS = {
 
 # Strategy params (best OOS config)
 CFG = {
-    "lookback_days": 7,          # short-term TSMOM (fast reaction)
-    "lookback_long_days": 28,    # long-term TSMOM (trend confirmation)
-    "dual_lookback": True,       # both must agree
+    "lookback_days": 7,          # single TSMOM (fast, Sharpe 4.88)
+    "lookback_long_days": 28,    # unused (dual disabled)
+    "dual_lookback": False,      # v5.1r: single > dual (Sharpe 4.88 vs 4.35)
     "volume_weighted": False,
     "cvd_quantile": 0.75,
     "cvd_roll_window": 120,
