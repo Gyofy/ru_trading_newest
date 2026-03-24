@@ -763,6 +763,19 @@ class LiveTradingBot:
         write_heartbeat(LOG_DIR / "heartbeat.json", "stopped")
         log_event("bot_stopped", {"reason": "shutdown"})
         logger.info("[Shutdown] Complete")
+        if self.mode == "live":
+            coins_str = " · ".join(COINS)
+            send_discord_embed([{
+                "title": "🛑 봇 종료 — LIVE 모드",
+                "color": 0xe74c3c,
+                "fields": [
+                    {"name": "잔고",    "value": f"{self.equity.current:.2f} USDT", "inline": True},
+                    {"name": "모드",    "value": "LIVE",                             "inline": True},
+                    {"name": "버전",    "value": _DISCORD_VERSION,                   "inline": True},
+                    {"name": "거래 코인", "value": coins_str,                        "inline": False},
+                ],
+                "footer": {"text": f"{_DISCORD_VERSION} | {_discord_now()}"},
+            }])
 
     # ── Main Loop ──────────────────────────────────────────
 
