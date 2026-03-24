@@ -21,7 +21,14 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 import numpy as np
 import pandas as pd
-import yfinance as yf
+
+# Data source: Binance ccxt (live) or yfinance (fallback)
+DATA_SOURCE = os.environ.get("DATA_SOURCE", "yfinance")  # "binance" or "yfinance"
+
+try:
+    import yfinance as yf
+except ImportError:
+    yf = None
 
 logging.basicConfig(
     level=logging.INFO,
@@ -41,11 +48,18 @@ from src.rl.bandit import SIZING_MAP
 # Config
 # ══════════════════════════════════════════════════════════
 
-COINS = {
+COINS_YAHOO = {
     "BTC": "BTC-USD", "ETH": "ETH-USD", "SOL": "SOL-USD",
     "XRP": "XRP-USD", "ADA": "ADA-USD", "DOT": "DOT-USD", "LINK": "LINK-USD",
     "DOGE": "DOGE-USD", "AVAX": "AVAX-USD", "BNB": "BNB-USD",
 }
+COINS_BINANCE = {
+    "BTC": "BTC/USDT:USDT", "ETH": "ETH/USDT:USDT", "SOL": "SOL/USDT:USDT",
+    "XRP": "XRP/USDT:USDT", "ADA": "ADA/USDT:USDT", "DOT": "DOT/USDT:USDT",
+    "LINK": "LINK/USDT:USDT", "DOGE": "DOGE/USDT:USDT", "AVAX": "AVAX/USDT:USDT",
+    "BNB": "BNB/USDT:USDT",
+}
+COINS = COINS_YAHOO  # default, overridden by DATA_SOURCE
 
 # Strategy params (best OOS config)
 CFG = {
@@ -160,8 +174,18 @@ class PaperBot:
     # ── Data Fetching ──
 
     def fetch_4h(self, coin: str) -> pd.DataFrame:
-        """Fetch 1h OHLCV, resample to 4h, add indicators."""
-        sym = COINS[coin]
+        """Fetch OHLCV (yfinance or Binance ccxt), resample to 4h, add indicators."""
+        if DATA_SOURCE == "binance":
+            return self._fetch_4h_binance(coin)
+        return self._fetch_4h_yfinance(coin)
+
+    def _fetch_4h_yfinance(self, coin: str) -> pd.DataFrame:
+        """yfinance fallback (no API key needed)."""
+        if yf is None:
+            log.warning(f"[{coin}] yfinance not installed")
+            return pd.DataFrame()
+
+        sym = COINS_YAHOO.get(coin, f"{coin}-USD")
         df = yf.download(sym, period="60d", interval="1h", progress=False)
         if df.empty:
             return pd.DataFrame()
@@ -171,13 +195,45 @@ class PaperBot:
         df = df.rename(columns={"Open":"open","High":"high","Low":"low",
                                  "Close":"close","Volume":"volume"})
 
-        # Resample to 4h
         df = df.resample("4h").agg({
             "open": lambda x: x.iloc[0] if len(x) > 0 else np.nan,
             "high": "max", "low": "min",
             "close": lambda x: x.iloc[-1] if len(x) > 0 else np.nan,
             "volume": "sum",
         }).dropna()
+        return self._add_indicators(df)
+
+    def _fetch_4h_binance(self, coin: str) -> pd.DataFrame:
+        """Binance ccxt (live API, real-time data)."""
+        try:
+            import ccxt
+            exchange = ccxt.binanceusdm({
+                "apiKey": os.environ.get("BINANCE_API_KEY", ""),
+                "secret": os.environ.get("BINANCE_API_SECRET", ""),
+                "options": {"defaultType": "future"},
+            })
+
+            ccxt_sym = COINS_BINANCE.get(coin, f"{coin}/USDT:USDT")
+            ohlcv = exchange.fetch_ohlcv(ccxt_sym, "4h", limit=500)
+
+            if not ohlcv:
+                return pd.DataFrame()
+
+            df = pd.DataFrame(ohlcv, columns=["timestamp","open","high","low","close","volume"])
+            df["timestamp"] = pd.to_datetime(df["timestamp"], unit="ms", utc=True)
+            df.set_index("timestamp", inplace=True)
+            df = df.astype(float)
+            return self._add_indicators(df)
+
+        except Exception as e:
+            log.warning(f"[{coin}] Binance fetch failed: {e}, falling back to yfinance")
+            return self._fetch_4h_yfinance(coin)
+
+    @staticmethod
+    def _add_indicators(df: pd.DataFrame) -> pd.DataFrame:
+        """Add ATR, RSI, CVD to raw OHLCV."""
+        if len(df) < 20:
+            return df
 
         # ATR
         tr = np.maximum(df["high"]-df["low"],
