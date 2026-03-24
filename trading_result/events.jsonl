@@ -1216,3 +1216,44 @@
 {"ts": "2026-03-24T01:20:40.464516+00:00", "event": "cycle_complete", "cycle": 522, "elapsed_s": 10.8, "equity": 65.31, "positions": ["SOL"]}
 {"ts": "2026-03-24T01:21:40.076223+00:00", "event": "cycle_complete", "cycle": 523, "elapsed_s": 10.4, "equity": 65.32, "positions": ["SOL"]}
 {"ts": "2026-03-24T01:22:42.075273+00:00", "event": "cycle_complete", "cycle": 524, "elapsed_s": 12.4, "equity": 65.32, "positions": ["SOL"]}
+{"ts": "2026-03-24T01:28:56.471894+00:00", "event": "bot_started", "mode": "live", "equity": 65.32202611, "coins": ["SOL", "ADA", "XRP", "DOT", "LINK"], "version": "v4.3-1m", "recovered_positions": 1, "loaded_models": ["SOL", "ADA", "XRP", "DOT", "LINK"]}
+{"ts": "2026-03-24T01:29:30.260506+00:00", "event": "model_trained", "coin": "SOL", "combo": "et+cb", "cv_score": 0.5385, "samples": 940}
+{"ts": "2026-03-24T01:29:35.987518+00:00", "event": "model_trained", "coin": "ADA", "combo": "et+cb", "cv_score": 0.5104, "samples": 940}
+{"ts": "2026-03-24T01:29:41.727053+00:00", "event": "model_trained", "coin": "XRP", "combo": "et+cb", "cv_score": 0.5683, "samples": 940}
+{"ts": "2026-03-24T01:29:47.433935+00:00", "event": "model_trained", "coin": "DOT", "combo": "et+cb", "cv_score": 0.539, "samples": 940}
+{"ts": "2026-03-24T01:30:05.133513+00:00", "event": "model_trained", "coin": "LINK", "combo": "et+xgb", "cv_score": 0.5184, "samples": 940}
+{"ts": "2026-03-24T01:30:05.624280+00:00", "event": "cycle_complete", "cycle": 1, "elapsed_s": 68.8, "equity": 65.32, "positions": ["SOL"]}
+{"ts": "2026-03-24T01:30:42.443833+00:00", "event": "cycle_complete", "cycle": 2, "elapsed_s": 26.8, "equity": 65.32, "positions": ["SOL"]}
+{"ts": "2026-03-24T01:31:25.960113+00:00", "event": "bot_started", "mode": "live", "equity": 65.31516368, "coins": ["SOL", "ADA", "XRP", "DOT", "LINK"], "version": "v4.3-1m", "recovered_positions": 1, "loaded_models": ["SOL", "ADA", "XRP", "DOT", "LINK"]}
+{"ts": "2026-03-24T01:32:00.913434+00:00", "event": "model_trained", "coin": "SOL", "combo": "et+cb", "cv_score": 0.5462, "samples": 940}
+{"ts": "2026-03-24T01:32:06.932517+00:00", "event": "model_trained", "coin": "ADA", "combo": "et+cb", "cv_score": 0.5084, "samples": 940}
+{"ts": "2026-03-24T01:32:12.076305+00:00", "event": "model_trained", "coin": "XRP", "combo": "et+cb", "cv_score": 0.5852, "samples": 940}
+{"ts": "2026-03-24T01:32:17.745105+00:00", "event": "model_trained", "coin": "DOT", "combo": "et+cb", "cv_score": 0.5429, "samples": 940}
+{"ts": "2026-03-24T01:32:24.706291+00:00", "event": "model_trained", "coin": "LINK", "combo": "et+xgb", "cv_score": 0.5371, "samples": 940}
+{"ts": "2026-03-24T01:32:25.134600+00:00", "event": "bot_stopped", "reason": "shutdown"}
+{"ts": "2026-03-24T01:32:34.680517+00:00", "event": "bot_started", "mode": "live", "equity": 65.31039208, "coins": ["SOL", "ADA", "XRP", "DOT", "LINK"], "version": "v4.3-1m", "recovered_positions": 1, "loaded_models": ["SOL", "ADA", "XRP", "DOT", "LINK"]}
+{"ts": "2026-03-24T01:33:07.497505+00:00", "event": "model_trained", "coin": "SOL", "combo": "et+cb", "cv_score": 0.5174, "samples": 940}
+{"ts": "2026-03-24T01:33:12.698286+00:00", "event": "model_trained", "coin": "ADA", "combo": "et+cb", "cv_score": 0.5153, "samples": 940}
+{"ts": "2026-03-24T01:33:18.483142+00:00", "event": "model_trained", "coin": "XRP", "combo": "et+cb", "cv_score": 0.6006, "samples": 940}
+{"ts": "2026-03-24T01:33:23.933656+00:00", "event": "model_trained", "coin": "DOT", "combo": "et+cb", "cv_score": 0.5451, "samples": 940}
+{"ts": "2026-03-24T01:33:29.964827+00:00", "event": "model_trained", "coin": "LINK", "combo": "et+xgb", "cv_score": 0.527, "samples": 940}
+{"ts": "2026-03-24T01:33:52.277216+00:00", "event": "cycle_complete", "cycle": 1, "elapsed_s": 77.2, "equity": 65.3, "positions": ["SOL"]}
+{"ts": "2026-03-24T01:34:52.481608+00:00", "event": "cycle_complete", "cycle": 2, "elapsed_s": 50.2, "equity": 65.3, "positions": ["SOL"]}
+{"ts": "2026-03-24T01:35:51.043734+00:00", "event": "cycle_complete", "cycle": 3, "elapsed_s": 48.5, "equity": 65.31, "positions": ["SOL"]}
+{"ts": "2026-03-24T01:36:34.036533+00:00", "event": "position_opened", "coin": "DOT", "side": "BUY", "entry": 1.417, "qty": 4.6, "sl": 1.415, "tp": 1.427, "mode": "live", "p_trade": 0.6028, "p_dir": 0.6765}
+{"ts": "2026-03-24T01:36:34.842224+00:00", "event": "cycle_complete", "cycle": 4, "elapsed_s": 32.3, "equity": 65.31, "positions": ["SOL", "DOT"]}
+{"ts": "2026-03-24T01:37:00.027146+00:00", "event": "position_closed", "coin": "DOT", "reason": "SL_HIT", "side": "BUY", "entry": 1.417, "exit": 1.415, "pnl_pct": -0.001411, "pnl_usdt": -0.0092, "bars": 0}
+{"ts": "2026-03-24T01:37:53.087877+00:00", "event": "cycle_complete", "cycle": 5, "elapsed_s": 50.6, "equity": 65.29, "positions": ["SOL"]}
+{"ts": "2026-03-24T01:38:14.965932+00:00", "event": "bot_started", "mode": "live", "equity": 65.28516797, "coins": ["BTC", "ETH", "SOL", "XRP", "ADA", "DOT", "LINK"], "version": "v4.3-1m", "recovered_positions": 1, "loaded_models": ["BTC", "ETH", "SOL", "XRP", "ADA", "DOT", "LINK"]}
+{"ts": "2026-03-24T01:38:49.922707+00:00", "event": "model_trained", "coin": "BTC", "combo": "et+cb", "cv_score": 0.5102, "samples": 940}
+{"ts": "2026-03-24T01:38:56.071655+00:00", "event": "model_trained", "coin": "ETH", "combo": "et+cb", "cv_score": 0.5606, "samples": 940}
+{"ts": "2026-03-24T01:39:05.018773+00:00", "event": "position_closed", "coin": "SOL", "reason": "EXCHANGE_CLOSED", "side": "BUY", "entry": 90.76, "exit": 90.64, "pnl_pct": -0.001322, "pnl_usdt": -0.0084, "bars": 4}
+{"ts": "2026-03-24T01:39:06.099708+00:00", "event": "bot_started", "mode": "live", "equity": 65.26939766999999, "coins": ["BTC", "ETH", "SOL", "XRP", "ADA", "DOT", "LINK"], "version": "v4.3-1m", "recovered_positions": 0, "loaded_models": ["BTC", "ETH", "SOL", "XRP", "ADA", "DOT", "LINK"]}
+{"ts": "2026-03-24T01:39:40.748617+00:00", "event": "model_trained", "coin": "BTC", "combo": "et+cb", "cv_score": 0.5099, "samples": 940}
+{"ts": "2026-03-24T01:39:46.931470+00:00", "event": "model_trained", "coin": "ETH", "combo": "et+cb", "cv_score": 0.5848, "samples": 940}
+{"ts": "2026-03-24T01:39:52.750134+00:00", "event": "model_trained", "coin": "SOL", "combo": "et+cb", "cv_score": 0.5533, "samples": 940}
+{"ts": "2026-03-24T01:39:58.718005+00:00", "event": "model_trained", "coin": "XRP", "combo": "et+cb", "cv_score": 0.5872, "samples": 940}
+{"ts": "2026-03-24T01:40:04.673568+00:00", "event": "model_trained", "coin": "ADA", "combo": "et+cb", "cv_score": 0.5006, "samples": 940}
+{"ts": "2026-03-24T01:40:09.767740+00:00", "event": "model_trained", "coin": "DOT", "combo": "et+cb", "cv_score": 0.568, "samples": 940}
+{"ts": "2026-03-24T01:40:15.603940+00:00", "event": "model_trained", "coin": "LINK", "combo": "et+xgb", "cv_score": 0.5125, "samples": 940}
+{"ts": "2026-03-24T01:40:59.980514+00:00", "event": "cycle_complete", "cycle": 1, "elapsed_s": 113.5, "equity": 65.28, "positions": []}
