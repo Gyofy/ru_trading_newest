@@ -9,38 +9,37 @@ __pycache__/
 .venv/
 venv/
 
-# 데이터 (용량 큼)
+# 대용량 데이터
 data/raw/
 data/processed/
 data/features/
 data/predictions/
 data/orders/
-data/reports/
-
-# Microstructure parquet (용량 큼 — CSV만 커밋)
 data/microstructure/*.parquet
-
-# Demo trading logs
-data/reports/
-
-# 수집 중간 로그
 data/*.log
-
-# 로그
-logs/*.log
-
-# Models / artifacts
 data/models/
 data/ledger.db
+
+# Reports: block large CSVs, keep trade logs
+data/reports/*.csv
+data/reports/*/nohup.log
+data/reports/*/bot.log
+data/reports/*/bot.lock
+
+# 트레이딩 로그 (push 대상 — 나중에 내려받기 위해)
+!data/reports/tsmom_paper/trades.jsonl
+!data/reports/tsmom_paper/state.json
+!data/reports/tsmom_paper/signal_log.jsonl
+!trading_result/
+
+# ML artifacts
 *.pt
 *.h5
 catboost_info/
 
-# IDE
+# IDE / OS
 .vscode/
 .idea/
-
-# OS
 .DS_Store
 Thumbs.db
 

@@ -109,6 +109,32 @@ See `docs/binance_implementation_spec.md` for full details:
 
 ---
 
+## Trade Logs (GitHub에 자동 저장)
+
+거래 기록은 GitHub에 push되어 어디서든 내려받을 수 있습니다.
+
+```bash
+# 로그 수동 push
+bash push_logs.sh
+
+# 다른 머신에서 내려받기
+git pull newest main
+cat data/reports/tsmom_paper/trades.jsonl   # 거래 기록
+cat data/reports/tsmom_paper/state.json     # 현재 상태
+cat data/reports/tsmom_paper/signal_log.jsonl  # RL 시그널 로그
+```
+
+**자동 저장되는 파일:**
+
+| 파일 | 내용 | 형식 |
+|------|------|------|
+| `trades.jsonl` | 모든 거래 (진입/청산/PnL) | JSON Lines |
+| `state.json` | 현재 equity, 포지션 | JSON |
+| `signal_log.jsonl` | RL state + action 기록 | JSON Lines |
+| `trading_result/` | v4.3 실거래 기록 | CSV + JSONL |
+
+---
+
 ## Environment
 
 ```
