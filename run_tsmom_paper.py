@@ -325,7 +325,7 @@ class PaperBot:
             if hi>=pos.sl_price: ep, et = pos.sl_price, "SL"
             elif lo<=pos.tp_price: ep, et = pos.tp_price, "TP"
         if ep is None and pos.bars_held>=CFG["max_hold_bars"]: ep, et = cl, "TTL"
-        if ep is None and gdir!=pos.side and pos.bars_held>=12: ep, et = cl, "DIR_FLIP"
+        if ep is None and gdir!=pos.side and pos.bars_held>=6: ep, et = cl, "DIR_FLIP"  # 6 1h-bars = 6h delay
 
         if ep is not None:
             self._close(coin, ep, et)
