@@ -1272,3 +1272,8 @@
 {"ts": "2026-03-24T01:47:50.222991+00:00", "event": "cycle_complete", "cycle": 6, "elapsed_s": 22.3, "equity": 65.25, "positions": ["SOL", "XRP"]}
 {"ts": "2026-03-24T01:49:03.119979+00:00", "event": "position_opened", "coin": "DOT", "side": "BUY", "entry": 1.409, "qty": 4.6, "sl": 1.407, "tp": 1.419, "mode": "live", "p_trade": 0.5636, "p_dir": 0.6599}
 {"ts": "2026-03-24T01:49:03.625750+00:00", "event": "cycle_complete", "cycle": 7, "elapsed_s": 35.7, "equity": 65.27, "positions": ["SOL", "XRP", "DOT"]}
+{"ts": "2026-03-24T01:49:50.792985+00:00", "event": "cycle_complete", "cycle": 8, "elapsed_s": 22.9, "equity": 65.24, "positions": ["SOL", "XRP", "DOT"]}
+{"ts": "2026-03-24T01:49:51.606975+00:00", "event": "position_closed", "coin": "DOT", "reason": "SL_HIT", "side": "BUY", "entry": 1.409, "exit": 1.407, "pnl_pct": -0.001419, "pnl_usdt": -0.0092, "bars": 1}
+{"ts": "2026-03-24T01:50:54.037485+00:00", "event": "position_opened", "coin": "DOT", "side": "BUY", "entry": 1.409, "qty": 4.6, "sl": 1.407, "tp": 1.419, "mode": "live", "p_trade": 0.4699, "p_dir": 0.7104}
+{"ts": "2026-03-24T01:50:54.469611+00:00", "event": "cycle_complete", "cycle": 9, "elapsed_s": 26.5, "equity": 65.25, "positions": ["SOL", "XRP", "DOT"]}
+{"ts": "2026-03-24T01:51:50.861965+00:00", "event": "cycle_complete", "cycle": 10, "elapsed_s": 22.9, "equity": 65.26, "positions": ["SOL", "XRP", "DOT"]}
