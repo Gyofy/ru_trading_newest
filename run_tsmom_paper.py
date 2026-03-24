@@ -69,6 +69,7 @@ CFG = {
 STATE_DIR = Path("data/reports/tsmom_paper")
 STATE_FILE = STATE_DIR / "state.json"
 TRADES_FILE = STATE_DIR / "trades.jsonl"
+LOCK_FILE = STATE_DIR / "bot.lock"
 
 INITIAL_EQUITY = 1000.0  # paper equity
 BAR_SECONDS = 4 * 3600   # 4h
@@ -97,11 +98,34 @@ class Position:
 class PaperBot:
     def __init__(self):
         STATE_DIR.mkdir(parents=True, exist_ok=True)
+
+        # Single instance lock — prevent duplicate processes
+        if LOCK_FILE.exists():
+            try:
+                lock_data = json.loads(LOCK_FILE.read_text())
+                old_pid = lock_data.get("pid", 0)
+                # Check if old process is still alive
+                import psutil
+                if psutil.pid_exists(old_pid):
+                    log.error(f"Another bot instance running (PID {old_pid}). Exiting.")
+                    sys.exit(1)
+                else:
+                    log.warning(f"Stale lock from PID {old_pid}, taking over.")
+            except (ImportError, Exception):
+                # psutil not available, check by timestamp
+                lock_age = time.time() - LOCK_FILE.stat().st_mtime
+                if lock_age < 300:  # less than 5 min old
+                    log.error("Another bot instance may be running (lock < 5min old). Exiting.")
+                    sys.exit(1)
+
+        # Write our lock
+        LOCK_FILE.write_text(json.dumps({"pid": os.getpid(), "started": time.time()}))
+
         self.equity = INITIAL_EQUITY
         self.positions: dict[str, Position] = {}
         self.trade_count = 0
         self.signal_logger = SignalLogger(STATE_DIR / "signal_log.jsonl")
-        self.coin_history: dict[str, list[float]] = {}  # last 5 PnLs per coin
+        self.coin_history: dict[str, list[float]] = {}
         self.load_state()
 
     def load_state(self):
@@ -472,10 +496,17 @@ class PaperBot:
             except KeyboardInterrupt:
                 log.info("Shutting down...")
                 self.save_state()
+                self._release_lock()
                 break
             except Exception as e:
                 log.error(f"Error: {e}", exc_info=True)
                 await asyncio.sleep(60)
+
+    def _release_lock(self):
+        try:
+            LOCK_FILE.unlink(missing_ok=True)
+        except Exception:
+            pass
 
 
 if __name__ == "__main__":
