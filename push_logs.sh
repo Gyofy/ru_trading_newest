@@ -8,6 +8,8 @@ cd "$(dirname "$0")"
 git add -f data/reports/tsmom_paper/trades.jsonl \
            data/reports/tsmom_paper/state.json \
            data/reports/tsmom_paper/signal_log.jsonl \
+           data/reports/tsmom_paper/trade_analysis.jsonl \
+           data/reports/tsmom_paper/trajectories.jsonl \
            trading_result/ \
            2>/dev/null
 

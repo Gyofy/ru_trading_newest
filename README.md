@@ -131,7 +131,9 @@ cat data/reports/tsmom_paper/signal_log.jsonl  # RL 시그널 로그
 | `trades.jsonl` | 모든 거래 (진입/청산/PnL) | JSON Lines |
 | `state.json` | 현재 equity, 포지션 | JSON |
 | `signal_log.jsonl` | RL state + action 기록 | JSON Lines |
-| `trading_result/` | v6.0 실거래 기록 | CSV + JSONL |
+| `trade_analysis.jsonl` | 진입/청산 시 시장 상태 + 손익 원인 분석 | JSON Lines |
+| `trajectories.jsonl` | bar-by-bar 포지션 궤적 (RL 학습용) | JSON Lines |
+| `trading_result/` | 실거래 기록 | CSV + JSONL |
 
 ---
 
