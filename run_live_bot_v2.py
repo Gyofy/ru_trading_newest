@@ -59,7 +59,7 @@ from src.rl.signal_logger import SignalLogger, SIZING_MAP
 from src.rl.rl_gate import RLGate
 
 # ── Constants ──────────────────────────────────────────────
-COINS = ["SOL"]  # SOL 단일 운영 (2026-03-19)
+COINS = ["SOL", "ADA", "XRP", "DOT", "LINK"]
 CYCLE_SECONDS = 2 * 3600  # default; overridden by config bar_minutes
 HEARTBEAT_INTERVAL = 60
 

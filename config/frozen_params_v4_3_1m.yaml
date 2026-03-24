@@ -64,7 +64,7 @@ sizing_tiers:
   tier_low:  0.005          # confidence ≤ 0.50 → 0.5% risk
   dd_brake_threshold: 0.015 # 일일 DD 1.5% 초과 시 sizing 50% 감소
 
-# ── Coin-Specific Parameters (SOL 단일 운영 — 2026-03-19) ──
+# ── Coin-Specific Parameters (5코인 운영 — 2026-03-24) ──
 coins:
   SOL:
     stage1_threshold: 0.45
@@ -74,3 +74,35 @@ coins:
     min_child_samples: 10
     model_combo: "et+cb"
     model_weights: { et: 0.5, cb: 0.5 }
+  ADA:
+    stage1_threshold: 0.45
+    max_features: 120
+    n_estimators: 300
+    max_depth_tree: 8
+    min_child_samples: 10
+    model_combo: "et+cb"
+    model_weights: { et: 0.5, cb: 0.5 }
+  XRP:
+    stage1_threshold: 0.45
+    max_features: 120
+    n_estimators: 300
+    max_depth_tree: 8
+    min_child_samples: 10
+    model_combo: "et+cb"
+    model_weights: { et: 0.5, cb: 0.5 }
+  DOT:
+    stage1_threshold: 0.45
+    max_features: 120
+    n_estimators: 300
+    max_depth_tree: 8
+    min_child_samples: 10
+    model_combo: "et+cb"
+    model_weights: { et: 0.5, cb: 0.5 }
+  LINK:
+    stage1_threshold: 0.45
+    max_features: 120
+    n_estimators: 300
+    max_depth_tree: 8
+    min_child_samples: 10
+    model_combo: "et+xgb"
+    model_weights: { et: 0.5, xgb: 0.5 }
