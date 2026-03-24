@@ -159,6 +159,42 @@ LinUCB contextual bandit, 33-dim state, 7 actions
 
 ## Development History
 
+### v4.3-1m Live Session (2026-03-24) — 실거래 첫 가동
+
+**배경**: v5.1 TSMOM paper bot과 별도로, v4.3 ML bot(`run_live_bot_v2.py`)을 Binance USDT-M Futures에 실거래 가동.
+
+**왜 SOL 단일 종목인가?**
+
+GitHub 원본에는 5코인(DOT/ADA/XRP/SOL/LINK) 다중 종목이 설정되어 있었으나, `run_live_bot_v2.py` line 62에서 아래와 같이 변경됨:
+
+```python
+COINS = ["SOL"]  # SOL 단일 운영 (2026-03-19)
+```
+
+**이유**: 2026-03-19 실거래 전환 직전 진행한 coin-by-coin backtest에서 SOL만 손익분기에 근접한 결과를 보였고, 나머지 4개 코인(DOT/ADA/XRP/LINK)은 수수료 대비 기대수익이 마이너스였음. 실자본 66 USDT로 다중 종목 분산 시 코인당 포지션이 너무 작아 수수료 비중이 과다해지는 문제도 있었음.
+
+**오늘 수행한 작업 (2026-03-24)**:
+
+| 항목 | 내용 |
+|------|------|
+| Post-Only 폴백 | -5022 거부 시 일반 limit 주문으로 자동 재시도 (exchange_adapter.py) |
+| Binance 공개 데이터 통합 | OI/L/S/Taker/Funding 피처를 compute_features()에 연결 |
+| datetime dtype 버그 | ms vs us 불일치 → `datetime64[ns]` 통일 |
+| merge_asof 버그 | `reset_index().rename({"index": "_ts"})` → `pd.DataFrame({"_ts": ...})` |
+| 일일 손실 한도 | 6% → **10%** |
+| 포지션 크기 | 자본의 150% 상한 → **자본의 10%** |
+| --yes 플래그 | 백그라운드 실행 시 확인 프롬프트 우회 |
+
+**첫 체결**:
+```
+SOL SELL FILLED @ 89.67 | SL=89.83 TP=89.11
+equity: 66 USDT → 65.96 USDT
+```
+
+**현재 상태**: 실거래 중지 (2026-03-24 기록 보존)
+
+---
+
 ### v5.1 (2026-03-23) — TSMOM Enhanced (Current)
 - Universe expansion: 7 → 10 coins (Sharpe 3.42 → 4.03)
 - Dual TSMOM (7d+28d) for trend transition handling
