@@ -66,19 +66,21 @@ ALL_COINS = ["BTC"] + ALTS
 
 CFG = {
     "lookback_bars": 168,       # 7d × 24h = 168 1h-bars
-    "cvd_quantile": 0.75,
-    "cvd_roll_window": 480,     # 120 4h-bars × 4 = 480 1h-bars
+    "cvd_quantile_sniper": 0.85, # A: sniper (극단 CVD, 높은 품질)
+    "cvd_quantile_steady": 0.75, # B: steady (일반 CVD, 높은 빈도)
+    "cvd_roll_window": 480,      # 120 4h-bars × 4 = 480 1h-bars
     "k_upper": 5.0,
     "k_lower": 2.0,
-    "max_hold_bars": 96,        # 24 4h-bars × 4 = 96 1h-bars
+    "max_hold_bars": 96,         # 24 4h-bars × 4 = 96 1h-bars
     "oi_zscore_max": 2.0,
     "cost_roundtrip": 0.0020,
-    "leverage": 2,
+    "leverage_sniper": 3,        # A: sniper → 3x
+    "leverage_steady": 2,        # B: steady → 2x
     "equity_risk_pct": 0.02,
     "max_positions": 2,
     "top_n": 2,
-    "cycle_seconds": 3600,      # 1h cycle (check every hour)
-    "cooldown_bars": 4,         # 4h cooldown after exit
+    "cycle_seconds": 3600,
+    "cooldown_bars": 4,
 }
 
 STATE_FILE = STATE_DIR / "state.json"
@@ -251,12 +253,20 @@ class PaperBot:
 
             cvd = df["cvd_ratio"]
             cw = CFG["cvd_roll_window"]
-            q_hi = cvd.rolling(cw, min_periods=100).quantile(CFG["cvd_quantile"]).iloc[-1]
-            q_lo = cvd.rolling(cw, min_periods=100).quantile(1-CFG["cvd_quantile"]).iloc[-1]
+            # Steady threshold (Q75) — minimum to enter
+            cq_s = CFG["cvd_quantile_steady"]
+            q_hi_s = cvd.rolling(cw, min_periods=100).quantile(cq_s).iloc[-1]
+            q_lo_s = cvd.rolling(cw, min_periods=100).quantile(1-cq_s).iloc[-1]
             cvd_now = cvd.iloc[-1]
-            if np.isnan(q_hi) or np.isnan(q_lo): continue
-            if direction==-1 and cvd_now<=q_hi: continue
-            if direction==1 and cvd_now>=q_lo: continue
+            if np.isnan(q_hi_s) or np.isnan(q_lo_s): continue
+            if direction==-1 and cvd_now<=q_hi_s: continue
+            if direction==1 and cvd_now>=q_lo_s: continue
+
+            # Sniper threshold (Q85) — qualifies for higher leverage
+            cq_a = CFG["cvd_quantile_sniper"]
+            q_hi_a = cvd.rolling(cw, min_periods=100).quantile(cq_a).iloc[-1]
+            q_lo_a = cvd.rolling(cw, min_periods=100).quantile(1-cq_a).iloc[-1]
+            is_sniper = (direction==-1 and cvd_now>q_hi_a) or (direction==1 and cvd_now<q_lo_a)
 
             oi_z = self._fetch_oi_zscore(coin)
             if abs(oi_z) > CFG["oi_zscore_max"]: continue
@@ -264,8 +274,10 @@ class PaperBot:
             atr = df["atr_14"].iloc[-1] if "atr_14" in df.columns else 0
             if np.isnan(atr) or atr<=0: continue
 
+            stype = "A_sniper" if is_sniper else "B_steady"
             cands.append((coin, {"relative_ret":rel, "rsi":rsi, "cvd":cvd_now,
-                                  "atr":atr, "oi_z":oi_z, "close":df["close"].iloc[-1]}))
+                                  "atr":atr, "oi_z":oi_z, "close":df["close"].iloc[-1],
+                                  "strategy_type":stype}))
 
         if direction==1: cands.sort(key=lambda x: -x[1]["relative_ret"])
         else: cands.sort(key=lambda x: x[1]["relative_ret"])
@@ -277,7 +289,8 @@ class PaperBot:
         price, atr = info["close"], info["atr"]
         tp_d = max(CFG["k_upper"]*atr, price*0.002)
         sl_d = max(CFG["k_lower"]*atr, price*0.002)
-        lev = CFG["leverage"]
+        stype = info.get("strategy_type", "B_steady")
+        lev = CFG["leverage_sniper"] if stype == "A_sniper" else CFG["leverage_steady"]
         risk = self.equity * CFG["equity_risk_pct"]
         size = min(risk/(sl_d/price), self.equity*0.2) * lev
 
@@ -289,7 +302,7 @@ class PaperBot:
         )
         side_str = "LONG" if side==1 else "SHORT"
         log.info(f"OPEN {side_str} {coin} @ ${price:.4f} | TP=${price+tp_d*side:.4f} "
-                 f"SL=${price-sl_d*side:.4f} | ${size:.0f} ({lev}x) "
+                 f"SL=${price-sl_d*side:.4f} | ${size:.0f} ({lev}x {stype}) "
                  f"rel={info['relative_ret']:+.2%}")
 
         # Log entry snapshot (market state at entry)
