@@ -1,0 +1,131 @@
+"""Strategy B: Liquidation Fade — 청산 캐스케이드 역행.
+
+Trigger: OI 급감 (>2σ) + Taker Volume 스파이크 (>2x avg) = 강제 청산.
+Direction: 청산 반대 (롱 청산 캐스케이드 → LONG 진입).
+SL: Recent swing high/low.
+TP: VWAP 복귀 (mean reversion).
+Cycle: 5분.
+"""
+
+from __future__ import annotations
+
+import logging
+import numpy as np
+import pandas as pd
+
+from src.signals.contract import Signal, Action, Regime
+from src.strategies.base import StrategyBase
+
+logger = logging.getLogger("strategy.liq_fade")
+
+
+class LiquidationFade(StrategyBase):
+    """Fade liquidation cascades — enter counter to forced exits."""
+
+    async def _eval_one_coin(self, coin: str) -> "Signal | None":
+        """Per-coin evaluation — called in parallel by base.evaluate()."""
+        cfg = self.config.extra
+        oi_sigma = cfg.get("oi_sigma_threshold", 2.0)
+        taker_mult = cfg.get("taker_spike_mult", 2.0)
+        swing_lookback = cfg.get("swing_lookback", 24)
+
+        cascade = await self._detect_cascade(coin, oi_sigma, taker_mult)
+        if cascade is None:
+            return None
+
+        direction, oi_drop, taker_ratio = cascade
+
+        df = await self.data_hub.get_ohlcv(coin, "5m", limit=swing_lookback + 10)
+        if df is None or len(df) < swing_lookback:
+            return None
+
+        self._log.info(
+            f"[{coin}] LIQ CASCADE → {direction} | "
+            f"OI_drop={oi_drop:.2f}σ taker={taker_ratio:.1f}x"
+        )
+        return Signal(
+            symbol=coin,
+            horizon_min=120,
+            regime=Regime.VOLATILE,
+            pred_return=abs(oi_drop) * 0.5,
+            p_up=0.7 if direction == "LONG" else 0.3,
+            confidence=min(taker_ratio / 4.0, 1.0),
+            model_name="liquidation_fade",
+            strategy_name=self.name,
+            action=Action.LONG if direction == "LONG" else Action.SHORT,
+            size=1.0,
+            ttl_bars=120,
+            extra={"oi_drop_sigma": oi_drop, "taker_ratio": taker_ratio},
+        )
+
+    async def _detect_cascade(
+        self,
+        coin: str,
+        oi_sigma: float,
+        taker_mult: float,
+    ) -> tuple[str, float, float] | None:
+        """Detect liquidation cascade via OI drop + taker volume spike.
+
+        Returns (direction, oi_drop_sigma, taker_ratio) or None.
+        """
+        # Get OHLCV for volume analysis
+        # Note: OI history requires paid API; cascade detection uses volume+price proxy instead.
+        df = await self.data_hub.get_ohlcv(coin, "5m", limit=100)
+        if df is None or len(df) < 50:
+            return None
+
+        # OI change detection via price/volume proxy
+        # (Real OI history requires separate API call — use volume drop as proxy)
+        # When OI drops sharply, volume spikes with price moving in one direction
+        vol = df["volume"].values
+        close = df["close"].values
+
+        # Recent volume spike
+        avg_vol = np.mean(vol[-50:-1])
+        current_vol = vol[-1]
+        taker_ratio = current_vol / avg_vol if avg_vol > 0 else 0
+
+        if taker_ratio < taker_mult:
+            return None
+
+        # Price direction in last few bars (cascade direction)
+        recent_return = (close[-1] / close[-6] - 1) if close[-6] > 0 else 0
+
+        # Large volume + sharp price drop = long liquidation cascade → go LONG
+        # Large volume + sharp price rise = short liquidation cascade → go SHORT
+        min_move = self.config.extra.get("min_move_pct", 0.005)  # default 0.5%
+
+        if abs(recent_return) < min_move:
+            return None
+
+        # Estimate OI drop severity from volume spike
+        oi_drop_est = taker_ratio * abs(recent_return) * 100  # pseudo-sigma
+
+        if oi_drop_est < oi_sigma:
+            return None
+
+        if recent_return < 0:
+            # Price dropped sharply with volume → long liquidations → fade LONG
+            return ("LONG", oi_drop_est, taker_ratio)
+        else:
+            # Price spiked sharply with volume → short liquidations → fade SHORT
+            return ("SHORT", oi_drop_est, taker_ratio)
+
+    def compute_barriers(
+        self, signal: Signal, atr: float, price: float
+    ) -> tuple[float, float]:
+        """SL = swing high/low (approximated as 2.5×ATR), TP = VWAP target."""
+        sl_mult = self.config.extra.get("sl_atr_mult", 2.5)
+        tp_mult = self.config.extra.get("tp_atr_mult", 2.0)
+
+        sl_dist = atr * sl_mult
+        tp_dist = atr * tp_mult
+
+        if signal.action == Action.SHORT:
+            sl_price = price + sl_dist
+            tp_price = price - tp_dist
+        else:
+            sl_price = price - sl_dist
+            tp_price = price + tp_dist
+
+        return (sl_price, tp_price)

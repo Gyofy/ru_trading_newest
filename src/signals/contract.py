@@ -61,6 +61,7 @@ class Signal:
     cost_bps: float = 20.0        # 편도 비용 (bps), 기본 20bps = 0.2%
 
     # ── 메타 ──
+    strategy_name: str = ""       # which strategy generated this signal
     extra: dict = field(default_factory=dict)
 
     # ── 파생 속성 ──

@@ -31,6 +31,8 @@ class OpenPosition:
     entry_order_id: str = ""
     sl_order_id: str = ""
     tp_order_id: str = ""
+    sl_exchange_id: str = ""   # exchange-side SL order ID (crash-safe)
+    tp_exchange_id: str = ""   # exchange-side TP order ID (crash-safe)
     # 3-stage partial TP (0.0 = single TP 하위호환)
     tp1_price: float = 0.0   # ATR×1.0 — 33% 청산, SL→BEP
     tp2_price: float = 0.0   # ATR×2.0 — 33% 청산, SL→TP1
@@ -41,6 +43,10 @@ class OpenPosition:
     # MFE/MAE tracking (updated every 30s poll by SlTpMonitor)
     price_high: float = 0.0  # highest price seen since entry
     price_low: float = 0.0   # lowest price seen since entry
+    # Multi-strategy support
+    strategy_tag: str = ""       # which strategy owns this position
+    trailing_sl: bool = False    # whether SL trails price
+    trail_distance: float = 0.0  # ATR-based trail distance (absolute)
 
     def __post_init__(self):
         if self.price_high == 0.0:

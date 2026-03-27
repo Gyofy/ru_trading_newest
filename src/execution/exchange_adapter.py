@@ -83,8 +83,8 @@ class ExchangeAdapter:
     def _build_binance(self, mode: str, api_key: str, secret: str):
         """Binance USDT-M Futures (binanceusdm).
 
-        sandbox/demo: testnet.binancefuture.com 수동 지정
-          (ccxt 4.4+ 에서 set_sandbox_mode deprecated — 직접 URL 오버라이드)
+        demo: demo.binance.com — 실제 fapi.binance.com 엔드포인트 사용 (가상 자금)
+        sandbox: testnet.binancefuture.com (개발자 테스트넷)
         """
         # Binance USDT-M Futures testnet base URL
         TESTNET_BASE = "https://testnet.binancefuture.com"
@@ -96,12 +96,13 @@ class ExchangeAdapter:
             "options": {
                 "defaultType": "future",
                 "adjustForTimeDifference": True,
-                # Testnet에서 fetchCurrencies 엔드포인트 미지원 → 스킵
                 "fetchCurrencies": False,
             },
         }
 
-        if mode in ("sandbox", "demo"):
+        # demo.binance.com은 실제 fapi 엔드포인트를 사용 — URL 오버라이드 없음
+        # sandbox만 testnet 엔드포인트로 강제 전환
+        if mode == "sandbox":
             config["urls"] = {
                 "api": {
                     "fapiPublic":         f"{TESTNET_BASE}/fapi/v1",
@@ -153,6 +154,13 @@ class ExchangeAdapter:
             "newClientOrderId": order_id,
         }
 
+    # ── Public access to underlying ccxt instance ────────────
+
+    @property
+    def async_exchange(self):
+        """Expose async ccxt instance for direct API calls (e.g., data_hub)."""
+        return self._exchange
+
     # ── Lifecycle ───────────────────────────────────────────
 
     async def initialize(self) -> None:
@@ -202,6 +210,21 @@ class ExchangeAdapter:
         ccxt_sym = self._ccxt_symbol(symbol)
         market = self._exchange.market(ccxt_sym)
         return market.get("precision", {}).get("price", 0.01)
+
+    # ── Leverage ────────────────────────────────────────────
+
+    def set_leverage(self, symbol: str, leverage: int) -> None:
+        """Set isolated margin mode and leverage for a symbol (sync). Best-effort."""
+        ccxt_sym = self._ccxt_symbol(symbol)
+        try:
+            self._sync_exchange.set_margin_mode("isolated", ccxt_sym)
+        except Exception:
+            pass  # already isolated or unsupported — non-fatal
+        try:
+            self._sync_exchange.set_leverage(leverage, ccxt_sym)
+            logger.info(f"[Leverage] {symbol} set to {leverage}x (isolated)")
+        except Exception as e:
+            logger.debug(f"[Leverage] {symbol} set_leverage failed: {e}")
 
     # ── Entry Orders (Maker-First) ──────────────────────────
 
@@ -547,8 +570,18 @@ class ExchangeAdapter:
     # ── Maker Price ──────────────────────────────────────────
 
     async def get_maker_entry_price(self, symbol: str, side: str) -> float:
+        """Return maker entry price (bid for BUY, ask for SELL).
+        Falls back to last price if bid/ask is 0 (common on testnet).
+        """
         ticker = await self.fetch_ticker(symbol)
-        return ticker["bid"] if side.upper() == "BUY" else ticker["ask"]
+        last = ticker.get("last", 0) or 0
+        if side.upper() == "BUY":
+            price = ticker["bid"] or last
+        else:
+            price = ticker["ask"] or last
+        if price <= 0:
+            raise ValueError(f"[{symbol}] maker price is 0 (bid={ticker['bid']}, ask={ticker['ask']}, last={last})")
+        return float(price)
 
     # ── ID Generation ────────────────────────────────────────
 
