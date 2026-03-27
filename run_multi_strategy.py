@@ -82,6 +82,7 @@ from src.strategies.trade_logger import TradeLogger
 from src.strategies.coin_profile import CoinProfileStore
 from src.strategies.position_sizer import PositionSizer
 from src.strategies.strategy_analyzer import StrategyAnalyzer
+from src.strategies.ev_guardian import EVGuardian
 
 STRATEGY_MAP = {
     "cvd_spike": CVDSpikeReactor,
@@ -187,6 +188,7 @@ class MultiStrategyBot:
         self.trade_logger: TradeLogger | None = None
         self.coin_profiles: CoinProfileStore | None = None
         self.position_sizer: PositionSizer | None = None
+        self.ev_guardian: EVGuardian | None = None
         self.strategies: dict[str, object] = {}
 
         # Paper mode tracking — load historical trades for continuity
@@ -256,6 +258,18 @@ class MultiStrategyBot:
         self.pos_manager = MultiPositionManager(STATE_DIR / "positions.json")
         self.data_hub = DataHub(self.exchange, executor=self._executor)
         self.trade_logger = TradeLogger(STATE_DIR)
+        ev_cfg = self.cfg.get("ev_guardian", {})
+        self.ev_guardian = EVGuardian(
+            jsonl_path=STATE_DIR / "trade_context.jsonl",
+            initial_equity=self.initial_equity,
+            fee_budget_pct=ev_cfg.get("fee_budget_pct", 0.005),
+            report_path=STATE_DIR / "ev_report.json",
+        )
+        # 시작 시 기존 데이터로 즉시 1회 평가
+        _ev_init = self.ev_guardian.evaluate()
+        if _ev_init:
+            log.info(f"[EVGuardian] Initial evaluation: {list(_ev_init.keys())}")
+            self.ev_guardian.save_report()
         self.coin_profiles = CoinProfileStore(
             persist_path=STATE_DIR / "coin_profiles.json",
             trade_context_path=STATE_DIR / "trade_context.jsonl",
@@ -406,6 +420,11 @@ class MultiStrategyBot:
             self._strategy_analysis_loop(), name="strategy_analysis"
         ))
 
+        # EV Guardian + Fee Budget evaluation (every 1h)
+        tasks.append(asyncio.create_task(
+            self._ev_guardian_loop(), name="ev_guardian"
+        ))
+
         # Wait for shutdown
         tasks.append(asyncio.create_task(
             self._shutdown_event.wait(), name="shutdown_wait"
@@ -437,6 +456,17 @@ class MultiStrategyBot:
 
                 # Daily reset
                 self.portfolio_risk.maybe_reset_daily()
+
+                # ── F1 + F5: EV/Fee budget gate ──────────────
+                if self.ev_guardian:
+                    allowed, ev_reason = self.ev_guardian.check_entry_allowed(strategy.name)
+                    if not allowed:
+                        log.info(f"[{strategy.name}] blocked by EVGuardian: {ev_reason}")
+                        try:
+                            await asyncio.sleep(cycle)
+                        except asyncio.CancelledError:
+                            break
+                        continue
 
                 # Evaluate
                 results = await strategy.tick(self.coins)
@@ -652,14 +682,21 @@ class MultiStrategyBot:
                 wins = sum(1 for t in self._paper_trades if t["pnl_usdt"] > 0)
                 wr = f"{wins/total_trades*100:.1f}%" if total_trades > 0 else "N/A"
 
+                # 수수료 통계
+                session_fee = sum(t.get("fee_usdt", 0.0) for t in self._paper_trades)
+                session_net = sum(t.get("pnl_net_usdt", t["pnl_usdt"]) for t in self._paper_trades)
+                ev_text = self.ev_guardian.format_discord_summary() if self.ev_guardian else ""
+
                 discord_post(
                     f"**💰 잔고**\n"
                     f"자본: `${status['equity']:,.2f}` | 초기: `${self.initial_equity:,.2f}`\n"
                     f"일일 손익: `{status['daily_loss_pct']:+.2%}` | 노셔널: `${status['notional']:.2f}`\n\n"
                     f"**📊 오픈 포지션 ({len(positions)}개)**\n{pos_text}\n\n"
                     f"**📈 세션 통계** (거래: {total_trades}건)\n"
-                    f"세션 PnL: `{session_pnl:+.4f} USDT` | 승률: `{wr}`\n\n"
-                    f"**전략별 PnL:**\n{strat_lines}",
+                    f"세션 PnL: `{session_pnl:+.4f} USDT` | 수수료: `{session_fee:.4f} USDT` | 순수익: `{session_net:+.4f} USDT`\n"
+                    f"승률: `{wr}`\n\n"
+                    f"**전략별 PnL:**\n{strat_lines}"
+                    + (f"\n\n**🔍 EV Guardian:**\n{ev_text}" if ev_text else ""),
                     title=f"🕐 1시간 브리핑 — {now.strftime('%H:%M UTC')}",
                 )
             except asyncio.CancelledError:
@@ -906,6 +943,14 @@ class MultiStrategyBot:
         # Record PnL
         self.portfolio_risk.record_trade_pnl(strategy, pnl_usdt)
 
+        # F5: 실수수료 기록 (EVGuardian 일일 예산 누적)
+        if self.ev_guardian:
+            from src.strategies.base import ROUND_TRIP_FEE_RATE
+            _entry_notional = pos.entry_price * pos.current_qty
+            _exit_notional = price * pos.current_qty
+            _fee_usdt = (_entry_notional + _exit_notional) * (ROUND_TRIP_FEE_RATE / 2)
+            self.ev_guardian.record_fee(strategy, _fee_usdt)
+
         # Record full trade context for per-coin optimization
         if self.trade_logger:
             try:
@@ -937,11 +982,19 @@ class MultiStrategyBot:
         # Remove position
         self.pos_manager.remove_position(strategy, coin)
 
+        # 실수수료 + 순수익 계산 (로그 + trades.jsonl 기록용)
+        from src.strategies.base import ROUND_TRIP_FEE_RATE
+        _entry_notional = pos.entry_price * pos.current_qty
+        _exit_notional = price * pos.current_qty
+        _fee_usdt = round((_entry_notional + _exit_notional) * (ROUND_TRIP_FEE_RATE / 2), 4)
+        _pnl_net_usdt = round(pnl_usdt - _fee_usdt, 4)
+        _pnl_net_pct = round(_pnl_net_usdt / _entry_notional, 6) if _entry_notional > 0 else 0.0
+
         # Log
-        emoji = "✅" if pnl_usdt > 0 else "❌"
+        emoji = "✅" if _pnl_net_usdt > 0 else "❌"
         log.info(
             f"[Close] {emoji} {strategy}:{coin} {reason} | "
-            f"PnL={pnl_usdt:+.4f} ({pnl_pct:+.2%}) | "
+            f"PnL={pnl_usdt:+.4f} net={_pnl_net_usdt:+.4f} fee={_fee_usdt:.4f} | "
             f"entry={pos.entry_price:.4f} exit={price:.4f} | "
             f"bars={pos.bars_held} | "
             f"mfe={pos.mfe_pct:.2%} mae={pos.mae_pct:.2%}"
@@ -967,6 +1020,9 @@ class MultiStrategyBot:
             "tp_pct": round(_tp_pct * 100, 4),   # % from entry
             "pnl_usdt": round(pnl_usdt, 6),
             "pnl_pct": round(pnl_pct, 6),
+            "fee_usdt": _fee_usdt,
+            "pnl_net_usdt": _pnl_net_usdt,
+            "pnl_net_pct": _pnl_net_pct,
             "reason": reason,
             "bars": pos.bars_held,
             "mfe": round(pos.mfe_pct, 6),
@@ -1005,17 +1061,20 @@ class MultiStrategyBot:
         except Exception:
             portfolio_snap = f"자본: `${status['equity']:,.2f}` | 노셔널: `${status['notional']:.2f}`"
 
+        _ev_summary = self.ev_guardian.format_discord_summary() if self.ev_guardian else ""
         discord_post(
             f"**{emoji_trade} 청산 결과**\n"
             f"종목: `{coin}` `{pos.side}` | [{strategy}]\n"
             f"진입: `{pos.entry_price:.4f}` → 청산: `{price:.4f}`\n"
             f"**PnL: `{pnl_usdt:+.4f} USDT` (`{pnl_pct:+.2%}`)**\n"
+            f"수수료: `{_fee_usdt:.4f} USDT` | **순수익: `{_pnl_net_usdt:+.4f} USDT` (`{_pnl_net_pct:+.4%}`)**\n"
             f"사유: {reason_label} | 보유: `{pos.bars_held}봉`\n"
             f"MFE: `{pos.mfe_pct:.2%}` | MAE: `{pos.mae_pct:.2%}`\n\n"
             f"{portfolio_snap}\n\n"
             f"**📋 세션** ({total_trades}건 | 승률 {wr} | PnL `{session_pnl:+.4f}`)\n"
-            f"{recent_text}",
-            title=f"{'✅ 익절' if pnl_usdt > 0 else '❌ 손절/청산'} — {coin} {reason_label}",
+            f"{recent_text}"
+            + (f"\n\n**🔍 EVGuardian:**\n{_ev_summary}" if _ev_summary else ""),
+            title=f"{'✅ 익절' if _pnl_net_usdt > 0 else '❌ 손절/청산'} — {coin} {reason_label}",
         )
         if not self._first_trade_notified:
             self._first_trade_notified = True
@@ -1160,6 +1219,70 @@ class MultiStrategyBot:
 
             try:
                 await asyncio.sleep(3600 * 6)  # 이후 6시간마다
+            except asyncio.CancelledError:
+                break
+
+    async def _ev_guardian_loop(self) -> None:
+        """1시간마다 EV 재평가 + 수수료 예산 현황 Discord 보고.
+
+        F1: 전략별 기대수익 계산 → 음수면 차단, 회복되면 자동 재개.
+        F5: 일일 수수료 예산 현황 보고.
+        """
+        await asyncio.sleep(1800)  # 시작 30분 후 첫 평가 (데이터 축적 대기)
+        while not self._shutdown_event.is_set():
+            try:
+                if not self.ev_guardian:
+                    break
+
+                # EV 재평가 (blocking I/O → executor)
+                loop = asyncio.get_running_loop()
+                ev_stats = await loop.run_in_executor(None, self.ev_guardian.evaluate)
+                self.ev_guardian.save_report()
+
+                # 상태 변화 감지 + Discord 알림
+                suspended_now = [n for n, s in ev_stats.items() if s.get("suspended")]
+                if suspended_now:
+                    # 차단된 전략이 있으면 즉시 Discord 경고
+                    lines = []
+                    for name in suspended_now:
+                        stat = ev_stats[name]
+                        lines.append(
+                            f"🚫 **{name}** 차단 — EV=`{stat['ev']:.4%}` "
+                            f"TP율=`{stat['tp_hit_rate']:.1%}` n=`{stat['n_trades']}`\n"
+                            f"  avg_tp=`{stat['avg_tp_pct']:.4%}` "
+                            f"avg_sl=`{stat['avg_sl_pct']:.4%}` "
+                            f"fee=`{stat['avg_fee_drag_pct']:.4%}`"
+                        )
+                    discord_post(
+                        "\n".join(lines),
+                        title="⚠️ EVGuardian — 음수 EV 전략 차단",
+                    )
+                    log.warning(f"[EVGuardian] Suspended strategies: {suspended_now}")
+
+                # 매 평가마다 간략 로그
+                for name, stat in ev_stats.items():
+                    log.info(
+                        f"[EVGuardian] {name}: EV={stat['ev']:.4%} "
+                        f"tp_rate={stat['tp_hit_rate']:.1%} n={stat['n_trades']} "
+                        f"{'SUSPENDED' if stat['suspended'] else 'ok'}"
+                    )
+
+                # 수수료 예산 현황
+                fee_exceeded, fee_detail = self.ev_guardian.is_fee_budget_exceeded()
+                if fee_exceeded:
+                    discord_post(
+                        f"🔴 **일일 수수료 예산 초과 — 신규 진입 차단**\n{fee_detail}",
+                        title="⛔ F5 Fee Budget Exceeded",
+                    )
+                    log.warning(f"[EVGuardian] Fee budget exceeded: {fee_detail}")
+
+            except asyncio.CancelledError:
+                break
+            except Exception as e:
+                log.error(f"[EVGuardian] loop error: {e}", exc_info=True)
+
+            try:
+                await asyncio.sleep(3600)  # 1시간마다
             except asyncio.CancelledError:
                 break
 
