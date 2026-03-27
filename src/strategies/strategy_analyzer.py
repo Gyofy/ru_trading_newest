@@ -27,6 +27,7 @@ import logging
 import math
 from collections import defaultdict
 from dataclasses import dataclass, asdict, field
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Optional
 
@@ -115,7 +116,6 @@ class StrategyAnalyzer:
             logger.info("[Analyzer] No trades found")
             return AnalysisReport(generated_at=self._now_str())
 
-        from datetime import datetime, timezone
         report = AnalysisReport(
             generated_at=self._now_str(),
             total_trades=len(trades),
@@ -574,5 +574,4 @@ class StrategyAnalyzer:
 
     @staticmethod
     def _now_str() -> str:
-        from datetime import datetime, timezone
         return datetime.now(timezone.utc).isoformat()

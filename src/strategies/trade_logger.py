@@ -28,6 +28,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
 
+from src.strategies.base import ROUND_TRIP_FEE_RATE
+
 logger = logging.getLogger("trade_logger")
 
 
@@ -193,7 +195,7 @@ class TradeLogger:
         # ── RACE CONDITION FIX: save skeleton to _pending BEFORE any async I/O ──
         # If SL hits while we're awaiting ticker/ohlcv/BTC data (can take 10-20s),
         # record_close will still find a valid context. Fields are enriched below.
-        from src.strategies.base import ROUND_TRIP_FEE_RATE as _FEE_RATE
+        _FEE_RATE = ROUND_TRIP_FEE_RATE
         _sl_dist_pct = abs(fill_price - sl_price) / fill_price * 100 if fill_price > 0 else 0
         _tp_dist_pct = abs(tp_price - fill_price) / fill_price * 100 if (fill_price > 0 and tp_price > 0) else 0
         _breakeven_pct = (_FEE_RATE * 100) if fill_price > 0 else 0  # round-trip fee % of notional
@@ -378,7 +380,7 @@ class TradeLogger:
         fill_type = "paper" if paper_mode else ("taker" if signal_extra.get("fill_taker", False) else "maker")
 
         # Fee estimate
-        from src.strategies.base import ROUND_TRIP_FEE_RATE
+
         fee_estimate_usdt = notional * ROUND_TRIP_FEE_RATE
         breakeven_move_pct = ROUND_TRIP_FEE_RATE * 100  # % of notional to cover round-trip fees
 
@@ -467,7 +469,7 @@ class TradeLogger:
         ctx.pnl_usdt = ctx.pnl_pct * ctx.entry_price * ctx.qty
 
         # Actual fee: entry notional × rate + exit notional × rate
-        from src.strategies.base import ROUND_TRIP_FEE_RATE
+
         entry_notional = ctx.entry_price * ctx.qty
         exit_notional = exit_price * ctx.qty
         ctx.fee_actual_usdt = round((entry_notional + exit_notional) * (ROUND_TRIP_FEE_RATE / 2), 4)
