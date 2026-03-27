@@ -430,6 +430,13 @@ class StrategyBase(ABC):
             # ── Trade context logging ──
             if self.trade_logger:
                 try:
+                    _sl_dist_log = abs(fill_price - sl_price)
+                    _rr_est_log = (
+                        abs(tp_price - fill_price) / _sl_dist_log
+                        if (_sl_dist_log > 0 and tp_price > 0) else 0.0
+                    )
+                    _concurrent = len(self.pos_manager.positions)
+                    _portfolio_notional = self.pos_manager.total_notional() if hasattr(self.pos_manager, "total_notional") else 0.0
                     await self.trade_logger.capture_entry_context(
                         data_hub=self.data_hub,
                         coin=coin,
@@ -446,9 +453,11 @@ class StrategyBase(ABC):
                         trailing_sl=use_trailing,
                         trail_distance=trail_dist,
                         risk_usdt=risk_usdt,
-                        rr_estimate=0.0,
+                        rr_estimate=_rr_est_log,
                         strategy_params=self.config.extra,
                         paper_mode=self.config.paper_mode,
+                        concurrent_positions=_concurrent,
+                        portfolio_notional=_portfolio_notional,
                     )
                 except Exception as e:
                     self._log.warning(f"[{coin}] Trade context capture failed: {e}")

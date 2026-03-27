@@ -133,8 +133,9 @@ class TradeContext:
     # ── Trade lifecycle (populated at close) ──
     mfe_to_trail_ratio: float = 0.0  # mfe_pct / (trail_distance/entry_price) — how close trail was to MFE
     sl_tighten_count: int = 0        # how many times trailing SL moved
-    time_to_mfe_bars: int = 0        # bar number when MFE was reached
-    bars_between_mfe_exit: int = 0   # bars from MFE to exit (reversal speed)
+    time_to_mfe_bars: int = 0        # bar number when MFE was reached (0 = unknown)
+    bars_between_mfe_exit: int = 0   # bars from MFE to exit — reversal speed proxy
+    atr_ratio_exit_entry: float = 0.0  # exit_atr / entry_atr — volatility expansion(>1) or contraction(<1)
 
     # ── Actual fee & net PnL (populated at close) ──
     fee_actual_usdt: float = 0.0     # actual round-trip fee paid (entry + exit)
@@ -142,6 +143,10 @@ class TradeContext:
     pnl_net_pct: float = 0.0         # net PnL % after fees
     fee_drag_pct: float = 0.0        # fee as % of entry notional (how much fee eats into trade)
     breakeven_move_pct: float = 0.0  # minimum price move needed just to cover fees
+
+    # ── Portfolio context at entry ──
+    concurrent_positions: int = 0    # how many other positions were open when this was entered
+    portfolio_notional_at_entry: float = 0.0  # total open notional across all strategies at entry
 
     # ── Timestamps for duration calc ──
     _entry_unix: float = 0.0
@@ -177,6 +182,8 @@ class TradeLogger:
         rr_estimate: float,
         strategy_params: dict,
         paper_mode: bool = True,
+        concurrent_positions: int = 0,
+        portfolio_notional: float = 0.0,
     ) -> TradeContext:
         """Capture full market context at entry time."""
         self._trade_counter += 1
@@ -190,6 +197,8 @@ class TradeLogger:
         _sl_dist_pct = abs(fill_price - sl_price) / fill_price * 100 if fill_price > 0 else 0
         _tp_dist_pct = abs(tp_price - fill_price) / fill_price * 100 if (fill_price > 0 and tp_price > 0) else 0
         _breakeven_pct = (_FEE_RATE * 100) if fill_price > 0 else 0  # round-trip fee % of notional
+        _sl_dist_abs = abs(fill_price - sl_price) if fill_price > 0 else 0
+        _rr_est = abs(tp_price - fill_price) / _sl_dist_abs if (_sl_dist_abs > 0 and tp_price > 0) else 0.0
         key = f"{strategy_name}:{coin}"
         _skeleton = TradeContext(
             trade_id=trade_id,
@@ -200,6 +209,9 @@ class TradeLogger:
             trigger_type=signal_extra.get("trigger", ""),
             cvd_value=signal_extra.get("cvd_value", 0.0),
             cvd_z_score=signal_extra.get("cvd_z_score", signal_extra.get("z_score", 0.0)),
+            # cvd_quantile_rank (cvd_spike) / cvd_quantile_breach (asymmetric_sniper) 둘 다 수용
+            cvd_quantile_breach=signal_extra.get("cvd_quantile_rank",
+                                signal_extra.get("cvd_quantile_breach", 0.0)),
             ofi_value=signal_extra.get("ofi_value", 0.0),
             signal_strength=signal_extra.get("strength", 0.0),
             signal_confidence=signal_extra.get("confidence", 0.0),
@@ -213,7 +225,7 @@ class TradeLogger:
             trailing_sl=trailing_sl,
             trail_distance=trail_distance,
             risk_usdt=risk_usdt,
-            rr_estimate=rr_estimate,
+            rr_estimate=round(_rr_est, 3),
             qty=qty,
             notional_usdt=notional,
             leverage=leverage,
@@ -224,6 +236,8 @@ class TradeLogger:
             day_of_week=now.weekday(),
             fee_estimate_usdt=round(notional * _FEE_RATE, 4),
             breakeven_move_pct=round(_breakeven_pct, 4),
+            concurrent_positions=concurrent_positions,
+            portfolio_notional_at_entry=round(portfolio_notional, 2),
             _entry_unix=time.time(),
         )
         self._pending[key] = _skeleton
@@ -382,6 +396,8 @@ class TradeLogger:
         ctx.trigger_type = trigger
         ctx.cvd_value = cvd_value
         ctx.cvd_z_score = cvd_z
+        ctx.cvd_quantile_breach = signal_extra.get("cvd_quantile_rank",
+                                   signal_extra.get("cvd_quantile_breach", 0.0))
         ctx.ofi_value = ofi_value
         ctx.signal_strength = strength
         ctx.signal_confidence = signal_extra.get("confidence", 0.0)
@@ -475,6 +491,10 @@ class TradeLogger:
             if ctx.trail_distance > 0 and ctx.entry_price > 0:
                 trail_pct = ctx.trail_distance / ctx.entry_price
                 ctx.mfe_to_trail_ratio = round(abs(ctx.mfe_pct) / trail_pct, 3) if trail_pct > 0 else 0.0
+
+        # exit_atr 기반 변동성 변화율 (진입 대비 청산 시 변동성 확장/축소)
+        if exit_atr > 0 and ctx.entry_atr > 0:
+            ctx.atr_ratio_exit_entry = round(exit_atr / ctx.entry_atr, 4)
 
         # Duration
         ctx.hold_duration_sec = time.time() - ctx._entry_unix if ctx._entry_unix > 0 else 0

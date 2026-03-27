@@ -31,6 +31,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 import yaml
+from dotenv import load_dotenv
+load_dotenv()
 
 # UTF-8 output for Windows
 if sys.stdout.encoding != "utf-8":
@@ -951,15 +953,26 @@ class MultiStrategyBot:
             _fee_usdt = (_entry_notional + _exit_notional) * (ROUND_TRIP_FEE_RATE / 2)
             self.ev_guardian.record_fee(strategy, _fee_usdt)
 
+        # exit ATR 계산 (record_close에 전달 → atr_ratio_exit_entry 계산용)
+        _exit_atr = 0.0
+        try:
+            _df_exit = await self.data_hub.get_ohlcv(coin, "1m", limit=20)
+            if _df_exit is not None and len(_df_exit) >= 14:
+                _exit_atr = float((_df_exit["high"] - _df_exit["low"]).rolling(14).mean().iloc[-1])
+        except Exception:
+            pass
+
         # Record full trade context for per-coin optimization
+        _tc_record = None
         if self.trade_logger:
             try:
-                self.trade_logger.record_close(
+                _tc_record = self.trade_logger.record_close(
                     strategy=strategy,
                     coin=coin,
                     exit_price=price,
                     exit_reason=reason,
                     pos=pos,
+                    exit_atr=_exit_atr,
                 )
             except Exception as e:
                 log.warning(f"[TradeLog] record_close failed: {e}")
@@ -1007,6 +1020,8 @@ class MultiStrategyBot:
         _ep = pos.entry_price
         _sl_pct = abs(pos.sl_price - _ep) / _ep if _ep > 0 else 0.0
         _tp_pct = abs(pos.tp_price - _ep) / _ep if (_ep > 0 and pos.tp_price > 0) else 0.0
+        # trade_context 레코드에서 최적화용 필드 추출
+        _tc = _tc_record or {}
         trade = {
             "ts": datetime.now(timezone.utc).isoformat(),
             "strategy": strategy,
@@ -1016,8 +1031,8 @@ class MultiStrategyBot:
             "exit": price,
             "sl_price": pos.sl_price,
             "tp_price": pos.tp_price,
-            "sl_pct": round(_sl_pct * 100, 4),   # % from entry
-            "tp_pct": round(_tp_pct * 100, 4),   # % from entry
+            "sl_pct": round(_sl_pct * 100, 4),
+            "tp_pct": round(_tp_pct * 100, 4),
             "pnl_usdt": round(pnl_usdt, 6),
             "pnl_pct": round(pnl_pct, 6),
             "fee_usdt": _fee_usdt,
@@ -1032,6 +1047,20 @@ class MultiStrategyBot:
             "trail_distance": getattr(pos, "trail_distance", 0.0),
             "notional": round(pos.entry_price * pos.qty, 2),
             "leverage": getattr(pos, "leverage", 0),
+            # ── 최적화용 컨텍스트 필드 (trade_context에서 추출) ──
+            "hour_utc": _tc.get("hour_utc", -1),
+            "session_utc": _tc.get("session_utc", ""),
+            "volatility_regime": _tc.get("volatility_regime", ""),
+            "btc_regime": _tc.get("btc_regime_1h", ""),
+            "trade_vs_btc": _tc.get("trade_vs_btc_regime", ""),
+            "signal_strength": _tc.get("signal_strength", 0.0),
+            "cvd_z_score": _tc.get("cvd_z_score", 0.0),
+            "cvd_quantile": _tc.get("cvd_quantile_breach", 0.0),
+            "rr_estimate": _tc.get("rr_estimate", 0.0),
+            "entry_atr_pct": _tc.get("entry_atr_pct", 0.0),
+            "atr_ratio": _tc.get("atr_ratio_exit_entry", 0.0),
+            "concurrent_pos": _tc.get("concurrent_positions", 0),
+            "fee_drag_pct": _tc.get("fee_drag_pct", 0.0),
         }
         self._paper_trades.append(trade)
         # Cap in-memory list to prevent unbounded growth over long sessions
