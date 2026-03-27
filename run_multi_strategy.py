@@ -950,6 +950,10 @@ class MultiStrategyBot:
         # Discord: 거래 완료 + 잔고 + 거래내역 요약
         status = self.portfolio_risk.status()
         # [Fix] trade를 먼저 append해야 최근 거래내역에 현재 거래가 포함됨
+        # Compute SL/TP distances for analysis
+        _ep = pos.entry_price
+        _sl_pct = abs(pos.sl_price - _ep) / _ep if _ep > 0 else 0.0
+        _tp_pct = abs(pos.tp_price - _ep) / _ep if (_ep > 0 and pos.tp_price > 0) else 0.0
         trade = {
             "ts": datetime.now(timezone.utc).isoformat(),
             "strategy": strategy,
@@ -957,12 +961,21 @@ class MultiStrategyBot:
             "side": pos.side,
             "entry": pos.entry_price,
             "exit": price,
+            "sl_price": pos.sl_price,
+            "tp_price": pos.tp_price,
+            "sl_pct": round(_sl_pct * 100, 4),   # % from entry
+            "tp_pct": round(_tp_pct * 100, 4),   # % from entry
             "pnl_usdt": round(pnl_usdt, 6),
             "pnl_pct": round(pnl_pct, 6),
             "reason": reason,
             "bars": pos.bars_held,
             "mfe": round(pos.mfe_pct, 6),
             "mae": round(pos.mae_pct, 6),
+            "trailing_sl": pos.trailing_sl,
+            "sl_tighten_count": getattr(pos, "sl_tighten_count", 0),
+            "trail_distance": getattr(pos, "trail_distance", 0.0),
+            "notional": round(pos.entry_price * pos.qty, 2),
+            "leverage": getattr(pos, "leverage", 0),
         }
         self._paper_trades.append(trade)
         # Cap in-memory list to prevent unbounded growth over long sessions

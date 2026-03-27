@@ -312,6 +312,7 @@ class StrategyBase(ABC):
                 strategy_tag=self.name,
                 trailing_sl=use_trailing,
                 trail_distance=trail_dist,
+                leverage=self.config.leverage,
             )
             self.pos_manager.add_position(self.name, pos)
             self._trade_count += 1
