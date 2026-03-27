@@ -71,7 +71,7 @@ log = logging.getLogger("multi_bot")
 
 from src.execution.exchange_adapter import ExchangeAdapter
 from src.execution.order_ledger import OrderLedger
-from src.strategies.base import StrategyConfig
+from src.strategies.base import StrategyConfig, StrategyBase, ROUND_TRIP_FEE_RATE
 from src.strategies.cvd_spike import CVDSpikeReactor
 from src.strategies.liquidation_fade import LiquidationFade
 from src.strategies.momentum_breakout import MomentumBreakout
@@ -762,8 +762,8 @@ class MultiStrategyBot:
                         ofi = DataHub.compute_ofi(df)
                         ofi_pct = float(ofi.rank(pct=True).iloc[-1])
 
-                        # ATR%
-                        atr = (df["high"] - df["low"]).rolling(14).mean().iloc[-1]
+                        # ATR% (true ATR: max of H-L, H-prevC, prevC-L)
+                        atr = StrategyBase._compute_atr(df, period=14)
                         atr_pct = atr / price * 100 if price > 0 else 0
 
                         # 추세
@@ -934,31 +934,34 @@ class MultiStrategyBot:
                 else:
                     _exchange_close_ok = False
                     log.error(f"[Close] {coin} exchange close failed: {e}")
-                    # Notify Discord about manual intervention needed (orphan position risk)
+                    # 청산 실패 시 pos_manager에 포지션 유지 — 모니터가 계속 추적
+                    # 소프트웨어에서 삭제하면 고아 포지션(orphan) 발생 위험
                     discord_post(
                         f"⚠️ **거래소 청산 실패** — 수동 확인 필요\n"
                         f"종목: `{coin}` | 수량: `{pos.current_qty}` | 사유: `{e}`\n"
-                        f"봇 내부 포지션은 제거됩니다. 거래소에서 직접 확인하세요.",
+                        f"포지션 추적 유지 중 — 모니터가 재시도합니다.",
                         title="⚠️ 거래소 청산 실패",
                     )
+                    return  # 청산 미확인 시 PnL 기록도 하지 않음
 
         # Record PnL
         self.portfolio_risk.record_trade_pnl(strategy, pnl_usdt)
 
+        # 수수료 계산 — 단 1회, EVGuardian + 로그 모두 이 값 사용
+        _entry_notional = pos.entry_price * pos.current_qty
+        _exit_notional = price * pos.current_qty
+        _fee_usdt = round((_entry_notional + _exit_notional) * (ROUND_TRIP_FEE_RATE / 2), 4)
+
         # F5: 실수수료 기록 (EVGuardian 일일 예산 누적)
         if self.ev_guardian:
-            from src.strategies.base import ROUND_TRIP_FEE_RATE
-            _entry_notional = pos.entry_price * pos.current_qty
-            _exit_notional = price * pos.current_qty
-            _fee_usdt = (_entry_notional + _exit_notional) * (ROUND_TRIP_FEE_RATE / 2)
             self.ev_guardian.record_fee(strategy, _fee_usdt)
 
-        # exit ATR 계산 (record_close에 전달 → atr_ratio_exit_entry 계산용)
+        # exit ATR 계산 — True ATR (StrategyBase._compute_atr 재사용)
         _exit_atr = 0.0
         try:
             _df_exit = await self.data_hub.get_ohlcv(coin, "1m", limit=20)
-            if _df_exit is not None and len(_df_exit) >= 14:
-                _exit_atr = float((_df_exit["high"] - _df_exit["low"]).rolling(14).mean().iloc[-1])
+            if _df_exit is not None and len(_df_exit) >= 15:
+                _exit_atr = StrategyBase._compute_atr(_df_exit, period=14)
         except Exception:
             pass
 
@@ -995,11 +998,7 @@ class MultiStrategyBot:
         # Remove position
         self.pos_manager.remove_position(strategy, coin)
 
-        # 실수수료 + 순수익 계산 (로그 + trades.jsonl 기록용)
-        from src.strategies.base import ROUND_TRIP_FEE_RATE
-        _entry_notional = pos.entry_price * pos.current_qty
-        _exit_notional = price * pos.current_qty
-        _fee_usdt = round((_entry_notional + _exit_notional) * (ROUND_TRIP_FEE_RATE / 2), 4)
+        # 순수익 계산 (_fee_usdt는 위에서 이미 계산됨)
         _pnl_net_usdt = round(pnl_usdt - _fee_usdt, 4)
         _pnl_net_pct = round(_pnl_net_usdt / _entry_notional, 6) if _entry_notional > 0 else 0.0
 

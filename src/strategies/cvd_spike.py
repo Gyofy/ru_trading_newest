@@ -140,10 +140,11 @@ class CVDSpikeReactor(StrategyBase):
         return None
 
     def compute_barriers(
-        self, signal: Signal, atr: float, price: float
+        self, signal: Signal, atr: float, price: float, extra: dict | None = None
     ) -> tuple[float, float]:
         """SL = 3×ATR, TP = 0 (trailing stop)."""
-        sl_mult = self.config.extra.get("sl_atr_mult", 3.0)
+        cfg = extra if extra is not None else self.config.extra
+        sl_mult = cfg.get("sl_atr_mult", 3.0)
         sl_dist = atr * sl_mult
 
         if signal.action == Action.SHORT:

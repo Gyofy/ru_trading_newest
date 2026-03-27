@@ -147,7 +147,7 @@ class MomentumBreakout(StrategyBase):
                 float(range_width_pct), float(breakout_pct), float(cvd_1h_delta))
 
     def compute_barriers(
-        self, signal: Signal, atr: float, price: float
+        self, signal: Signal, atr: float, price: float, extra: dict | None = None
     ) -> tuple[float, float]:
         """SL = breakout level, TP = 0 (trailing stop)."""
         breakout_level = signal.extra.get("breakout_level", 0)

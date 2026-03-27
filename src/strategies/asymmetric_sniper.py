@@ -162,14 +162,14 @@ class AsymmetricSniper(StrategyBase):
     # ── Barriers: fixed-dollar SL, trailing TP ─────────────
 
     def compute_barriers(
-        self, signal: Signal, atr: float, price: float
+        self, signal: Signal, atr: float, price: float, extra: dict | None = None
     ) -> tuple[float, float]:
         """Fixed-dollar SL, trailing stop TP (tp_price=0).
 
         SL distance = risk_usdt / notional * price
         For $32 alloc x 5x = $160 notional, $1.5 risk = 0.94% SL distance.
         """
-        cfg = self.config.extra
+        cfg = extra if extra is not None else self.config.extra
         risk_usdt = cfg.get("risk_per_trade_usdt", 1.5)
         max_notional = self.config.allocation_usdt * self.config.leverage
 

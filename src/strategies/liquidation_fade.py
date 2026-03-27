@@ -121,11 +121,12 @@ class LiquidationFade(StrategyBase):
             return ("SHORT", oi_drop_est, taker_ratio, recent_return)
 
     def compute_barriers(
-        self, signal: Signal, atr: float, price: float
+        self, signal: Signal, atr: float, price: float, extra: dict | None = None
     ) -> tuple[float, float]:
         """SL = swing high/low (approximated as 2.5×ATR), TP = VWAP target."""
-        sl_mult = self.config.extra.get("sl_atr_mult", 2.5)
-        tp_mult = self.config.extra.get("tp_atr_mult", 2.0)
+        cfg = extra if extra is not None else self.config.extra
+        sl_mult = cfg.get("sl_atr_mult", 2.5)
+        tp_mult = cfg.get("tp_atr_mult", 2.0)
 
         sl_dist = atr * sl_mult
         tp_dist = atr * tp_mult

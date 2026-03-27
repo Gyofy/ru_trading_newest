@@ -94,9 +94,14 @@ class StrategyBase(ABC):
 
     @abstractmethod
     def compute_barriers(
-        self, signal: Signal, atr: float, price: float
+        self, signal: Signal, atr: float, price: float, extra: dict | None = None
     ) -> tuple[float, float]:
         """Compute (sl_price, tp_price) for this strategy.
+
+        Args:
+            extra: Per-coin adaptive params override for self.config.extra.
+                   If None, falls back to self.config.extra. Pass this explicitly
+                   instead of mutating self.config.extra directly.
 
         Returns:
             (sl_price, tp_price) — tp_price=0 means trailing stop only.
@@ -165,19 +170,12 @@ class StrategyBase(ABC):
             self._log.warning(f"[{coin}] ATR=0, skip")
             return None
 
-        # Apply per-coin adaptive params.
-        # NOTE: No await between mutation and restore — safe in asyncio single-thread model.
-        # _try_execute is always called sequentially from tick() so no true concurrency here.
-        original_extra = self.config.extra
+        # Apply per-coin adaptive params — pass as argument, never mutate self.config.extra.
         effective_extra = (
-            self.coin_profiles.get_params(coin, original_extra)
-            if self.coin_profiles else original_extra
+            self.coin_profiles.get_params(coin, self.config.extra)
+            if self.coin_profiles else self.config.extra
         )
-        self.config.extra = effective_extra
-        try:
-            sl_price, tp_price = self.compute_barriers(signal, atr, price)
-        finally:
-            self.config.extra = original_extra
+        sl_price, tp_price = self.compute_barriers(signal, atr, price, extra=effective_extra)
 
         # Stop distance for sizing
         sl_dist = abs(price - sl_price)
@@ -276,11 +274,7 @@ class StrategyBase(ABC):
             fill_price = result.get("fill_price", price)
 
             # Recalculate barriers from fill price using per-coin params
-            self.config.extra = effective_extra
-            try:
-                sl_price, tp_price = self.compute_barriers(signal, atr, fill_price)
-            finally:
-                self.config.extra = original_extra
+            sl_price, tp_price = self.compute_barriers(signal, atr, fill_price, extra=effective_extra)
 
             # Determine trailing
             use_trailing = tp_price == 0
@@ -291,7 +285,7 @@ class StrategyBase(ABC):
             # Fee offset ensures net RR = intended RR after paying round-trip fees
             if use_trailing:
                 sl_dist = abs(fill_price - sl_price)
-                tp_rr = self.config.extra.get("tp_rr_ratio", 2.0)
+                tp_rr = effective_extra.get("tp_rr_ratio", 2.0)
                 fee_offset = fill_price * ROUND_TRIP_FEE_RATE  # price units to cover fees
                 if side == "BUY":
                     tp_price = fill_price + sl_dist * tp_rr + fee_offset
@@ -299,7 +293,7 @@ class StrategyBase(ABC):
                     tp_price = fill_price - sl_dist * tp_rr - fee_offset
 
             # Register position
-            from src.execution.position_store import OpenPosition
+            from src.execution.position_store import OpenPosition  # noqa: PLC0415
             pos = OpenPosition(
                 coin=coin,
                 side=side,

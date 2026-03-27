@@ -196,9 +196,28 @@ class SlTpMonitorV2:
                     logger.info(f"[MonitorV2] {coin} SL re-registered @ {rounded_sl}")
                     setattr(pos, attempt_key, 0)
                 else:
+                    err_str = str(result.get("error", ""))
+                    # -4509: 거래소에 포지션 없음 → 고스트 포지션 → close callback으로 정리
+                    if "-4509" in err_str or "GTE" in err_str:
+                        strategy = self._pos_strategy(coin)
+                        logger.warning(
+                            f"[MonitorV2] {coin} no exchange position (-4509) "
+                            f"— closing ghost position from tracker"
+                        )
+                        await self._close(strategy, coin, "GHOST_CLEANUP", pos.entry_price)
+                        return
                     setattr(pos, attempt_key, fail_count + 1)
                     logger.warning(f"[MonitorV2] {coin} SL re-register failed: {result.get('error')}")
             except Exception as e:
+                err_str = str(e)
+                if "-4509" in err_str or "GTE" in err_str:
+                    strategy = self._pos_strategy(coin)
+                    logger.warning(
+                        f"[MonitorV2] {coin} no exchange position (-4509) "
+                        f"— closing ghost position from tracker"
+                    )
+                    await self._close(strategy, coin, "GHOST_CLEANUP", pos.entry_price)
+                    return
                 setattr(pos, attempt_key, fail_count + 1)
                 logger.warning(f"[MonitorV2] {coin} SL re-register error: {e}")
 
@@ -336,6 +355,14 @@ class SlTpMonitorV2:
             logger.info(f"[MonitorV2] {coin} exchange {label} order cancelled")
         except Exception as e:
             logger.warning(f"[MonitorV2] {coin} cancel exchange {label} failed: {e}")
+
+    def _pos_strategy(self, coin: str) -> str:
+        """coin에 해당하는 strategy 이름 반환. 매칭 안되면 빈 문자열."""
+        for key in self.pos_manager.positions:
+            strat, c = self.pos_manager._parse_key(key)
+            if c == coin:
+                return strat
+        return ""
 
     def increment_bars(self) -> None:
         """Increment bars_held for all positions. Call once per smallest cycle."""
