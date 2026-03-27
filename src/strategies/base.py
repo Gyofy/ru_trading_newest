@@ -263,6 +263,7 @@ class StrategyBase(ABC):
                 return None
 
             # Place order
+            _is_new_coin = coin not in self._leverage_initialized
             try:
                 result = await self._place_entry(coin, side, qty, price)
             except Exception as e:
@@ -527,7 +528,6 @@ class StrategyBase(ABC):
             }
 
         # Live mode: real Post-Only maker entry
-        _is_new_coin = coin not in self._leverage_initialized
         try:
             await self.exchange.set_leverage_async(coin, self.config.leverage)
             self._leverage_initialized.add(coin)
