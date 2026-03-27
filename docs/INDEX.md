@@ -62,6 +62,22 @@ docs/
 | v4.1 | `config/frozen_params_v4_1.yaml` | 5코인, ET primary, microstructure ON |
 | v3.4 | `config/frozen_params_v3_4.yaml` | Production baseline (DOT+ADA) |
 
+---
+
+## ⛔ 실행 절대 원칙: TP/SL FOR POSITION 필수
+
+**어떤 포지션도 SL과 TP 없이 존재할 수 없다. 예외 없음.**
+
+- SL: `STOP_MARKET` + `closePosition=True`
+- TP: `TAKE_PROFIT_MARKET` + `closePosition=True`
+- fill 후 반드시 **1초 대기** 후 등록 (Binance position propagation delay — -4509 방지)
+- 5회 retry 실패 시 **즉시 강제청산** (naked position = 절대 금지)
+- `positions.json`의 `sl_exchange_id` / `tp_exchange_id` 둘 다 비어있으면 위반
+
+> 상세: `CLAUDE.md` → "⛔ 절대 원칙: 모든 포지션에 TP/SL FOR POSITION 필수"
+
+---
+
 ## How to Use
 
 1. **New session**: Read `docs/INDEX.md` first

@@ -83,6 +83,39 @@ run_live_bot_v2.py            # v4.3-1m autonomous trading bot (ACTIVE)
 3. 일일 손실 -10% 초과 시 당일 거래 중단
 4. OHLCV → feature → prediction → (signal → order) 파이프라인 순서 준수
 
+## ⛔ 절대 원칙: 모든 포지션에 TP/SL FOR POSITION 필수
+
+**어떠한 예외도 없다. 모든 포지션은 반드시 SL + TP 양쪽을 FOR POSITION 타입으로 거래소에 등록해야 한다.**
+
+### 규칙 상세
+
+| 항목 | 규칙 |
+|------|------|
+| SL 타입 | `STOP_MARKET` + `closePosition=True` (FOR POSITION) |
+| TP 타입 | `TAKE_PROFIT_MARKET` + `closePosition=True` (FOR POSITION) |
+| 등록 시점 | fill 확인 후 **1초 대기** 후 등록 (Binance position propagation delay) |
+| 재시도 | 최대 5회 × 1초 간격 |
+| 실패 시 | SL 5회 실패 → 즉시 포지션 강제청산 (naked position 절대 금지) |
+| TP 5회 실패 → 즉시 포지션 강제청산 (SL만 있는 포지션도 금지) |
+| 확인 방법 | `positions.json` 내 `sl_exchange_id`, `tp_exchange_id` 모두 non-empty여야 함 |
+
+### 왜 FOR POSITION 타입인가
+- Binance Position 탭 TP/SL 컬럼에 표시 → 거래소 UI에서 즉시 확인 가능
+- `closePosition=True` → 포지션 전체 일괄 청산 보장 (수량 불일치 없음)
+- `reduceOnly=True` + 수량 지정 방식은 수량 변경 시 TP/SL 무효화 위험
+
+### 위반 시나리오 (과거 사례)
+- **-4509 오류**: fill 직후 즉시 SL 등록 시도 → Binance position DB 미반영 → 거부
+  - 해결: fill 후 1초 대기 추가, retry 5회로 증가
+- **-2022 오류**: 포지션이 없는데 market_close 시도 (ghost position)
+  - 해결: GHOST_CLEANUP early return으로 PnL 기록 없이 tracker만 제거
+
+### 모든 코드 변경 시 체크리스트
+- [ ] `place_protective_stop()` 호출 전 fill 완료 확인
+- [ ] SL/TP 등록 후 `pos.sl_exchange_id`, `pos.tp_exchange_id` 비어있지 않음 확인
+- [ ] SL/TP 없는 포지션이 `pos_manager`에 남지 않도록 강제청산 분기 유지
+- [ ] `closePosition=True` 파라미터 절대 제거 금지
+
 ## Labeling & Evaluation (v4.3)
 - **라벨링**: Triple Barrier (k_upper=3.0×ATR, k_lower=1.0×ATR, max_hold=60bars)
 - **2-Stage Binary**: S1(Trade/NoTrade) → S2(Long/Short, Trade samples only)
