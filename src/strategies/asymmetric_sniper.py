@@ -412,42 +412,93 @@ class AsymmetricSniper(StrategyBase):
             self.pos_manager.add_position(self.name, pos)
             self._trade_count += 1
 
-            # ── Register exchange-side SL (live mode only) ──
+            # ── Register exchange-side SL/TP — every position MUST have both ──
+            # 3-retry with 0.5s delay. Failure → force-close (no naked positions).
             if not self.config.paper_mode:
                 sl_side = "SELL" if side == "BUY" else "BUY"
-                sl_oid = self.exchange.make_order_id(
-                    coin, sl_side, self._trade_count, prefix="v8sl",
-                )
                 rounded_sl = self.exchange.round_price(coin, sl_price)
-                sl_result = await self.exchange.place_protective_stop(
-                    symbol=coin, side=sl_side, qty=qty,
-                    stop_price=rounded_sl, order_link_id=sl_oid,
-                )
-                if sl_result.get("success"):
-                    pos.sl_order_id = sl_oid
-                    pos.sl_exchange_id = sl_result.get("exchange_order_id", "")
-                    self._log.info(f"[{coin}] Exchange SL registered @ {sl_price:.4f}")
-                else:
-                    self._log.warning(
-                        f"[{coin}] Exchange SL FAILED: {sl_result.get('error')} "
-                        f"(software SL still active)"
-                    )
+                rounded_tp = self.exchange.round_price(coin, tp_price) if tp_price > 0 else 0
 
-                if tp_price > 0:
-                    tp_oid = self.exchange.make_order_id(
-                        coin, sl_side, self._trade_count, prefix="v8tp",
+                # SL retry loop
+                sl_result = {"success": False}
+                for attempt in range(3):
+                    if attempt > 0:
+                        await asyncio.sleep(0.5)
+                    sl_oid = self.exchange.make_order_id(
+                        coin, sl_side, self._trade_count, prefix=f"v8sl{attempt}",
                     )
-                    rounded_tp = self.exchange.round_price(coin, tp_price)
-                    tp_result = await self.exchange.place_take_profit(
+                    sl_result = await self.exchange.place_protective_stop(
                         symbol=coin, side=sl_side, qty=qty,
-                        tp_price=rounded_tp, order_link_id=tp_oid,
+                        stop_price=rounded_sl, order_link_id=sl_oid,
                     )
-                    if tp_result.get("success"):
-                        pos.tp_order_id = tp_oid
-                        pos.tp_exchange_id = tp_result.get("exchange_order_id", "")
-                        self._log.info(f"[{coin}] Exchange TP registered @ {tp_price:.4f}")
-                    else:
-                        self._log.warning(f"[{coin}] Exchange TP FAILED: {tp_result.get('error')}")
+                    if sl_result.get("success"):
+                        pos.sl_order_id = sl_oid
+                        pos.sl_exchange_id = sl_result.get("exchange_order_id", "")
+                        self._log.info(
+                            f"[{coin}] Exchange SL registered @ {sl_price:.4f}"
+                            + (f" (retry {attempt})" if attempt > 0 else "")
+                        )
+                        break
+
+                if not sl_result.get("success"):
+                    self._log.error(
+                        f"[SL_FAIL_CRITICAL] {coin} SL 3회 실패 → 강제청산 (err: {sl_result.get('error')})"
+                    )
+                    try:
+                        close_side = "SELL" if side == "BUY" else "BUY"
+                        await self.exchange.market_close(
+                            coin, close_side, qty,
+                            order_link_id=self.exchange.make_order_id(coin, close_side, prefix="v8emg"),
+                        )
+                    except Exception as ce:
+                        self._log.error(f"[SL_FAIL_CRITICAL] {coin} 강제청산 실패: {ce}")
+                    self.pos_manager.remove_position(self.name, coin)
+                    return None
+
+                # TP retry loop
+                if rounded_tp > 0:
+                    tp_result = {"success": False}
+                    for attempt in range(3):
+                        if attempt > 0:
+                            await asyncio.sleep(0.5)
+                        tp_oid = self.exchange.make_order_id(
+                            coin, sl_side, self._trade_count, prefix=f"v8tp{attempt}",
+                        )
+                        tp_result = await self.exchange.place_take_profit(
+                            symbol=coin, side=sl_side, qty=qty,
+                            tp_price=rounded_tp, order_link_id=tp_oid,
+                        )
+                        if tp_result.get("success"):
+                            pos.tp_order_id = tp_oid
+                            pos.tp_exchange_id = tp_result.get("exchange_order_id", "")
+                            self._log.info(
+                                f"[{coin}] Exchange TP registered @ {tp_price:.4f}"
+                                + (f" (retry {attempt})" if attempt > 0 else "")
+                            )
+                            break
+
+                    if not tp_result.get("success"):
+                        self._log.error(
+                            f"[TP_FAIL_CRITICAL] {coin} TP 3회 실패 → 강제청산 (err: {tp_result.get('error')})"
+                        )
+                        try:
+                            if pos.sl_exchange_id:
+                                await self.exchange.cancel_order(
+                                    coin, exchange_order_id=pos.sl_exchange_id,
+                                    order_link_id=pos.sl_order_id,
+                                )
+                        except Exception:
+                            pass
+                        try:
+                            close_side = "SELL" if side == "BUY" else "BUY"
+                            await self.exchange.market_close(
+                                coin, close_side, qty,
+                                order_link_id=self.exchange.make_order_id(coin, close_side, prefix="v8emg"),
+                            )
+                        except Exception as ce:
+                            self._log.error(f"[TP_FAIL_CRITICAL] {coin} 강제청산 실패: {ce}")
+                        self.pos_manager.remove_position(self.name, coin)
+                        return None
 
             self.pos_manager._save()
 

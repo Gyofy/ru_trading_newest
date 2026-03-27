@@ -208,35 +208,43 @@ class SlTpMonitorV2:
             except Exception as e:
                 logger.warning(f"[Trail] {coin} cancel old SL failed: {e}")
 
-        # Place new exchange SL at updated price
+        # Place new exchange SL at updated price — retry up to 3 times
         rounded_sl = self.exchange.round_price(coin, new_sl)
-        new_oid = self.exchange.make_order_id(coin, sl_side, prefix="v8tsl")
-        try:
-            result = await self.exchange.place_protective_stop(
-                symbol=coin, side=sl_side, qty=pos.current_qty,
-                stop_price=rounded_sl, order_link_id=new_oid,
-            )
+        result = {"success": False}
+        for attempt in range(3):
+            if attempt > 0:
+                await asyncio.sleep(0.5)
+            new_oid = self.exchange.make_order_id(coin, sl_side, prefix=f"v8tsl{attempt}")
+            try:
+                result = await self.exchange.place_protective_stop(
+                    symbol=coin, side=sl_side, qty=pos.current_qty,
+                    stop_price=rounded_sl, order_link_id=new_oid,
+                )
+            except Exception as e:
+                result = {"success": False, "error": str(e)}
             if result.get("success"):
                 pos.sl_exchange_id = result.get("exchange_order_id", "")
                 pos.sl_order_id = new_oid
-                logger.debug(f"[Trail] {coin} exchange SL updated → {rounded_sl}")
+                logger.debug(
+                    f"[Trail] {coin} exchange SL updated → {rounded_sl}"
+                    + (f" (retry {attempt})" if attempt > 0 else "")
+                )
+                break
+
+        if not result.get("success"):
+            err_msg = str(result.get("error", ""))
+            if "-4509" in err_msg or "-4130" in err_msg or "GTE" in err_msg:
+                # Position doesn't exist on exchange — clear tracking
+                logger.warning(
+                    f"[Trail] {coin} position not on exchange (-4509), clearing SL tracking"
+                )
+                pos.sl_exchange_id = ""
+                pos.sl_order_id = ""
             else:
-                err_msg = str(result.get("error", ""))
-                # -4509: no exchange position / -4130: duplicate GTE stop exists → software-only SL
-                if "-4509" in err_msg or "-4130" in err_msg or "GTE" in err_msg:
-                    logger.warning(
-                        f"[Trail] {coin} no exchange position (-4509) — "
-                        f"software SL only @ {new_sl:.4f}"
-                    )
-                    pos.sl_exchange_id = ""
-                    pos.sl_order_id = ""
-                else:
-                    logger.warning(
-                        f"[Trail] {coin} exchange SL FAILED: {err_msg} "
-                        f"(software SL still active @ {new_sl:.4f})"
-                    )
-        except Exception as e:
-            logger.warning(f"[Trail] {coin} exchange SL place failed: {e}")
+                logger.error(
+                    f"[SL_FAIL] [Trail] {coin} SL update failed 3x: {err_msg} "
+                    f"— software SL only @ {new_sl:.4f}"
+                )
 
     async def _cancel_exchange_order(
         self, pos, coin: str,
