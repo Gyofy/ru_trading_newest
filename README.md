@@ -1,9 +1,10 @@
-# Binance Futures Multi-Strategy Bot — v8.2
+# Binance Futures Multi-Strategy Bot — v8.4
 
 **바이낸스 선물 자동매매 시스템 | 4개 병렬 전략 | Demo/Paper/Live 모드 지원**
 
-> v8.2는 CVD/OFI 극단 반응, 청산 캐스케이드 역행, 모멘텀 돌파, 비대칭 저격 4개 전략을
-> asyncio.gather로 15개 코인에 동시 평가한다.
+> v8.4는 CVD/OFI 극단 반응, 청산 캐스케이드 역행, 모멘텀 돌파, 비대칭 저격 4개 전략을
+> asyncio.gather로 동적 코인 풀에 동시 평가한다. 레버리지 +1, 포지션 수량 2배, 수수료 반영 TP/SL,
+> exchange SL/TP 자동 재등록, 시장 종료 전 SL/TP 선취소 등 안전장치가 강화되었다.
 
 ---
 
@@ -25,14 +26,16 @@
 
 | 항목 | 값 |
 |------|-----|
-| 버전 | v8.2 (multi-strategy demo trading) |
+| 버전 | v8.4 (multi-strategy demo trading) |
 | 기본 모드 | demo (Binance testnet 실주문) |
 | 초기 가상 자본 | $5,000 |
 | 전략 수 | 4개 (병렬 동시 실행) |
-| 평가 대상 코인 | 15개 base + 동적 확장 |
-| 사이클 | 1분 / 5분 (전략별) |
-| 포지션 진입 방식 | Post-Only Maker (GTX) |
-| SL/TP 처리 | 거래소 측 (live) / 소프트웨어 (paper) |
+| 평가 대상 코인 | 13개 base + 동적 확장 (APT/TAO 제외) |
+| 사이클 | 1분 (전략별) |
+| 포지션 진입 방식 | Post-Only Maker (GTX), LIMIT 폴백 |
+| SL/TP 처리 | 거래소 측 closePosition=True (demo/live) |
+| SL/TP 재등록 | 모니터가 15초마다 누락 여부 자동 감지·재등록 |
+| 수수료 반영 | TP = SL × RR + round-trip fee (0.190%) |
 
 ### 운영 모드
 
@@ -366,18 +369,26 @@ tail -n 10 data/reports/multi_strategy/trades.jsonl | python3 -m json.tool
 | v4.x ~ v5.x | ML 2-Stage Binary | 데이터 leakage 확인, Sharpe 과대평가 | 폐기 |
 | v6.x | TSMOM BTC Dir + RS | BTC 방향 + 상대강도 선택 (1h) | 폐기 |
 | v8.1 | Multi-Strategy 초기 | CVD/OFI/청산/모멘텀 프레임워크 구축 | 구버전 |
-| **v8.2** | **Multi-Strategy 현재** | asyncio 병렬 평가, funding 필터 우회, R:R 오버라이드, exposure cap 2.5x 상향 | **현재** |
+| v8.2 | Multi-Strategy | asyncio 병렬 평가, funding 필터 우회, R:R 오버라이드 | 구버전 |
+| v8.3 | Multi-Strategy | 수수료 반영 TP/SL, SL 3회 실패 강제청산, trailing 축소, BTC macro 로그 | 구버전 |
+| **v8.4** | **Multi-Strategy 현재** | 레버리지 +1/수량 2배, SL/TP 자동재등록, naked position 보존, shutdown SL/TP 취소, APT/TAO 제외 | **현재** |
 
-### v8.2 주요 변경점 (vs v8.1)
+### v8.4 주요 변경점 (vs v8.3)
 
-- asyncio.gather를 통한 15개 코인 병렬 동시 평가 (순차 → 병렬, 사이클 지연 감소)
-- asyncio.Semaphore(2) rate limiting 추가
-- testnet 환경에서 funding 필터 비활성화 (`funding_filter_enabled: false`)
-- testnet 1분봉 ATR 왜곡으로 R:R 체크 비활성화 (`rr_check_enabled: false`)
-- portfolio exposure cap 85% → 250% 상향 (가상매매 공격적 설정)
-- position_sizing risk_pct_per_trade 8% → 15% 상향
-- CVD/OFI 분위수 임계 0.95 → 0.92 완화 (진입 빈도 증가)
-- Asymmetric Sniper CVD 분위수 0.99 → 0.97 완화
+**포지션 크기 및 레버리지 상향**
+- 모든 전략 레버리지 +1: cvd_spike(5→6), liquidation_fade(4→5), momentum_breakout(5→6), asymmetric_sniper(7→8)
+- 모든 전략 allocation_usdt ×2: cvd_spike($4,500→$9,000), liq_fade($2,250→$4,500), mom_breakout($2,250→$4,500), sniper($4,500→$9,000)
+- asymmetric_sniper risk_per_trade_usdt ×2 ($100→$200)
+
+**SL/TP 안전성 강화**
+- `SlTpMonitorV2._ensure_exchange_orders()`: 매 15초 폴링 시 exchange SL/TP 누락 자동 감지 → 재등록 (3사이클 throttle)
+- `shutdown()`: market_close 전에 exchange SL/TP 주문 먼저 취소 (잔류 조건부 주문 방지)
+- `base.py` / `asymmetric_sniper.py`: SL/TP 강제청산 실패 시 pos_manager에서 제거하지 않아 모니터 감시 유지 (naked position 방지)
+
+**기타**
+- `set_leverage()` → `set_leverage_async()`: 이벤트 루프 blocking 해소
+- `exclude_coins: [APT, TAO]`: testnet WaitFill timeout 코인 완전 제외 (base + dynamic 양쪽)
+- Config 버전 v8.3-demo → v8.4-demo
 
 ---
 

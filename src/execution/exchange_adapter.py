@@ -226,6 +226,11 @@ class ExchangeAdapter:
         except Exception as e:
             logger.debug(f"[Leverage] {symbol} set_leverage failed: {e}")
 
+    async def set_leverage_async(self, symbol: str, leverage: int) -> None:
+        """Async wrapper for set_leverage — avoids blocking the event loop."""
+        loop = asyncio.get_running_loop()
+        await loop.run_in_executor(None, self.set_leverage, symbol, leverage)
+
     # ── Entry Orders (Maker-First) ──────────────────────────
 
     async def place_post_only_entry(

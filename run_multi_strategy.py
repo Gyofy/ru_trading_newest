@@ -171,6 +171,7 @@ class MultiStrategyBot:
         self._dc_max_spread = dcfg.get("max_spread_bps", 8.0)
         self._dc_refresh_sec = dcfg.get("refresh_interval_sec", 900)
         self._dc_base_coins: list[str] = dcfg.get("base_coins", ["XRP", "SOL", "TAO", "DOGE", "ADA"])
+        self._dc_exclude_coins: set[str] = set(dcfg.get("exclude_coins", []))
 
         # Shared lock for portfolio-level atomicity
         self._portfolio_lock = asyncio.Lock()
@@ -517,13 +518,13 @@ class MultiStrategyBot:
 
             base_set = set(self._dc_base_coins)
 
-            # base_coins 제외한 선택적 풀 (상위 selective_pool_size개)
+            # base_coins 제외한 선택적 풀 (상위 selective_pool_size개), exclude_coins 필터 적용
             selective_coins = [
                 r for r in selective_results
-                if r["coin"] not in base_set
+                if r["coin"] not in base_set and r["coin"] not in self._dc_exclude_coins
             ][:self._dc_selective_pool]
 
-            # ── base_coins: 항상 포함 (거래소 가격 조회 가능 여부 무관) ──
+            # ── base_coins: 항상 포함 (exclude_coins는 base_coins에서도 제외) ──
             base_meta = [
                 next(
                     (r for r in selective_results if r["coin"] == c),
@@ -531,6 +532,7 @@ class MultiStrategyBot:
                      "spread_bps": 0, "last": 0},
                 )
                 for c in self._dc_base_coins
+                if c not in self._dc_exclude_coins
             ]
 
             # 최종: base_coins 먼저, 선택적 풀 뒤에
@@ -1165,6 +1167,24 @@ class MultiStrategyBot:
 
         if self.mode in ("live", "demo") and not self._keep_positions:
             for pos in self.pos_manager.all_positions():
+                # Cancel exchange SL/TP before market close — prevents residual
+                # conditional orders from firing after position is already gone
+                for attr_id, attr_link, label in [
+                    ("sl_exchange_id", "sl_order_id", "SL"),
+                    ("tp_exchange_id", "tp_order_id", "TP"),
+                ]:
+                    exch_id = getattr(pos, attr_id, "")
+                    link_id = getattr(pos, attr_link, "")
+                    if exch_id or link_id:
+                        try:
+                            await self.exchange.cancel_order(
+                                pos.coin,
+                                exchange_order_id=exch_id or None,
+                                order_link_id=link_id or None,
+                            )
+                            log.info(f"[Shutdown] {pos.coin} exchange {label} cancelled")
+                        except Exception as e:
+                            log.warning(f"[Shutdown] {pos.coin} {label} cancel: {e}")
                 try:
                     close_side = "SELL" if pos.side == "BUY" else "BUY"
                     await self.exchange.market_close(

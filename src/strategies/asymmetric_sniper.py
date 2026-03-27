@@ -444,15 +444,21 @@ class AsymmetricSniper(StrategyBase):
                     self._log.error(
                         f"[SL_FAIL_CRITICAL] {coin} SL 3회 실패 → 강제청산 (err: {sl_result.get('error')})"
                     )
+                    close_side = "SELL" if side == "BUY" else "BUY"
+                    close_ok = False
                     try:
-                        close_side = "SELL" if side == "BUY" else "BUY"
                         await self.exchange.market_close(
                             coin, close_side, qty,
                             order_link_id=self.exchange.make_order_id(coin, close_side, prefix="v8emg"),
                         )
+                        close_ok = True
                     except Exception as ce:
-                        self._log.error(f"[SL_FAIL_CRITICAL] {coin} 강제청산 실패: {ce}")
-                    self.pos_manager.remove_position(self.name, coin)
+                        self._log.error(
+                            f"[SL_FAIL_CRITICAL] {coin} 강제청산 실패: {ce} "
+                            f"— NAKED POSITION 위험! 수동 개입 필요"
+                        )
+                    if close_ok:
+                        self.pos_manager.remove_position(self.name, coin)
                     return None
 
                 # TP retry loop
@@ -489,14 +495,19 @@ class AsymmetricSniper(StrategyBase):
                                 )
                         except Exception:
                             pass
+                        close_side = "SELL" if side == "BUY" else "BUY"
                         try:
-                            close_side = "SELL" if side == "BUY" else "BUY"
                             await self.exchange.market_close(
                                 coin, close_side, qty,
                                 order_link_id=self.exchange.make_order_id(coin, close_side, prefix="v8emg"),
                             )
                         except Exception as ce:
-                            self._log.error(f"[TP_FAIL_CRITICAL] {coin} 강제청산 실패: {ce}")
+                            self._log.error(
+                                f"[TP_FAIL_CRITICAL] {coin} 강제청산 실패: {ce} "
+                                f"— NAKED POSITION 위험! 수동 개입 필요"
+                            )
+                            # Keep in tracker — monitor continues watching
+                            return None
                         self.pos_manager.remove_position(self.name, coin)
                         return None
 

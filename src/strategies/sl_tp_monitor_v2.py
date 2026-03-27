@@ -96,6 +96,13 @@ class SlTpMonitorV2:
             # Track extremes
             pos.update_extremes(price)
 
+            # ── Ensure exchange SL/TP exist (register if missing) ─────────
+            if not self.paper_mode:
+                await self._ensure_exchange_orders(pos, coin)
+            # Re-check position still alive after potential await
+            if not self.pos_manager.has_position(strategy, coin):
+                continue
+
             # ── Trailing stop update ──────────────────────
             if pos.trailing_sl and pos.trail_distance > 0:
                 await self._update_trailing_sl(pos, coin, price)
@@ -151,6 +158,69 @@ class SlTpMonitorV2:
                 )
                 await self._close(strategy, coin, "TIME_STOP", price)
                 continue
+
+    async def _ensure_exchange_orders(self, pos, coin: str) -> None:
+        """Register missing exchange SL/TP orders for a position.
+
+        Called every poll cycle. Only places orders when sl/tp_exchange_id is
+        empty, so it is effectively a no-op for healthy positions.
+        Throttled by _ensure_attempt_count to avoid hammering on repeated failures.
+        """
+        sl_missing = not getattr(pos, "sl_exchange_id", "")
+        tp_missing = not getattr(pos, "tp_exchange_id", "") and pos.tp_price > 0
+
+        if not sl_missing and not tp_missing:
+            return
+
+        # Throttle: only retry every 3 poll cycles to avoid 429
+        attempt_key = f"_ensure_fail_{coin}"
+        fail_count = getattr(pos, attempt_key, 0)
+        if fail_count > 0 and fail_count % 3 != 0:
+            setattr(pos, attempt_key, fail_count + 1)
+            return
+
+        sl_side = "SELL" if pos.side == "BUY" else "BUY"
+        qty = getattr(pos, "current_qty", pos.qty)
+
+        if sl_missing and pos.sl_price > 0:
+            rounded_sl = self.exchange.round_price(coin, pos.sl_price)
+            sl_oid = self.exchange.make_order_id(coin, sl_side, prefix="v8mon_sl")
+            try:
+                result = await self.exchange.place_protective_stop(
+                    symbol=coin, side=sl_side, qty=qty,
+                    stop_price=rounded_sl, order_link_id=sl_oid,
+                )
+                if result.get("success"):
+                    pos.sl_exchange_id = result.get("exchange_order_id", "")
+                    pos.sl_order_id = sl_oid
+                    logger.info(f"[MonitorV2] {coin} SL re-registered @ {rounded_sl}")
+                    setattr(pos, attempt_key, 0)
+                else:
+                    setattr(pos, attempt_key, fail_count + 1)
+                    logger.warning(f"[MonitorV2] {coin} SL re-register failed: {result.get('error')}")
+            except Exception as e:
+                setattr(pos, attempt_key, fail_count + 1)
+                logger.warning(f"[MonitorV2] {coin} SL re-register error: {e}")
+
+        if tp_missing and pos.tp_price > 0:
+            rounded_tp = self.exchange.round_price(coin, pos.tp_price)
+            tp_oid = self.exchange.make_order_id(coin, sl_side, prefix="v8mon_tp")
+            try:
+                result = await self.exchange.place_take_profit(
+                    symbol=coin, side=sl_side, qty=qty,
+                    tp_price=rounded_tp, order_link_id=tp_oid,
+                )
+                if result.get("success"):
+                    pos.tp_exchange_id = result.get("exchange_order_id", "")
+                    pos.tp_order_id = tp_oid
+                    logger.info(f"[MonitorV2] {coin} TP re-registered @ {rounded_tp}")
+                else:
+                    logger.warning(f"[MonitorV2] {coin} TP re-register failed: {result.get('error')}")
+            except Exception as e:
+                logger.warning(f"[MonitorV2] {coin} TP re-register error: {e}")
+
+        # Persist updated order IDs
+        self.pos_manager._save()
 
     # Minimum SL move (% of price) before syncing to exchange.
     # Prevents excessive API calls on tiny price fluctuations.

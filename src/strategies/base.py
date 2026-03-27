@@ -352,15 +352,22 @@ class StrategyBase(ABC):
                         f"[SL_FAIL_CRITICAL] ⚠️ {coin} SL 3회 실패 → 포지션 강제 청산 "
                         f"(err: {sl_result.get('error')})"
                     )
+                    close_side = "SELL" if side == "BUY" else "BUY"
+                    close_ok = False
                     try:
-                        close_side = "SELL" if side == "BUY" else "BUY"
                         await self.exchange.market_close(
                             coin, close_side, qty,
                             order_link_id=self.exchange.make_order_id(coin, close_side, prefix="v8emg"),
                         )
+                        close_ok = True
                     except Exception as ce:
-                        self._log.error(f"[SL_FAIL_CRITICAL] {coin} 강제청산도 실패: {ce}")
-                    self.pos_manager.remove_position(self.name, coin)
+                        self._log.error(
+                            f"[SL_FAIL_CRITICAL] {coin} 강제청산도 실패: {ce} "
+                            f"— NAKED POSITION 위험! 수동 개입 필요"
+                        )
+                    if close_ok:
+                        self.pos_manager.remove_position(self.name, coin)
+                    # If close failed: keep position in tracker so monitor keeps watching
                     return None
 
                 # ── TP: 3-retry with 0.5s delay ──
@@ -407,7 +414,12 @@ class StrategyBase(ABC):
                                 order_link_id=self.exchange.make_order_id(coin, close_side, prefix="v8emg"),
                             )
                         except Exception as ce:
-                            self._log.error(f"[TP_FAIL_CRITICAL] {coin} 강제청산도 실패: {ce}")
+                            self._log.error(
+                                f"[TP_FAIL_CRITICAL] {coin} 강제청산도 실패: {ce} "
+                                f"— NAKED POSITION 위험! 수동 개입 필요"
+                            )
+                            # Keep position in tracker — monitor continues watching
+                            return None
                         self.pos_manager.remove_position(self.name, coin)
                         return None
 
@@ -488,7 +500,7 @@ class StrategyBase(ABC):
 
         # Live mode: real Post-Only maker entry
         try:
-            self.exchange.set_leverage(coin, self.config.leverage)
+            await self.exchange.set_leverage_async(coin, self.config.leverage)
         except Exception as _lev_e:
             self._log.warning(
                 f"[{coin}] set_leverage({self.config.leverage}x) FAILED: {_lev_e} "
