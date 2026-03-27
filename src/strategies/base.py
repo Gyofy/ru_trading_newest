@@ -278,7 +278,10 @@ class StrategyBase(ABC):
 
             # Determine trailing
             use_trailing = tp_price == 0
-            trail_dist = atr * self.config.sl_atr_mult if use_trailing else 0.0
+            # Use trailing_atr_mult if provided (e.g. 0.7×ATR for tight trail),
+            # fallback to sl_atr_mult so trail distance ≠ SL distance by accident.
+            _trail_mult = effective_extra.get("trailing_atr_mult", self.config.sl_atr_mult)
+            trail_dist = atr * _trail_mult if use_trailing else 0.0
 
             # For trailing strategies: compute initial TP for exchange display
             # Uses tp_rr_ratio config (default 2.0x SL distance)

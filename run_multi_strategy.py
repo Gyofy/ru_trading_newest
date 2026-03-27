@@ -879,6 +879,15 @@ class MultiStrategyBot:
         if pos is None:
             return
 
+        # Ghost positions never existed on exchange — just remove from tracker, no PnL/fee
+        if reason == "GHOST_CLEANUP":
+            self.pos_manager.remove_position(strategy, coin)
+            log.info(
+                f"[Close] 👻 {strategy}:{coin} GHOST_CLEANUP "
+                f"— removed stale tracker entry (was never on exchange)"
+            )
+            return
+
         # Calculate PnL
         if pos.side == "BUY":
             pnl_pct = (price - pos.entry_price) / pos.entry_price
@@ -918,13 +927,13 @@ class MultiStrategyBot:
                     )
                     return  # 청산 미확인 시 PnL 기록도 하지 않음
 
-        # Record PnL
-        self.portfolio_risk.record_trade_pnl(strategy, pnl_usdt)
-
         # 수수료 계산 — 단 1회, EVGuardian + 로그 모두 이 값 사용
         _entry_notional = pos.entry_price * pos.current_qty
         _exit_notional = price * pos.current_qty
         _fee_usdt = round((_entry_notional + _exit_notional) * (ROUND_TRIP_FEE_RATE / 2), 4)
+
+        # Record net PnL (gross - fee) so current_equity reflects actual balance
+        self.portfolio_risk.record_trade_pnl(strategy, pnl_usdt - _fee_usdt)
 
         # F5: 실수수료 기록 (EVGuardian 일일 예산 누적)
         if self.ev_guardian:

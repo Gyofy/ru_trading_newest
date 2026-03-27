@@ -72,7 +72,7 @@ class LiquidationFade(StrategyBase):
         coin: str,
         oi_sigma: float,
         taker_mult: float,
-    ) -> tuple[str, float, float] | None:
+    ) -> tuple[str, float, float, float] | None:
         """Detect liquidation cascade via OI drop + taker volume spike.
 
         Returns (direction, oi_drop_sigma, taker_ratio) or None.
