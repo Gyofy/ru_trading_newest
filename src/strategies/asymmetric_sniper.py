@@ -264,17 +264,14 @@ class AsymmetricSniper(StrategyBase):
             self._log.warning(f"[{coin}] ATR=0, skip")
             return None
 
-        # Apply per-coin adaptive params (try/finally ensures restoration even on error)
-        original_extra = self.config.extra
-        if self.coin_profiles:
-            self.config.extra = self.coin_profiles.get_params(coin, original_extra)
-        cfg = self.config.extra
+        # Apply per-coin adaptive params — pass as argument, never mutate self.config.extra.
+        effective_extra = (
+            self.coin_profiles.get_params(coin, self.config.extra)
+            if self.coin_profiles else self.config.extra
+        )
+        cfg = effective_extra
 
-        try:
-            sl_price, tp_price = self.compute_barriers(signal, atr, price)
-        finally:
-            self.config.extra = original_extra
-        cfg = original_extra  # use restored extra for remaining logic
+        sl_price, tp_price = self.compute_barriers(signal, atr, price, extra=effective_extra)
         sl_dist = abs(price - sl_price)
 
         min_sl_dist = price * ROUND_TRIP_FEE_RATE
@@ -373,13 +370,8 @@ class AsymmetricSniper(StrategyBase):
                 return None
 
             fill_price = result.get("fill_price", price)
-            # Re-apply per-coin params for post-fill barrier (mirrors base.py pattern)
-            if self.coin_profiles:
-                self.config.extra = self.coin_profiles.get_params(coin, original_extra)
-            try:
-                sl_price, tp_price = self.compute_barriers(signal, atr, fill_price)
-            finally:
-                self.config.extra = original_extra
+            # Re-compute barriers from fill price using per-coin params
+            sl_price, tp_price = self.compute_barriers(signal, atr, fill_price, extra=effective_extra)
 
             # Trailing stop config
             trail_initial = cfg.get("trailing_atr_mult_initial", 2.0)
