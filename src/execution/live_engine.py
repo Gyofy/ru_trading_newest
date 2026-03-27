@@ -384,6 +384,7 @@ class LiveEngine:
                     fill_price=fill["fill_price"],
                     fill_qty=fill["fill_qty"],
                     fee=fill.get("fee", 0),
+                    raw_response=fill.get("raw_response"),
                 )
                 self.ledger.update_order_status(p["order_id"], "FILLED")
 

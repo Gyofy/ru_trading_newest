@@ -475,11 +475,22 @@ class ExchangeAdapter:
                 order = await self._fetch_order_by_link_id(symbol, order_link_id)
                 if order:
                     if order.get("status") == "closed":
+                        fill_price = order.get("average", order.get("price", 0))
+                        fill_qty = order.get("filled", 0)
+                        # Binance Demo 모드에서는 fee 필드가 None으로 옴 → notional 기반 추정
+                        # Post-Only 진입 = maker 0.02%, 폴백(taker) = 0.05%
+                        api_fee = (order.get("fee") or {}).get("cost")
+                        if api_fee is not None and api_fee > 0:
+                            fee = api_fee
+                        else:
+                            fee_rate = 0.0002  # maker (Post-Only 기본)
+                            fee = fill_price * fill_qty * fee_rate
                         return {
                             "filled": True,
-                            "fill_price": order.get("average", order.get("price", 0)),
-                            "fill_qty": order.get("filled", 0),
-                            "fee": (order.get("fee") or {}).get("cost", 0),
+                            "fill_price": fill_price,
+                            "fill_qty": fill_qty,
+                            "fee": fee,
+                            "raw_response": order,
                         }
                     if order.get("status") in ("canceled", "cancelled", "rejected"):
                         return None
