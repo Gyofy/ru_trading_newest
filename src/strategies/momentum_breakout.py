@@ -74,10 +74,11 @@ class MomentumBreakout(StrategyBase):
         coin: str,
         vol_mult: float,
         range_hours: int,
-    ) -> tuple[str, float, float, bool] | None:
+    ) -> tuple[str, float, float, bool, float, float, float] | None:
         """Check for volume-confirmed breakout.
 
-        Returns (direction, vol_ratio, breakout_level, cvd_confirmed) or None.
+        Returns (direction, vol_ratio, breakout_level, cvd_confirmed,
+                 range_width_pct, breakout_pct, cvd_1h_delta) or None.
         """
         # Get 1m data for precise volume and CVD analysis
         bars_needed = range_hours * 60 + 60  # 24h + buffer in 1m bars

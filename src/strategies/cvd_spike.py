@@ -102,7 +102,9 @@ class CVDSpikeReactor(StrategyBase):
         current_ofi = float(ofi_series.iloc[-1])
 
         # CVD z-score (standardised position within window)
-        cvd_std = float(recent.std()) or 1.0
+        # NaN is truthy so "or 1.0" does not protect against NaN — use np.isfinite
+        _std = float(recent.std())
+        cvd_std = _std if np.isfinite(_std) and _std > 0 else 1.0
         cvd_mean = float(recent.mean())
         cvd_z = (current_cvd - cvd_mean) / cvd_std
 

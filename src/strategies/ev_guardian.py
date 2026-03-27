@@ -140,7 +140,8 @@ class EVGuardian:
 
             # EV 공식 (수수료 이중 차감 방지: pnl_net_pct에 fee 이미 포함)
             # pnl_net_pct가 있으면 그대로 사용, 없으면 분해 공식
-            if any(t.get("pnl_net_pct") for t in closed):
+            # any(t.get(...))가 아닌 "key in t"로 체크: 0.0 값은 falsy라 any()가 오작동함
+            if any("pnl_net_pct" in t for t in closed):
                 ev = avg_net_pnl
                 reason_ev = "net_pnl_avg"
             else:
