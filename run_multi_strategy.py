@@ -25,6 +25,7 @@ import logging
 import os
 import signal
 import sys
+import threading
 import time
 import urllib.request
 from datetime import datetime, timezone
@@ -96,15 +97,19 @@ STRATEGY_MAP = {
 
 # ── Discord ──────────────────────────────────────────────
 
+_discord_rate_lock = threading.Lock()
+_discord_last_ts: float = 0.0
+_DISCORD_MIN_INTERVAL = 2.0  # Discord rate limit: max 30/min → 1 per 2s minimum
+
+
 def _discord_post_sync(message: str, title: str) -> None:
     """동기 Discord 전송 (executor에서 호출용). Rate-limited: 1 per 2s."""
     global _discord_last_ts
-    import time as _time
     with _discord_rate_lock:
-        elapsed = _time.monotonic() - _discord_last_ts
+        elapsed = time.monotonic() - _discord_last_ts
         if elapsed < _DISCORD_MIN_INTERVAL:
-            _time.sleep(_DISCORD_MIN_INTERVAL - elapsed)
-        _discord_last_ts = _time.monotonic()
+            time.sleep(_DISCORD_MIN_INTERVAL - elapsed)
+        _discord_last_ts = time.monotonic()
     url = os.environ.get("DISCORD_WEBHOOK_URL", "")
     if not url:
         return
@@ -131,12 +136,6 @@ def _discord_post_sync(message: str, title: str) -> None:
         urllib.request.urlopen(req, timeout=5)
     except Exception as e:
         log.error(f"[Discord] Post failed: {e}")
-
-
-import threading as _threading
-_discord_rate_lock = _threading.Lock()
-_discord_last_ts: float = 0.0
-_DISCORD_MIN_INTERVAL = 2.0  # Discord rate limit: max 30/min → 1 per 2s minimum
 
 
 def discord_post(message: str, title: str = "") -> None:
@@ -195,8 +194,8 @@ class MultiStrategyBot:
 
         # Paper mode tracking — load historical trades for continuity
         self._paper_equity = self.initial_equity
-        self._paper_trades: list[dict] = self._load_trades_history()
-        self._first_trade_notified = len(self._paper_trades) > 0
+        self._session_trades: list[dict] = self._load_trades_history()
+        self._first_trade_notified = len(self._session_trades) > 0
 
         # Graceful update: --keep-positions prevents closing positions on shutdown
         self._keep_positions: bool = False
@@ -679,14 +678,14 @@ class MultiStrategyBot:
                 ) or "• 거래 없음"
 
                 # 오늘 세션 통계
-                total_trades = len(self._paper_trades)
-                session_pnl = sum(t["pnl_usdt"] for t in self._paper_trades)
-                wins = sum(1 for t in self._paper_trades if t["pnl_usdt"] > 0)
+                total_trades = len(self._session_trades)
+                session_pnl = sum(t["pnl_usdt"] for t in self._session_trades)
+                wins = sum(1 for t in self._session_trades if t["pnl_usdt"] > 0)
                 wr = f"{wins/total_trades*100:.1f}%" if total_trades > 0 else "N/A"
 
                 # 수수료 통계
-                session_fee = sum(t.get("fee_usdt", 0.0) for t in self._paper_trades)
-                session_net = sum(t.get("pnl_net_usdt", t["pnl_usdt"]) for t in self._paper_trades)
+                session_fee = sum(t.get("fee_usdt", 0.0) for t in self._session_trades)
+                session_net = sum(t.get("pnl_net_usdt", t["pnl_usdt"]) for t in self._session_trades)
                 ev_text = self.ev_guardian.format_discord_summary() if self.ev_guardian else ""
 
                 discord_post(
@@ -712,181 +711,20 @@ class MultiStrategyBot:
                 break
 
     async def _discord_signal_scan(self) -> None:
-        """매 10분마다 변동성 상위 30개 전체 신호 분석 리포트 출력.
-
-        self.coins(safety filter 통과 목록)가 아닌, 변동성 상위 30개 전체를
-        필터 없이 스캔하여 진입 신호 강도를 분석한다.
-        """
+        """매 10분마다 변동성 상위 30개 전체 신호 분석 리포트 출력."""
         await asyncio.sleep(60)  # 시작 후 1분 뒤 첫 실행
         while not self._shutdown_event.is_set():
             try:
                 now = datetime.now(timezone.utc)
-
-                # ── 변동성 상위 30 전체 (safety filter 제거) ──
-                universe = await self.data_hub.select_tradeable_coins(
-                    volatility_pool=30,
-                    min_volume_usdt=0,       # 필터 없음 — 전체 스캔
-                    max_spread_bps=9999.0,   # 필터 없음
-                )
-                if not universe:
-                    # testnet에서 fetch 실패 시 현재 coin 리스트 fallback
-                    universe = [{"coin": c, "volatility_pct": 0,
-                                 "volume_usdt": 0, "spread_bps": 0, "last": 0}
-                                for c in self.coins]
-
-                active_set = set(self.coins)  # safety filter 통과한 코인
-                open_coins = {
-                    self.pos_manager._parse_key(k)[1]
-                    for k in self.pos_manager.positions
-                }
-
-                scored = []
-                for meta in universe:
-                    coin = meta["coin"]
-                    try:
-                        df = await self.data_hub.get_ohlcv(coin, "1m", limit=500)
-                        if df is None or len(df) < 100:
-                            continue
-
-                        price = df["close"].iloc[-1]
-
-                        # CVD z-score (단순 rolling std 기반)
-                        cvd = DataHub.compute_cvd(df)
-                        cvd_pct = float(cvd.rank(pct=True).iloc[-1])
-                        cvd_val = float(cvd.iloc[-1])
-                        cvd_mean = float(cvd.rolling(480).mean().iloc[-1])
-                        cvd_std = float(cvd.rolling(480).std().iloc[-1])
-                        cvd_z = (cvd_val - cvd_mean) / cvd_std if cvd_std > 0 else 0
-
-                        # OFI
-                        ofi = DataHub.compute_ofi(df)
-                        ofi_pct = float(ofi.rank(pct=True).iloc[-1])
-
-                        # ATR% (true ATR: max of H-L, H-prevC, prevC-L)
-                        atr = StrategyBase._compute_atr(df, period=14)
-                        atr_pct = atr / price * 100 if price > 0 else 0
-
-                        # 추세
-                        ret_20 = (price - df["close"].iloc[-20]) / df["close"].iloc[-20]
-                        ret_5 = (price - df["close"].iloc[-5]) / df["close"].iloc[-5]
-
-                        # 신호 판정 (CVD 극단 = 역추세 전략 진입 방향 기준)
-                        # CVD 극단 매수(>0.95) → 소진 예상 → 역추세 SHORT 후보
-                        # CVD 극단 매도(<0.05) → 소진 예상 → 역추세 LONG 후보
-                        direction = "─"
-                        score = 0
-                        if cvd_pct > 0.95 or cvd_z > 2.0:
-                            direction = "역추세SHORT 🔴"
-                            score += 2 + (1 if cvd_z > 3.0 else 0)
-                        elif cvd_pct < 0.05 or cvd_z < -2.0:
-                            direction = "역추세LONG 🟢"
-                            score += 2 + (1 if cvd_z < -3.0 else 0)
-                        if ofi_pct > 0.90:
-                            score += 1
-                        elif ofi_pct < 0.10:
-                            score += 1
-                        if atr_pct > 0.5:
-                            score += 1  # 충분한 변동성
-
-                        status = "🔵 OPEN" if coin in open_coins else (
-                                 "✅ 활성" if coin in active_set else "⚪ 대기")
-
-                        scored.append({
-                            "coin": coin,
-                            "direction": direction,
-                            "score": score,
-                            "cvd_pct": cvd_pct,
-                            "cvd_z": cvd_z,
-                            "ofi_pct": ofi_pct,
-                            "atr_pct": atr_pct,
-                            "ret_5": ret_5,
-                            "ret_20": ret_20,
-                            "price": price,
-                            "vol_m": meta["volume_usdt"] / 1e6,
-                            "status": status,
-                        })
-                    except Exception:
-                        continue
-
-                scored.sort(key=lambda x: x["score"], reverse=True)
-
-                # ── 리포트 구성 ──
-                strong = [s for s in scored if s["score"] >= 2]
-                neutral = [s for s in scored if s["score"] < 2]
-
-                lines = [f"**전체 스캔: {len(scored)}개** | 신호: {len(strong)}개 | 중립: {len(neutral)}개"]
-                lines.append(f"활성 코인(safety 통과): `{', '.join(active_set) if active_set else '없음'}`")
-                lines.append("")
-
-                if strong:
-                    lines.append("**━ 진입 후보 ━**")
-                    for s in strong[:10]:
-                        lines.append(
-                            f"{s['status']} **{s['coin']}** {s['direction']} (점{s['score']})\n"
-                            f"  `{s['price']:.4f}` | CVD-z: `{s['cvd_z']:+.1f}` | OFI: `{s['ofi_pct']:.2f}` "
-                            f"| ATR: `{s['atr_pct']:.2f}%` | 5봉: `{s['ret_5']:+.2%}`"
-                        )
-                else:
-                    lines.append("현재 진입 조건 충족 후보 없음 — 시장 중립 구간")
-
-                if neutral and len(neutral) <= 20:
-                    lines.append("")
-                    lines.append(f"**━ 중립 ({len(neutral)}개) ━**")
-                    neutral_summary = ", ".join(
-                        f"`{s['coin']}`({s['atr_pct']:.1f}%)" for s in neutral[:15]
-                    )
-                    lines.append(neutral_summary)
-
-                # ── 보유 포지션 요약 + 예상 청산 타이밍 ──
-                positions = self.pos_manager.positions
-                if positions:
-                    lines.append("")
-                    lines.append("**━ 보유 포지션 ━**")
-                    for key, pos in positions.items():
-                        try:
-                            # 현재 가격
-                            ticker = await self.data_hub.get_ticker(pos.coin)
-                            cur_price = ticker.get("last", pos.entry_price)
-
-                            # 미실현 PnL
-                            if pos.side == "BUY":
-                                unreal_pct = (cur_price - pos.entry_price) / pos.entry_price
-                            else:
-                                unreal_pct = (pos.entry_price - cur_price) / pos.entry_price
-                            unreal_usdt = unreal_pct * pos.current_qty * pos.entry_price
-
-                            # 예상 청산 타이밍 (남은 TTL bars → 분 환산)
-                            bars_remaining = max(0, pos.ttl_bars - pos.bars_held)
-                            eta_min = bars_remaining  # 1 bar = 1분
-                            eta_str = f"{eta_min//60}h{eta_min%60}m" if eta_min >= 60 else f"{eta_min}m"
-
-                            # SL 거리
-                            sl_dist_pct = abs(cur_price - pos.sl_price) / cur_price * 100
-
-                            side_emoji = "📈" if pos.side == "BUY" else "📉"
-                            pnl_emoji = "🟢" if unreal_usdt >= 0 else "🔴"
-                            lines.append(
-                                f"{side_emoji} **{pos.coin}** {pos.side} `@{pos.entry_price:.4f}` "
-                                f"→ 현재 `{cur_price:.4f}`\n"
-                                f"  {pnl_emoji} 미실현: `{unreal_usdt:+.2f}$` (`{unreal_pct:+.2%}`) | "
-                                f"SL까지: `{sl_dist_pct:.2f}%` | "
-                                f"TTL잔여: `{eta_str}` ({bars_remaining}봉)"
-                            )
-                        except Exception:
-                            lines.append(f"• {pos.coin} {pos.side} @{pos.entry_price:.4f}")
-
-                    status = self.portfolio_risk.status()
-                    lines.append(
-                        f"\n💼 총 {len(positions)}포지션 | 노셔널 `${status['notional']:.0f}` | "
-                        f"잔고 `${status['equity']:.2f}` | 일일 `{status['daily_loss_pct']:+.2%}`"
-                    )
-
+                scored = await self._score_signal_universe()
+                pos_lines = await self._format_open_positions_for_scan()
+                msg = self._format_signal_scan_message(scored, pos_lines)
                 discord_post(
-                    "\n".join(lines),
+                    msg,
                     title=f"📡 10분 전체 신호 스캔 — {now.strftime('%H:%M UTC')} | 상위30 분석",
                 )
+                strong = [s for s in scored if s["score"] >= 2]
                 log.info(f"[SignalScan] {len(scored)} coins | {len(strong)} candidates")
-
             except asyncio.CancelledError:
                 break
             except Exception as e:
@@ -896,6 +734,142 @@ class MultiStrategyBot:
                 await asyncio.sleep(600)  # 10분
             except asyncio.CancelledError:
                 break
+
+    async def _score_signal_universe(self) -> list[dict]:
+        """변동성 상위 30개 코인에 대해 CVD/OFI 기반 신호 점수를 계산한다."""
+        universe = await self.data_hub.select_tradeable_coins(
+            volatility_pool=30,
+            min_volume_usdt=0,
+            max_spread_bps=9999.0,
+        )
+        if not universe:
+            universe = [{"coin": c, "volatility_pct": 0,
+                         "volume_usdt": 0, "spread_bps": 0, "last": 0}
+                        for c in self.coins]
+
+        active_set = set(self.coins)
+        open_coins = {
+            self.pos_manager._parse_key(k)[1]
+            for k in self.pos_manager.positions
+        }
+
+        scored = []
+        for meta in universe:
+            coin = meta["coin"]
+            try:
+                df = await self.data_hub.get_ohlcv(coin, "1m", limit=500)
+                if df is None or len(df) < 100:
+                    continue
+
+                price = float(df["close"].iloc[-1])
+                cvd = DataHub.compute_cvd(df)
+                cvd_val = float(cvd.iloc[-1])
+                cvd_mean = float(cvd.rolling(480).mean().iloc[-1])
+                cvd_std = float(cvd.rolling(480).std().iloc[-1])
+                cvd_z = (cvd_val - cvd_mean) / cvd_std if cvd_std > 0 else 0.0
+                cvd_pct = float(cvd.rank(pct=True).iloc[-1])
+
+                ofi = DataHub.compute_ofi(df)
+                ofi_pct = float(ofi.rank(pct=True).iloc[-1])
+
+                atr = StrategyBase._compute_atr(df, period=14)
+                atr_pct = atr / price * 100 if price > 0 else 0.0
+
+                ret_5 = (price - float(df["close"].iloc[-5])) / float(df["close"].iloc[-5])
+                ret_20 = (price - float(df["close"].iloc[-20])) / float(df["close"].iloc[-20])
+
+                direction, score = "─", 0
+                if cvd_pct > 0.95 or cvd_z > 2.0:
+                    direction = "역추세SHORT 🔴"
+                    score += 2 + (1 if cvd_z > 3.0 else 0)
+                elif cvd_pct < 0.05 or cvd_z < -2.0:
+                    direction = "역추세LONG 🟢"
+                    score += 2 + (1 if cvd_z < -3.0 else 0)
+                if ofi_pct > 0.90 or ofi_pct < 0.10:
+                    score += 1
+                if atr_pct > 0.5:
+                    score += 1
+
+                status = "🔵 OPEN" if coin in open_coins else (
+                         "✅ 활성" if coin in active_set else "⚪ 대기")
+                scored.append({
+                    "coin": coin, "direction": direction, "score": score,
+                    "cvd_pct": cvd_pct, "cvd_z": cvd_z, "ofi_pct": ofi_pct,
+                    "atr_pct": atr_pct, "ret_5": ret_5, "ret_20": ret_20,
+                    "price": price, "vol_m": meta["volume_usdt"] / 1e6, "status": status,
+                })
+            except Exception:
+                continue
+
+        scored.sort(key=lambda x: x["score"], reverse=True)
+        return scored
+
+    async def _format_open_positions_for_scan(self) -> list[str]:
+        """보유 포지션 현황 라인 목록 반환 (신호 스캔 Discord 메시지용)."""
+        positions = self.pos_manager.positions
+        if not positions:
+            return []
+        lines = ["", "**━ 보유 포지션 ━**"]
+        for pos in positions.values():
+            try:
+                ticker = await self.data_hub.get_ticker(pos.coin)
+                cur_price = ticker.get("last", pos.entry_price)
+                if pos.side == "BUY":
+                    unreal_pct = (cur_price - pos.entry_price) / pos.entry_price
+                else:
+                    unreal_pct = (pos.entry_price - cur_price) / pos.entry_price
+                unreal_usdt = unreal_pct * pos.current_qty * pos.entry_price
+                bars_remaining = max(0, pos.ttl_bars - pos.bars_held)
+                eta_min = bars_remaining
+                eta_str = f"{eta_min//60}h{eta_min%60}m" if eta_min >= 60 else f"{eta_min}m"
+                sl_dist_pct = abs(cur_price - pos.sl_price) / cur_price * 100
+                side_emoji = "📈" if pos.side == "BUY" else "📉"
+                pnl_emoji = "🟢" if unreal_usdt >= 0 else "🔴"
+                lines.append(
+                    f"{side_emoji} **{pos.coin}** {pos.side} `@{pos.entry_price:.4f}` "
+                    f"→ 현재 `{cur_price:.4f}`\n"
+                    f"  {pnl_emoji} 미실현: `{unreal_usdt:+.2f}$` (`{unreal_pct:+.2%}`) | "
+                    f"SL까지: `{sl_dist_pct:.2f}%` | TTL잔여: `{eta_str}` ({bars_remaining}봉)"
+                )
+            except Exception:
+                lines.append(f"• {pos.coin} {pos.side} @{pos.entry_price:.4f}")
+        status = self.portfolio_risk.status()
+        lines.append(
+            f"\n💼 총 {len(positions)}포지션 | 노셔널 `${status['notional']:.0f}` | "
+            f"잔고 `${status['equity']:.2f}` | 일일 `{status['daily_loss_pct']:+.2%}`"
+        )
+        return lines
+
+    def _format_signal_scan_message(
+        self, scored: list[dict], pos_lines: list[str]
+    ) -> str:
+        """신호 스캔 결과를 Discord 메시지 문자열로 포맷."""
+        active_set = set(self.coins)
+        strong = [s for s in scored if s["score"] >= 2]
+        neutral = [s for s in scored if s["score"] < 2]
+
+        lines = [f"**전체 스캔: {len(scored)}개** | 신호: {len(strong)}개 | 중립: {len(neutral)}개"]
+        lines.append(f"활성 코인(safety 통과): `{', '.join(active_set) if active_set else '없음'}`")
+        lines.append("")
+
+        if strong:
+            lines.append("**━ 진입 후보 ━**")
+            for s in strong[:10]:
+                lines.append(
+                    f"{s['status']} **{s['coin']}** {s['direction']} (점{s['score']})\n"
+                    f"  `{s['price']:.4f}` | CVD-z: `{s['cvd_z']:+.1f}` | OFI: `{s['ofi_pct']:.2f}` "
+                    f"| ATR: `{s['atr_pct']:.2f}%` | 5봉: `{s['ret_5']:+.2%}`"
+                )
+        else:
+            lines.append("현재 진입 조건 충족 후보 없음 — 시장 중립 구간")
+
+        if neutral and len(neutral) <= 20:
+            lines.append("")
+            lines.append(f"**━ 중립 ({len(neutral)}개) ━**")
+            lines.append(", ".join(f"`{s['coin']}`({s['atr_pct']:.1f}%)" for s in neutral[:15]))
+
+        lines.extend(pos_lines)
+        return "\n".join(lines)
 
     async def _on_position_close(
         self, strategy: str, coin: str, reason: str, price: float
@@ -1061,20 +1035,20 @@ class MultiStrategyBot:
             "concurrent_pos": _tc.get("concurrent_positions", 0),
             "fee_drag_pct": _tc.get("fee_drag_pct", 0.0),
         }
-        self._paper_trades.append(trade)
+        self._session_trades.append(trade)
         # Cap in-memory list to prevent unbounded growth over long sessions
-        if len(self._paper_trades) > 1000:
-            self._paper_trades = self._paper_trades[-1000:]
+        if len(self._session_trades) > 1000:
+            self._session_trades = self._session_trades[-1000:]
         self._save_trade(trade)
 
         # Discord: 거래 완료 + 잔고 + 거래내역 요약
-        total_trades = len(self._paper_trades)
-        session_pnl = sum(t["pnl_usdt"] for t in self._paper_trades)
-        wins = sum(1 for t in self._paper_trades if t["pnl_usdt"] > 0)
+        total_trades = len(self._session_trades)
+        session_pnl = sum(t["pnl_usdt"] for t in self._session_trades)
+        wins = sum(1 for t in self._session_trades if t["pnl_usdt"] > 0)
         wr = f"{wins/total_trades*100:.1f}%" if total_trades > 0 else "N/A"
 
         # 최근 5건 (현재 거래 포함)
-        recent = self._paper_trades[-5:]
+        recent = self._session_trades[-5:]
         recent_lines = []
         for t in reversed(recent):
             e = "✅" if t["pnl_usdt"] > 0 else "❌"
@@ -1148,9 +1122,9 @@ class MultiStrategyBot:
 
         pos_section = "\n".join(lines) if lines else "포지션 없음"
         total_sign = "🟢" if total_unrealized >= 0 else "🔴"
-        session_pnl = sum(t["pnl_usdt"] for t in self._paper_trades)
-        total_trades = len(self._paper_trades)
-        wins = sum(1 for t in self._paper_trades if t["pnl_usdt"] > 0)
+        session_pnl = sum(t["pnl_usdt"] for t in self._session_trades)
+        total_trades = len(self._session_trades)
+        wins = sum(1 for t in self._session_trades if t["pnl_usdt"] > 0)
         wr = f"{wins/total_trades*100:.0f}%" if total_trades > 0 else "-"
 
         return (
@@ -1195,8 +1169,8 @@ class MultiStrategyBot:
                 "current_equity": round(current, 6),
                 "initial_equity": round(self.initial_equity, 6),
                 "restarts": existing.get("restarts", 0) + (1 if not existing else 0),
-                "total_trades": len(self._paper_trades),
-                "total_pnl": round(sum(t.get("pnl_usdt", 0) for t in self._paper_trades), 6),
+                "total_trades": len(self._session_trades),
+                "total_pnl": round(sum(t.get("pnl_usdt", 0) for t in self._session_trades), 6),
                 "last_updated": datetime.now(timezone.utc).isoformat(),
             })
             with open(EQUITY_STATE_FILE, "w") as f:
@@ -1372,9 +1346,9 @@ class MultiStrategyBot:
             )
 
         # Summary
-        total_trades = len(self._paper_trades)
-        total_pnl = sum(t["pnl_usdt"] for t in self._paper_trades)
-        wins = sum(1 for t in self._paper_trades if t["pnl_usdt"] > 0)
+        total_trades = len(self._session_trades)
+        total_pnl = sum(t["pnl_usdt"] for t in self._session_trades)
+        wins = sum(1 for t in self._session_trades if t["pnl_usdt"] > 0)
         wr = wins / total_trades * 100 if total_trades > 0 else 0
 
         log.info(f"{'='*60}")
@@ -1385,7 +1359,7 @@ class MultiStrategyBot:
         log.info(f"  Final equity: ${self.portfolio_risk.current_equity:.2f}")
 
         for name in self.strategies:
-            strat_trades = [t for t in self._paper_trades if t["strategy"] == name]
+            strat_trades = [t for t in self._session_trades if t["strategy"] == name]
             strat_pnl = sum(t["pnl_usdt"] for t in strat_trades)
             log.info(f"  [{name}] trades={len(strat_trades)} pnl=${strat_pnl:+.4f}")
         log.info(f"{'='*60}")
