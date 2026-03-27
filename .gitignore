@@ -9,8 +9,9 @@ __pycache__/
 .venv/
 venv/
 
-# 대용량 데이터
-data/raw/
+# 대용량 데이터 (Binance 샘플 데이터는 예외)
+data/raw/*
+!data/raw/binance/
 data/processed/
 data/features/
 data/predictions/
