@@ -405,17 +405,20 @@ class AsymmetricSniper(StrategyBase):
             self._trade_count += 1
 
             # ── Register exchange-side SL/TP — every position MUST have both ──
-            # 3-retry with 0.5s delay. Failure → force-close (no naked positions).
+            # closePosition=True (FOR POSITION) requires position to exist in Binance DB first.
+            # Add 1s initial wait + 5-retry with 1s delay.
             if not self.config.paper_mode:
                 sl_side = "SELL" if side == "BUY" else "BUY"
                 rounded_sl = self.exchange.round_price(coin, sl_price)
                 rounded_tp = self.exchange.round_price(coin, tp_price) if tp_price > 0 else 0
 
+                await asyncio.sleep(1.0)  # Binance position propagation delay after fill
+
                 # SL retry loop
                 sl_result = {"success": False}
-                for attempt in range(3):
+                for attempt in range(5):
                     if attempt > 0:
-                        await asyncio.sleep(0.5)
+                        await asyncio.sleep(1.0)
                     sl_oid = self.exchange.make_order_id(
                         coin, sl_side, self._trade_count, prefix=f"v8sl{attempt}",
                     )
@@ -434,7 +437,7 @@ class AsymmetricSniper(StrategyBase):
 
                 if not sl_result.get("success"):
                     self._log.error(
-                        f"[SL_FAIL_CRITICAL] {coin} SL 3회 실패 → 강제청산 (err: {sl_result.get('error')})"
+                        f"[SL_FAIL_CRITICAL] {coin} SL 5회 실패 → 강제청산 (err: {sl_result.get('error')})"
                     )
                     close_side = "SELL" if side == "BUY" else "BUY"
                     close_ok = False
@@ -456,9 +459,9 @@ class AsymmetricSniper(StrategyBase):
                 # TP retry loop
                 if rounded_tp > 0:
                     tp_result = {"success": False}
-                    for attempt in range(3):
+                    for attempt in range(5):
                         if attempt > 0:
-                            await asyncio.sleep(0.5)
+                            await asyncio.sleep(1.0)
                         tp_oid = self.exchange.make_order_id(
                             coin, sl_side, self._trade_count, prefix=f"v8tp{attempt}",
                         )

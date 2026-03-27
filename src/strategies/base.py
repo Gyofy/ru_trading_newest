@@ -323,11 +323,16 @@ class StrategyBase(ABC):
                 rounded_sl = self.exchange.round_price(coin, sl_price)
                 rounded_tp = self.exchange.round_price(coin, tp_price) if tp_price > 0 else 0
 
-                # ── SL: 3-retry with 0.5s delay (exchange needs position to exist first) ──
+                # Binance: closePosition=True (FOR POSITION) requires the position to exist
+                # in Binance's DB before GTE TIF is accepted. Fill confirmation (order=FILLED)
+                # propagates to the position engine with up to ~1s delay on testnet.
+                await asyncio.sleep(1.0)
+
+                # ── SL: 5-retry with 1s delay ──
                 sl_result = {"success": False}
-                for attempt in range(3):
+                for attempt in range(5):
                     if attempt > 0:
-                        await asyncio.sleep(0.5)
+                        await asyncio.sleep(1.0)
                     sl_oid = self.exchange.make_order_id(
                         coin, sl_side, self._trade_count, prefix=f"v8sl{attempt}",
                     )
@@ -347,7 +352,7 @@ class StrategyBase(ABC):
                 if not sl_result.get("success"):
                     # SL 등록 완전 실패 → 포지션 즉시 강제 청산 (SL 없는 포지션 금지)
                     self._log.error(
-                        f"[SL_FAIL_CRITICAL] ⚠️ {coin} SL 3회 실패 → 포지션 강제 청산 "
+                        f"[SL_FAIL_CRITICAL] ⚠️ {coin} SL 5회 실패 → 포지션 강제 청산 "
                         f"(err: {sl_result.get('error')})"
                     )
                     close_side = "SELL" if side == "BUY" else "BUY"
@@ -368,12 +373,12 @@ class StrategyBase(ABC):
                     # If close failed: keep position in tracker so monitor keeps watching
                     return None
 
-                # ── TP: 3-retry with 0.5s delay ──
+                # ── TP: 5-retry with 1s delay ──
                 if rounded_tp > 0:
                     tp_result = {"success": False}
-                    for attempt in range(3):
+                    for attempt in range(5):
                         if attempt > 0:
-                            await asyncio.sleep(0.5)
+                            await asyncio.sleep(1.0)
                         tp_oid = self.exchange.make_order_id(
                             coin, sl_side, self._trade_count, prefix=f"v8tp{attempt}",
                         )
@@ -393,7 +398,7 @@ class StrategyBase(ABC):
                     if not tp_result.get("success"):
                         # TP 등록 완전 실패 → 포지션 강제 청산 (TP 없는 포지션 금지)
                         self._log.error(
-                            f"[TP_FAIL_CRITICAL] ⚠️ {coin} TP 3회 실패 → 포지션 강제 청산 "
+                            f"[TP_FAIL_CRITICAL] ⚠️ {coin} TP 5회 실패 → 포지션 강제 청산 "
                             f"(err: {tp_result.get('error')})"
                         )
                         # Cancel SL first (best-effort), then force-close
