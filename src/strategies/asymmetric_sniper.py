@@ -18,7 +18,7 @@ import numpy as np
 import pandas as pd
 
 from src.signals.contract import Signal, Action, Regime
-from src.strategies.base import StrategyBase
+from src.strategies.base import StrategyBase, ROUND_TRIP_FEE_RATE
 
 logger = logging.getLogger("strategy.asymmetric_sniper")
 
@@ -180,8 +180,8 @@ class AsymmetricSniper(StrategyBase):
         sl_pct = risk_usdt / max_notional  # e.g. 1.5 / 160 = 0.009375
         sl_dist = price * sl_pct
 
-        # Enforce minimum SL distance (0.1%)
-        min_sl_dist = price * 0.001
+        # Enforce minimum SL distance = round-trip fee threshold (≈0.19%)
+        min_sl_dist = price * ROUND_TRIP_FEE_RATE
         sl_dist = max(sl_dist, min_sl_dist)
 
         if signal.action == Action.SHORT:
@@ -277,8 +277,12 @@ class AsymmetricSniper(StrategyBase):
         cfg = original_extra  # use restored extra for remaining logic
         sl_dist = abs(price - sl_price)
 
-        if sl_dist < price * 0.001:
-            self._log.warning(f"[{coin}] SL too tight: {sl_dist:.6f}")
+        min_sl_dist = price * ROUND_TRIP_FEE_RATE
+        if sl_dist < min_sl_dist:
+            self._log.warning(
+                f"[{coin}] SL too tight: {sl_dist:.6f} < fee_threshold {min_sl_dist:.6f} "
+                f"({ROUND_TRIP_FEE_RATE:.3%}) — skip"
+            )
             return None
 
         # Dynamic position sizing
@@ -321,12 +325,11 @@ class AsymmetricSniper(StrategyBase):
             return None
 
         # R:R floor check (disable with rr_check_enabled=false for testnet)
-        actual_rr = 0.0  # default; only computed when rr_check_enabled=True
+        # actual_rr always computed for logging; check only enforced when enabled
+        potential_reward = atr * cfg.get("trailing_atr_mult_initial", 2.0)
+        actual_rr = potential_reward / sl_dist if sl_dist > 0 else 0.0
         if cfg.get("rr_check_enabled", True):
             rr_min = cfg.get("rr_minimum", 3.0)
-            # Use 2*ATR as conservative reward estimate
-            potential_reward = atr * cfg.get("trailing_atr_mult_initial", 2.0)
-            actual_rr = potential_reward / sl_dist if sl_dist > 0 else 0
             if actual_rr < rr_min * 0.75:
                 # R:R must reach at least 75% of target (e.g. 2.25 for rr_min=3.0)
                 self._log.info(
@@ -370,19 +373,27 @@ class AsymmetricSniper(StrategyBase):
                 return None
 
             fill_price = result.get("fill_price", price)
-            sl_price, tp_price = self.compute_barriers(signal, atr, fill_price)
+            # Re-apply per-coin params for post-fill barrier (mirrors base.py pattern)
+            if self.coin_profiles:
+                self.config.extra = self.coin_profiles.get_params(coin, original_extra)
+            try:
+                sl_price, tp_price = self.compute_barriers(signal, atr, fill_price)
+            finally:
+                self.config.extra = original_extra
 
             # Trailing stop config
             trail_initial = cfg.get("trailing_atr_mult_initial", 2.0)
             trail_dist = atr * trail_initial
 
             # Compute initial TP for exchange display (RR = rr_minimum, default 3.0)
+            # Fee offset ensures net RR = rr_minimum after paying round-trip fees
             sl_dist = abs(fill_price - sl_price)
             rr = cfg.get("rr_minimum", 3.0)
+            fee_offset = fill_price * ROUND_TRIP_FEE_RATE
             if side == "BUY":
-                tp_price = fill_price + sl_dist * rr
+                tp_price = fill_price + sl_dist * rr + fee_offset
             else:
-                tp_price = fill_price - sl_dist * rr
+                tp_price = fill_price - sl_dist * rr - fee_offset
 
             from src.execution.position_store import OpenPosition
             pos = OpenPosition(
@@ -391,7 +402,7 @@ class AsymmetricSniper(StrategyBase):
                 entry_price=fill_price,
                 qty=qty,
                 sl_price=sl_price,
-                tp_price=sl_price,  # placeholder (trailing mode)
+                tp_price=tp_price if tp_price > 0 else sl_price,
                 entry_time=signal.ts.isoformat(),
                 ttl_bars=signal.ttl_bars or 120,
                 strategy_tag=self.name,
@@ -471,11 +482,14 @@ class AsymmetricSniper(StrategyBase):
             self._last_trade_ts = time.time()
             self._daily_trade_count += 1
 
+            fee_usdt = notional * ROUND_TRIP_FEE_RATE
+            sl_pct = sl_dist / fill_price * 100
+            tp_pct = abs(tp_price - fill_price) / fill_price * 100 if tp_price > 0 else 0
             self._log.info(
                 f"[{coin}] ENTRY {side} @ {fill_price:.4f} | "
-                f"qty={qty} | SL={sl_price:.4f} | "
-                f"risk=${actual_risk:.2f} | trail_dist={trail_dist:.4f} | "
-                f"notional=${notional:.2f} | "
+                f"qty={qty} | SL={sl_price:.4f}(-{sl_pct:.2f}%) | TP={tp_price:.4f}(+{tp_pct:.2f}%) | "
+                f"risk=${actual_risk:.2f} | notional=${notional:.2f} | "
+                f"fee≈${fee_usdt:.3f}({ROUND_TRIP_FEE_RATE:.3%}) | "
                 f"trade #{self._daily_trade_count} today"
             )
 

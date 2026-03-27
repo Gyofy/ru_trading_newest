@@ -23,6 +23,15 @@ from src.signals.contract import Signal, Action
 
 logger = logging.getLogger("strategy")
 
+# ── Fee constants (Binance USDT-M Futures, taker-only round-trip) ───────────
+# Entry: market/IOC taker 0.055%  |  Exit: STOP_MARKET / TP_MARKET taker 0.055%
+# Slippage: entry 0.03% + exit 0.05%
+# Total round-trip rate applied to notional (= qty × price)
+_TAKER_FEE     = 0.00055   # 0.055%
+_SLIP_ENTRY    = 0.0003    # 0.030%
+_SLIP_EXIT     = 0.0005    # 0.050%
+ROUND_TRIP_FEE_RATE = _TAKER_FEE * 2 + _SLIP_ENTRY + _SLIP_EXIT  # ≈ 0.190%
+
 
 @dataclass
 class StrategyConfig:
@@ -172,8 +181,13 @@ class StrategyBase(ABC):
 
         # Stop distance for sizing
         sl_dist = abs(price - sl_price)
-        if sl_dist < price * 0.001:  # min 0.1% SL distance
-            self._log.warning(f"[{coin}] SL too tight: {sl_dist:.6f}")
+        # Minimum SL distance = round-trip fee cost (trade must cover fees to be viable)
+        min_sl_dist = price * ROUND_TRIP_FEE_RATE
+        if sl_dist < min_sl_dist:
+            self._log.warning(
+                f"[{coin}] SL too tight: {sl_dist:.6f} < fee_threshold {min_sl_dist:.6f} "
+                f"({ROUND_TRIP_FEE_RATE:.3%} of price) — skip"
+            )
             return None
         # Cap sl_dist at 8% of price — prevents testnet ATR spikes from collapsing notional
         sl_dist = min(sl_dist, price * 0.08)
@@ -274,13 +288,15 @@ class StrategyBase(ABC):
 
             # For trailing strategies: compute initial TP for exchange display
             # Uses tp_rr_ratio config (default 2.0x SL distance)
-            if use_trailing and tp_price == 0:
+            # Fee offset ensures net RR = intended RR after paying round-trip fees
+            if use_trailing:
                 sl_dist = abs(fill_price - sl_price)
                 tp_rr = self.config.extra.get("tp_rr_ratio", 2.0)
+                fee_offset = fill_price * ROUND_TRIP_FEE_RATE  # price units to cover fees
                 if side == "BUY":
-                    tp_price = fill_price + sl_dist * tp_rr
+                    tp_price = fill_price + sl_dist * tp_rr + fee_offset
                 else:
-                    tp_price = fill_price - sl_dist * tp_rr
+                    tp_price = fill_price - sl_dist * tp_rr - fee_offset
 
             # Register position
             from src.execution.position_store import OpenPosition
@@ -370,11 +386,15 @@ class StrategyBase(ABC):
                 except Exception as e:
                     self._log.warning(f"[{coin}] Trade context capture failed: {e}")
 
+            fee_usdt = notional * ROUND_TRIP_FEE_RATE
+            sl_pct = sl_dist / fill_price * 100
+            tp_pct = abs(tp_price - fill_price) / fill_price * 100 if tp_price > 0 else 0
             self._log.info(
                 f"[{coin}] ENTRY {side} @ {fill_price:.4f} | "
-                f"qty={qty} | SL={sl_price:.4f} | "
+                f"qty={qty} | SL={sl_price:.4f}(-{sl_pct:.2f}%) | "
+                f"TP={tp_price:.4f}(+{tp_pct:.2f}%) | "
                 f"trailing={'Y' if use_trailing else 'N'} | "
-                f"notional=${notional:.2f}"
+                f"notional=${notional:.2f} | fee≈${fee_usdt:.3f}({ROUND_TRIP_FEE_RATE:.3%})"
             )
 
             return {
