@@ -753,7 +753,7 @@ class MultiStrategyBot:
         active_set = set(self.coins)
         open_coins = {
             self.pos_manager._parse_key(k)[1]
-            for k in self.pos_manager.positions
+            for k in list(self.pos_manager.positions)  # copy: avoid RuntimeError on concurrent modification
         }
 
         scored = []

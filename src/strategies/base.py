@@ -81,6 +81,7 @@ class StrategyBase(ABC):
         self._log = logging.getLogger(f"strategy.{self.name}")
         self._paused = False
         self._trade_count = 0
+        self._leverage_initialized: set[str] = set()  # coins initialized in this session
 
     # ── Abstract methods ──────────────────────────────────
 
@@ -326,7 +327,15 @@ class StrategyBase(ABC):
                 # Binance: closePosition=True (FOR POSITION) requires the position to exist
                 # in Binance's DB before GTE TIF is accepted. Fill confirmation (order=FILLED)
                 # propagates to the position engine with up to ~1s delay on testnet.
-                await asyncio.sleep(1.0)
+                # New coins (first trade this session): margin mode change (CROSS→ISOLATED)
+                # also needs to propagate — takes up to 5-10s on testnet.
+                _sl_init_wait = 3.0 if _is_new_coin else 1.0
+                if _is_new_coin:
+                    self._log.info(
+                        f"[{coin}] 신규 종목 — SL/TP 등록 전 {_sl_init_wait}s 대기 "
+                        f"(margin mode 전파 대기)"
+                    )
+                await asyncio.sleep(_sl_init_wait)
 
                 # ── SL: 5-retry with 1s delay ──
                 sl_result = {"success": False}
@@ -518,8 +527,10 @@ class StrategyBase(ABC):
             }
 
         # Live mode: real Post-Only maker entry
+        _is_new_coin = coin not in self._leverage_initialized
         try:
             await self.exchange.set_leverage_async(coin, self.config.leverage)
+            self._leverage_initialized.add(coin)
         except Exception as _lev_e:
             self._log.warning(
                 f"[{coin}] set_leverage({self.config.leverage}x) FAILED: {_lev_e} "

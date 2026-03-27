@@ -10,6 +10,7 @@ Philosophy: "틀려도 $1.5, 맞으면 $4.5+"
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import time
 from datetime import datetime, timezone
@@ -360,6 +361,7 @@ class AsymmetricSniper(StrategyBase):
             if qty <= 0:
                 return None
 
+            _is_new_coin = coin not in self._leverage_initialized
             try:
                 result = await self._place_entry(coin, side, qty, price)
             except Exception as e:
@@ -412,7 +414,14 @@ class AsymmetricSniper(StrategyBase):
                 rounded_sl = self.exchange.round_price(coin, sl_price)
                 rounded_tp = self.exchange.round_price(coin, tp_price) if tp_price > 0 else 0
 
-                await asyncio.sleep(1.0)  # Binance position propagation delay after fill
+                # 새 종목(margin mode 변경): 3s, 기존 종목: 1s
+                _sl_init_wait = 3.0 if _is_new_coin else 1.0
+                if _is_new_coin:
+                    self._log.info(
+                        f"[{coin}] 신규 종목 — SL/TP 등록 전 {_sl_init_wait}s 대기 "
+                        f"(margin mode 전파 대기)"
+                    )
+                await asyncio.sleep(_sl_init_wait)
 
                 # SL retry loop
                 sl_result = {"success": False}
