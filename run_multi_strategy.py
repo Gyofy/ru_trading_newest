@@ -146,7 +146,10 @@ def discord_post(message: str, title: str = "") -> None:
         return
     try:
         loop = asyncio.get_running_loop()
-        loop.run_in_executor(None, _discord_post_sync, message, title)
+        # Store future in a task so it's tracked and not silently dropped
+        loop.create_task(
+            asyncio.wrap_future(loop.run_in_executor(None, _discord_post_sync, message, title))
+        )
     except RuntimeError:
         # 이벤트 루프 밖에서 호출된 경우 (startup 등)
         _discord_post_sync(message, title)

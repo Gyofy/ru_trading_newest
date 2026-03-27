@@ -108,9 +108,9 @@ class CoinProfileStore:
             confidence = min(total_trades / 20, 1.0)
 
         Recognized base_params keys that get adapted:
-            sl_atr_mult   -> multiplied by sl_mult_adj
-            trail_mult    -> multiplied by trail_mult_adj
-            cvd_quantile  -> offset by cvd_quantile_adj
+            sl_atr_mult      -> multiplied by sl_mult_adj
+            trailing_atr_mult -> multiplied by trail_mult_adj
+            cvd_quantile     -> offset by cvd_quantile_adj
         """
         profile = self._profiles.get(coin)
         if profile is None or profile.total_trades == 0:
@@ -126,10 +126,10 @@ class CoinProfileStore:
             adapted["sl_atr_mult"] = base_val * (1 - c) + learned_val * c
 
         # Trailing distance blending
-        if "trail_mult" in adapted:
-            base_val = adapted["trail_mult"]
+        if "trailing_atr_mult" in adapted:
+            base_val = adapted["trailing_atr_mult"]
             learned_val = base_val * profile.trail_mult_adj
-            adapted["trail_mult"] = base_val * (1 - c) + learned_val * c
+            adapted["trailing_atr_mult"] = base_val * (1 - c) + learned_val * c
 
         # CVD quantile blending (additive offset, not multiplicative)
         if "cvd_quantile" in adapted:

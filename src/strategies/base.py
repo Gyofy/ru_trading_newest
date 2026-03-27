@@ -396,15 +396,17 @@ class StrategyBase(ABC):
                             f"[TP_FAIL_CRITICAL] ⚠️ {coin} TP 3회 실패 → 포지션 강제 청산 "
                             f"(err: {tp_result.get('error')})"
                         )
-                        # Cancel SL first, then close
+                        # Cancel SL first (best-effort), then force-close
                         try:
                             if pos.sl_exchange_id:
                                 await self.exchange.cancel_order(
                                     coin, exchange_order_id=pos.sl_exchange_id,
                                     order_link_id=pos.sl_order_id,
                                 )
-                        except Exception:
-                            pass
+                        except Exception as _cancel_e:
+                            self._log.debug(
+                                f"[{coin}] SL cancel during TP_FAIL_CRITICAL ignored: {_cancel_e}"
+                            )
                         try:
                             close_side = "SELL" if side == "BUY" else "BUY"
                             await self.exchange.market_close(
@@ -494,6 +496,11 @@ class StrategyBase(ABC):
             maker_price = ticker["bid"] if side.upper() == "BUY" else ticker["ask"]
             if maker_price <= 0:
                 maker_price = ticker["last"]
+            if maker_price <= 0:
+                self._log.warning(
+                    f"[{coin}] Paper fill skipped — ticker all zeros (exchange unavailable?)"
+                )
+                return {"success": False, "error": "ticker_unavailable"}
             order_id = self.exchange.make_order_id(
                 coin, side, self._trade_count + 1, prefix="v8p",
             )
