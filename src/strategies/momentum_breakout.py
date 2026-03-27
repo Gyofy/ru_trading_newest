@@ -33,7 +33,7 @@ class MomentumBreakout(StrategyBase):
         if result is None:
             return None
 
-        direction, vol_ratio, breakout_level, cvd_confirmed = result
+        direction, vol_ratio, breakout_level, cvd_confirmed, range_width_pct, breakout_pct, cvd_1h_delta = result
         lev_base = cfg.get("leverage_base", 2)
         lev_confirmed = cfg.get("leverage_confirmed", 3)
         effective_lev = lev_confirmed if cvd_confirmed else lev_base
@@ -60,6 +60,12 @@ class MomentumBreakout(StrategyBase):
                 "breakout_level": breakout_level,
                 "cvd_confirmed": cvd_confirmed,
                 "effective_leverage": effective_lev,
+                # Algo-dev fields
+                "strength": float(vol_ratio),
+                "trigger": "vol_breakout",
+                "cvd_value": float(cvd_1h_delta),
+                "range_width_pct": float(range_width_pct),
+                "breakout_pct": float(breakout_pct),
             },
         )
 
@@ -125,16 +131,20 @@ class MomentumBreakout(StrategyBase):
 
         # CVD confirmation
         cvd = self.data_hub.compute_cvd(df_1m)
+        cvd_1h_delta = 0.0
         if len(cvd) < 60:
             cvd_confirmed = False
         else:
-            cvd_1h_delta = cvd.iloc[-1] - cvd.iloc[-60]
+            cvd_1h_delta = float(cvd.iloc[-1] - cvd.iloc[-60])
             cvd_confirmed = (
                 (direction == "LONG" and cvd_1h_delta > 0)
                 or (direction == "SHORT" and cvd_1h_delta < 0)
             )
 
-        return (direction, float(vol_ratio), float(breakout_level), cvd_confirmed)
+        range_width_pct = (range_high - range_low) / range_low if range_low > 0 else 0.0
+        breakout_pct = abs(current_close - breakout_level) / breakout_level if breakout_level > 0 else 0.0
+        return (direction, float(vol_ratio), float(breakout_level), cvd_confirmed,
+                float(range_width_pct), float(breakout_pct), float(cvd_1h_delta))
 
     def compute_barriers(
         self, signal: Signal, atr: float, price: float

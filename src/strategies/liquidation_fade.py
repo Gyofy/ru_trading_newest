@@ -33,7 +33,7 @@ class LiquidationFade(StrategyBase):
         if cascade is None:
             return None
 
-        direction, oi_drop, taker_ratio = cascade
+        direction, oi_drop, taker_ratio, recent_return = cascade
 
         df = await self.data_hub.get_ohlcv(coin, "5m", limit=swing_lookback + 10)
         if df is None or len(df) < swing_lookback:
@@ -41,7 +41,7 @@ class LiquidationFade(StrategyBase):
 
         self._log.info(
             f"[{coin}] LIQ CASCADE → {direction} | "
-            f"OI_drop={oi_drop:.2f}σ taker={taker_ratio:.1f}x"
+            f"OI_drop={oi_drop:.2f}σ taker={taker_ratio:.1f}x move={recent_return:.3%}"
         )
         return Signal(
             symbol=coin,
@@ -55,7 +55,16 @@ class LiquidationFade(StrategyBase):
             action=Action.LONG if direction == "LONG" else Action.SHORT,
             size=1.0,
             ttl_bars=120,
-            extra={"oi_drop_sigma": oi_drop, "taker_ratio": taker_ratio},
+            extra={
+                "oi_drop_sigma": oi_drop,
+                "taker_ratio": taker_ratio,
+                "recent_return_pct": float(recent_return),
+                "strength": float(oi_drop),
+                "trigger": "liq_cascade",
+                # Algo-dev fields
+                "cvd_value": 0.0,       # liq_fade doesn't use CVD — kept for schema consistency
+                "ofi_value": float(taker_ratio),  # volume spike serves as OFI proxy
+            },
         )
 
     async def _detect_cascade(
@@ -106,10 +115,10 @@ class LiquidationFade(StrategyBase):
 
         if recent_return < 0:
             # Price dropped sharply with volume → long liquidations → fade LONG
-            return ("LONG", oi_drop_est, taker_ratio)
+            return ("LONG", oi_drop_est, taker_ratio, recent_return)
         else:
             # Price spiked sharply with volume → short liquidations → fade SHORT
-            return ("SHORT", oi_drop_est, taker_ratio)
+            return ("SHORT", oi_drop_est, taker_ratio, recent_return)
 
     def compute_barriers(
         self, signal: Signal, atr: float, price: float

@@ -1,0 +1,67 @@
+2026-03-27 19:44:08,043 [INFO] ProcessPoolExecutor initialized: 6 workers
+2026-03-27 19:44:08,043 [INFO] ============================================================
+2026-03-27 19:44:08,043 [INFO] Multi-Strategy Bot v8.2 | mode=demo
+2026-03-27 19:44:08,043 [INFO] equity=$5000.0 | coins=['XRP', 'SOL', 'TAO', 'DOGE', 'ADA', 'DOT', 'AVAX', 'BNB', 'LINK']
+2026-03-27 19:44:08,043 [INFO] ============================================================
+2026-03-27 19:44:08,043 [WARNING] [Demo] BINANCE_TESTNET_API_KEY not set — falling back to paper mode
+2026-03-27 19:44:08,683 [INFO] Exchange initialized (binance/live): 701 markets loaded
+2026-03-27 19:44:08,683 [INFO] Demo/testnet mode: virtual funds, real orders on testnet | equity=$5000.00
+2026-03-27 19:44:08,684 [INFO] No existing coin profiles at data/reports/multi_strategy/coin_profiles.json, starting fresh
+2026-03-27 19:44:08,684 [INFO] [cvd_spike] loaded | $900.0 | 3x | cycle=60s | max_pos=8
+2026-03-27 19:44:08,684 [INFO] [liquidation_fade] loaded | $600.0 | 2x | cycle=300s | max_pos=4
+2026-03-27 19:44:08,684 [INFO] [momentum_breakout] loaded | $600.0 | 3x | cycle=300s | max_pos=4
+2026-03-27 19:44:08,684 [INFO] [asymmetric_sniper] loaded | $2400.0 | 5x | cycle=60s | max_pos=4
+2026-03-27 19:44:08,684 [INFO] [MonitorV2] Started (poll every 15s)
+2026-03-27 19:44:08,685 [INFO] [Discord] System ready notification sent
+2026-03-27 19:44:08,685 [INFO] [cvd_spike] loop started (every 60s)
+2026-03-27 19:44:08,685 [INFO] [liquidation_fade] loop started (every 300s)
+2026-03-27 19:44:08,685 [INFO] [momentum_breakout] loop started (every 300s)
+2026-03-27 19:44:08,685 [INFO] [asymmetric_sniper] loop started (every 60s)
+2026-03-27 19:44:08,813 [INFO] [CoinSelect] Volatility top 30 → 0 passed safety filter | rejected: 0
+2026-03-27 19:44:08,813 [INFO] [CoinRefresh] 15 coins active (base=15 + selective=0) | +{'ARB', 'SUI', 'APT', 'ETH', 'OP', 'BTC'} -{}
+2026-03-27 19:44:19,448 [INFO] [XRP] LIQ CASCADE → LONG | OI_drop=1.93σ taker=2.7x
+2026-03-27 19:44:19,513 [INFO] [SOL] LIQ CASCADE → LONG | OI_drop=4.05σ taker=2.5x
+2026-03-27 19:44:19,552 [INFO] [DOGE] LIQ CASCADE → LONG | OI_drop=2.29σ taker=3.3x
+2026-03-27 19:44:19,608 [INFO] [ADA] LIQ CASCADE → LONG | OI_drop=1.71σ taker=2.1x
+2026-03-27 19:44:19,673 [INFO] [BTC] LIQ CASCADE → LONG | OI_drop=3.59σ taker=3.5x
+2026-03-27 19:44:19,707 [INFO] [ETH] LIQ CASCADE → LONG | OI_drop=4.19σ taker=3.1x
+2026-03-27 19:44:19,786 [INFO] [BNB] LIQ CASCADE → LONG | OI_drop=2.76σ taker=2.2x
+2026-03-27 19:44:19,819 [INFO] [DOT] LIQ CASCADE → LONG | OI_drop=1.67σ taker=2.0x
+2026-03-27 19:44:19,892 [INFO] [AVAX] LIQ CASCADE → LONG | OI_drop=3.93σ taker=3.3x
+2026-03-27 19:44:19,927 [INFO] [LINK] LIQ CASCADE → LONG | OI_drop=2.92σ taker=2.6x
+2026-03-27 19:44:20,006 [INFO] [OP] LIQ CASCADE → LONG | OI_drop=2.73σ taker=2.3x
+2026-03-27 19:44:20,040 [INFO] [ARB] LIQ CASCADE → LONG | OI_drop=4.08σ taker=3.8x
+2026-03-27 19:44:20,119 [INFO] [SUI] LIQ CASCADE → LONG | OI_drop=2.63σ taker=2.8x
+2026-03-27 19:44:20,358 [INFO] [XRP] PAPER fill BUY @ 1.3359 qty=898.2
+2026-03-27 19:44:20,359 [INFO] [MultiPos] Added liquidation_fade:XRP: BUY XRP @ 1.3359
+2026-03-27 19:44:20,671 [INFO] [TradeLog] Entry captured: liquidation_fade_XRP_0327_104420_0001
+2026-03-27 19:44:20,671 [INFO] [XRP] ENTRY BUY @ 1.3359 | qty=898.2 | SL=1.3278 | trailing=N | notional=$1200.00
+2026-03-27 19:44:20,817 [INFO] [SOL] notional 0.09 < $5, skip
+2026-03-27 19:44:20,960 [INFO] [DOGE] notional 0.09 < $5, skip
+2026-03-27 19:44:21,111 [INFO] [ADA] notional 0.09 < $5, skip
+2026-03-27 19:44:21,111 [INFO] [liquidation_fade] TRADE: {'strategy': 'liquidation_fade', 'coin': 'XRP', 'side': 'BUY', 'price': 1.3359, 'qty': 898.2, 'sl': 1.3278107142857143, 'tp': 1.348033928571429, 'trailing': False}
+2026-03-27 19:44:27,986 [INFO] [SOL] BREAKOUT → SHORT | vol=3.4x cvd_conf=N lev=3x
+2026-03-27 19:44:28,464 [INFO] [DOGE] BREAKOUT → SHORT | vol=4.0x cvd_conf=N lev=3x
+2026-03-27 19:44:28,713 [INFO] [ADA] BREAKOUT → SHORT | vol=3.3x cvd_conf=N lev=3x
+2026-03-27 19:44:28,975 [INFO] [BTC] BREAKOUT → SHORT | vol=3.0x cvd_conf=N lev=3x
+2026-03-27 19:44:29,213 [INFO] [ETH] BREAKOUT → SHORT | vol=3.2x cvd_conf=N lev=3x
+2026-03-27 19:44:29,509 [INFO] [BNB] BREAKOUT → SHORT | vol=3.6x cvd_conf=N lev=3x
+2026-03-27 19:44:29,743 [INFO] [DOT] BREAKOUT → SHORT | vol=2.2x cvd_conf=N lev=3x
+2026-03-27 19:44:29,962 [INFO] [AVAX] BREAKOUT → SHORT | vol=3.4x cvd_conf=N lev=3x
+2026-03-27 19:44:30,209 [INFO] [LINK] BREAKOUT → SHORT | vol=3.4x cvd_conf=N lev=3x
+2026-03-27 19:44:30,464 [INFO] [OP] BREAKOUT → SHORT | vol=2.6x cvd_conf=N lev=3x
+2026-03-27 19:44:30,707 [INFO] [ARB] BREAKOUT → SHORT | vol=3.4x cvd_conf=N lev=3x
+2026-03-27 19:44:30,994 [INFO] [SUI] BREAKOUT → SHORT | vol=2.8x cvd_conf=N lev=3x
+2026-03-27 19:44:31,214 [INFO] [APT] BREAKOUT → SHORT | vol=2.1x cvd_conf=N lev=3x
+2026-03-27 19:44:31,609 [INFO] [SOL] PAPER fill SELL @ 83.3800 qty=21.58
+2026-03-27 19:44:31,609 [INFO] [MultiPos] Added momentum_breakout:SOL: SELL SOL @ 83.38
+2026-03-27 19:44:31,899 [INFO] [TradeLog] Entry captured: momentum_breakout_SOL_0327_104431_0002
+2026-03-27 19:44:31,899 [INFO] [SOL] ENTRY SELL @ 83.3800 | qty=21.58 | SL=83.8750 | trailing=Y | notional=$1800.00
+2026-03-27 19:44:32,044 [INFO] [DOGE] notional 0.66 < $5, skip
+2026-03-27 19:44:32,167 [INFO] [ADA] notional 0.66 < $5, skip
+2026-03-27 19:44:32,359 [INFO] [BTC] notional 0.66 < $5, skip
+2026-03-27 19:44:32,359 [INFO] [momentum_breakout] TRADE: {'strategy': 'momentum_breakout', 'coin': 'SOL', 'side': 'SELL', 'price': 83.38, 'qty': 21.58, 'sl': 83.875, 'tp': 0.0, 'trailing': True}
+2026-03-27 19:45:07,050 [INFO] [Heartbeat] equity=$5000.00 | daily=0.00% | pos=2 | notional=$2999.25 | kill=False
+2026-03-27 19:45:07,235 [INFO] [CoinSelect] Volatility top 30 → 0 passed safety filter | rejected: 0
+2026-03-27 19:45:10,631 [INFO] [ADA] CVD SPIKE → SHORT | trigger=ofi_extreme_buy strength=-0.151
+2026-03-27 19:45:11,684 [INFO] [ADA] rejected: exposure_cap: 5699.25 > 4250.00

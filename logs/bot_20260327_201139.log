@@ -1,0 +1,78 @@
+2026-03-27 20:11:41,399 [INFO] ProcessPoolExecutor initialized: 6 workers
+2026-03-27 20:11:41,400 [INFO] ============================================================
+2026-03-27 20:11:41,400 [INFO] Multi-Strategy Bot v8.2 | mode=demo
+2026-03-27 20:11:41,400 [INFO] equity=$5000.0 | coins=['XRP', 'SOL', 'TAO', 'DOGE', 'ADA', 'DOT', 'AVAX', 'BNB', 'LINK']
+2026-03-27 20:11:41,400 [INFO] ============================================================
+2026-03-27 20:11:41,400 [WARNING] [Demo] BINANCE_TESTNET_API_KEY not set — falling back to paper mode
+2026-03-27 20:11:41,925 [INFO] Exchange initialized (binance/live): 701 markets loaded
+2026-03-27 20:11:41,925 [INFO] Demo/testnet mode: virtual funds, real orders on testnet | equity=$5000.00
+2026-03-27 20:11:41,926 [INFO] [MultiPos] Recovered 3 positions
+2026-03-27 20:11:41,926 [INFO] No existing coin profiles at data/reports/multi_strategy/coin_profiles.json, starting fresh
+2026-03-27 20:11:41,926 [INFO] [cvd_spike] loaded | $900.0 | 4x | cycle=60s | max_pos=8
+2026-03-27 20:11:41,926 [INFO] [liquidation_fade] loaded | $600.0 | 3x | cycle=300s | max_pos=4
+2026-03-27 20:11:41,926 [INFO] [momentum_breakout] loaded | $600.0 | 4x | cycle=300s | max_pos=4
+2026-03-27 20:11:41,926 [INFO] [asymmetric_sniper] loaded | $2400.0 | 6x | cycle=60s | max_pos=4
+2026-03-27 20:11:41,926 [INFO] [MonitorV2] Started (poll every 15s)
+2026-03-27 20:11:41,927 [INFO] [Recovery] Resuming monitoring for 3 recovered positions
+2026-03-27 20:11:41,927 [INFO] [Discord] System ready notification sent
+2026-03-27 20:11:41,927 [INFO] [cvd_spike] loop started (every 60s)
+2026-03-27 20:11:41,927 [INFO] [liquidation_fade] loop started (every 300s)
+2026-03-27 20:11:41,927 [INFO] [momentum_breakout] loop started (every 300s)
+2026-03-27 20:11:41,927 [INFO] [asymmetric_sniper] loop started (every 60s)
+2026-03-27 20:11:42,150 [INFO] [CoinSelect] Volatility top 30 → 3 passed safety filter | rejected: 0
+2026-03-27 20:11:42,151 [INFO]   ✓ TAO    vol%= 0.00% vol=$      0M spread= 0.0bps $0.0000
+2026-03-27 20:11:42,151 [INFO]   ✓ SOL    vol%= 0.00% vol=$      0M spread= 0.0bps $0.0000
+2026-03-27 20:11:42,151 [INFO]   ✓ XRP    vol%= 0.00% vol=$      0M spread= 0.0bps $0.0000
+2026-03-27 20:11:42,151 [INFO] [CoinRefresh] 15 coins active (base=15 + selective=0) | +{'APT', 'SUI', 'ARB', 'BTC', 'OP', 'ETH'} -{}
+2026-03-27 20:12:02,043 [INFO] [DOGE] BREAKOUT → SHORT | vol=5.4x cvd_conf=N lev=4x
+2026-03-27 20:12:02,300 [INFO] [ADA] BREAKOUT → SHORT | vol=6.5x cvd_conf=N lev=4x
+2026-03-27 20:12:02,550 [INFO] [BTC] BREAKOUT → SHORT | vol=4.8x cvd_conf=N lev=4x
+2026-03-27 20:12:02,802 [INFO] [ETH] BREAKOUT → SHORT | vol=5.8x cvd_conf=N lev=4x
+2026-03-27 20:12:03,045 [INFO] [BNB] BREAKOUT → SHORT | vol=5.5x cvd_conf=N lev=4x
+2026-03-27 20:12:03,298 [INFO] [DOT] BREAKOUT → SHORT | vol=2.8x cvd_conf=N lev=4x
+2026-03-27 20:12:03,552 [INFO] [AVAX] BREAKOUT → SHORT | vol=5.6x cvd_conf=N lev=4x
+2026-03-27 20:12:03,799 [INFO] [LINK] BREAKOUT → SHORT | vol=5.3x cvd_conf=N lev=4x
+2026-03-27 20:12:04,042 [INFO] [OP] BREAKOUT → SHORT | vol=4.5x cvd_conf=N lev=4x
+2026-03-27 20:12:04,300 [INFO] [ARB] BREAKOUT → SHORT | vol=5.3x cvd_conf=N lev=4x
+2026-03-27 20:12:04,549 [INFO] [SUI] BREAKOUT → SHORT | vol=4.8x cvd_conf=N lev=4x
+2026-03-27 20:12:04,798 [INFO] [APT] BREAKOUT → SHORT | vol=3.9x cvd_conf=N lev=4x
+2026-03-27 20:12:05,347 [INFO] [DOGE] PAPER fill SELL @ 0.0898 qty=6688.0
+2026-03-27 20:12:05,348 [INFO] [MultiPos] Added momentum_breakout:DOGE: SELL DOGE @ 0.08981
+2026-03-27 20:12:05,656 [INFO] [TradeLog] Entry captured: momentum_breakout_DOGE_0327_111205_0001
+2026-03-27 20:12:05,656 [INFO] [DOGE] ENTRY SELL @ 0.0898 | qty=6688.0 | SL=0.0901 | trailing=Y | notional=$600.66
+2026-03-27 20:12:05,913 [INFO] [ADA] notional 0.01 < $5, skip
+2026-03-27 20:12:06,167 [INFO] [BTC] notional 0.01 < $5, skip
+2026-03-27 20:12:06,167 [INFO] [momentum_breakout] TRADE: {'strategy': 'momentum_breakout', 'coin': 'DOGE', 'side': 'SELL', 'price': 0.08981, 'qty': 6688.0, 'sl': 0.09005857142857143, 'tp': 0.0, 'trailing': True}
+2026-03-27 20:12:41,098 [INFO] [Heartbeat] equity=$5000.00 | daily=0.00% | pos=4 | notional=$6299.62 | kill=False
+2026-03-27 20:12:41,279 [INFO] [CoinSelect] Volatility top 30 → 0 passed safety filter | rejected: 0
+2026-03-27 20:12:43,018 [INFO] [OP] CVD SPIKE → LONG | trigger=cvd_extreme_sell strength=0.709
+2026-03-27 20:12:43,019 [INFO] [ARB] CVD SPIKE → LONG | trigger=cvd_extreme_sell strength=0.063
+2026-03-27 20:12:43,675 [INFO] [BNB] CVD SPIKE → SHORT | trigger=ofi_extreme_buy strength=-0.000
+2026-03-27 20:12:45,201 [INFO] [BNB] PAPER fill SELL @ 610.2800 qty=1.47
+2026-03-27 20:12:45,201 [INFO] [MultiPos] Added cvd_spike:BNB: SELL BNB @ 610.28
+2026-03-27 20:12:46,152 [INFO] [TradeLog] Entry captured: cvd_spike_BNB_0327_111245_0002
+2026-03-27 20:12:46,152 [INFO] [BNB] ENTRY SELL @ 610.2800 | qty=1.47 | SL=612.8279 | trailing=Y | notional=$900.27
+2026-03-27 20:12:46,797 [INFO] [OP] notional 3.16 < $5, skip
+2026-03-27 20:12:48,522 [INFO] [ARB] notional 3.16 < $5, skip
+2026-03-27 20:12:48,522 [INFO] [cvd_spike] TRADE: {'strategy': 'cvd_spike', 'coin': 'BNB', 'side': 'SELL', 'price': 610.28, 'qty': 1.47, 'sl': 612.8278571428572, 'tp': 0.0, 'trailing': True}
+2026-03-27 20:12:49,558 [INFO] [SignalScan] 15 coins | 15 candidates
+2026-03-27 20:13:39,424 [INFO] [Heartbeat] equity=$5000.00 | daily=0.00% | pos=5 | notional=$7196.74 | kill=False
+2026-03-27 20:13:46,865 [INFO] [ADA] CVD SPIKE → SHORT | trigger=ofi_extreme_buy strength=-1.381
+2026-03-27 20:13:47,067 [INFO] [ETH] CVD SPIKE → SHORT | trigger=ofi_extreme_buy strength=-0.912
+2026-03-27 20:13:47,160 [INFO] [DOT] CVD SPIKE → LONG | trigger=cvd_extreme_sell strength=1.539
+2026-03-27 20:13:47,363 [INFO] [LINK] CVD SPIKE → SHORT | trigger=ofi_extreme_buy strength=-0.154
+2026-03-27 20:13:47,461 [INFO] [OP] CVD SPIKE → LONG | trigger=cvd_extreme_sell strength=0.232
+2026-03-27 20:13:47,665 [INFO] [SUI] CVD SPIKE → SHORT | trigger=ofi_extreme_buy strength=-0.888
+2026-03-27 20:13:48,539 [INFO] [ADA] notional 3.16 < $5, skip
+2026-03-27 20:13:48,730 [INFO] [ETH] notional 3.16 < $5, skip
+2026-03-27 20:13:48,881 [INFO] [DOT] notional 3.16 < $5, skip
+2026-03-27 20:13:49,055 [INFO] [LINK] notional 3.16 < $5, skip
+2026-03-27 20:13:49,207 [INFO] [OP] notional 3.16 < $5, skip
+2026-03-27 20:13:49,376 [INFO] [SUI] notional 3.16 < $5, skip
+2026-03-27 20:14:37,697 [INFO] [Heartbeat] equity=$5000.00 | daily=0.00% | pos=5 | notional=$7196.74 | kill=False
+2026-03-27 20:14:47,695 [INFO] [BTC] CVD SPIKE → SHORT | trigger=ofi_extreme_buy strength=-0.113
+2026-03-27 20:14:48,199 [INFO] [OP] CVD SPIKE → LONG | trigger=cvd_extreme_sell strength=0.838
+2026-03-27 20:14:48,504 [INFO] [APT] CVD SPIKE → LONG | trigger=cvd_extreme_sell strength=0.561
+2026-03-27 20:14:49,281 [INFO] [BTC] notional 3.16 < $5, skip
+2026-03-27 20:14:49,437 [INFO] [OP] notional 3.16 < $5, skip
+2026-03-27 20:14:49,584 [INFO] [APT] notional 3.16 < $5, skip

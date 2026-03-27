@@ -1,220 +1,441 @@
-# CLAUDE_CRYPTO_AGENT
+# Binance Futures Multi-Strategy Bot — v8.2
 
-Crypto trading system — BTC global direction + relative strength alt selection.
+**바이낸스 선물 자동매매 시스템 | 4개 병렬 전략 | Demo/Paper/Live 모드 지원**
 
-**Binance USDT-M Futures | 10 coins | v6.1 | 1h resolution | Continuous Trading**
-
----
-
-## Strategy: v6.1
-
-```
-1. BTC 7-day return → Global Direction (LONG / SHORT / FLAT)
-2. Alt 9 coins: BTC 대비 상대 강도 랭킹 → 상위 2개만 선택
-3. RSI + CVD Q75 + OI z-score 필터
-4. BTC 방향 전환 → 즉시 청산 (DIR_FLIP)
-5. TP=5×ATR, SL=2×ATR, TTL=96 1h-bars (4일)
-6. 1h 주기 시그널 체크, 조건 충족 시 즉시 진입
-7. 최대 2 포지션, 2x 레버리지, 포지션당 리스크 2%
-```
-
-### Validated Performance
-
-| | IS (9개월) | OOS (3.5개월) |
-|---|---|---|
-| per-trade Sharpe | +0.058 | +0.208 |
-| WR | 42.4% | 47.2% |
-| Profit Factor | 1.15 | 1.71 |
-| MDD | -67.4% | -13.5% |
-
-**IS + OOS 둘 다 양수.** 이전 v5.3은 IS 마이너스 + Sharpe 8.6배 과대평가.
+> v8.2는 CVD/OFI 극단 반응, 청산 캐스케이드 역행, 모멘텀 돌파, 비대칭 저격 4개 전략을
+> asyncio.gather로 15개 코인에 동시 평가한다.
 
 ---
 
-## Binance API Adaptation (실거래 전환 프로세스)
+## 목차
 
-### Step 1: 환경 설정
+1. [시스템 개요](#시스템-개요)
+2. [아키텍처](#아키텍처)
+3. [전략 상세](#전략-상세)
+4. [설정](#설정)
+5. [실행 방법](#실행-방법)
+6. [리스크 관리](#리스크-관리)
+7. [모니터링 및 로그](#모니터링-및-로그)
+8. [버전 이력](#버전-이력)
+9. [환경 설정](#환경-설정)
 
-```bash
-# 필수 환경 변수
-export BINANCE_API_KEY="your_api_key"
-export BINANCE_API_SECRET="your_api_secret"
-export DATA_SOURCE="binance"
+---
 
-# 선택 (기본값 있음)
-export BINANCE_TESTNET="true"       # true: testnet, false: 실거래
-```
+## 시스템 개요
 
-### Step 2: Testnet 검증 (1주일)
+| 항목 | 값 |
+|------|-----|
+| 버전 | v8.2 (multi-strategy demo trading) |
+| 기본 모드 | demo (Binance testnet 실주문) |
+| 초기 가상 자본 | $5,000 |
+| 전략 수 | 4개 (병렬 동시 실행) |
+| 평가 대상 코인 | 15개 base + 동적 확장 |
+| 사이클 | 1분 / 5분 (전략별) |
+| 포지션 진입 방식 | Post-Only Maker (GTX) |
+| SL/TP 처리 | 거래소 측 (live) / 소프트웨어 (paper) |
 
-```bash
-# Testnet으로 먼저 실행 (가상 자금)
-BINANCE_TESTNET=true DATA_SOURCE=binance python run_tsmom_paper.py
-```
+### 운영 모드
 
-**체크리스트:**
-- [ ] Binance ccxt 연결 성공 (1h OHLCV fetch)
-- [ ] Post-Only 진입 주문 체결
-- [ ] STOP_MARKET SL 주문 정상 배치
-- [ ] TAKE_PROFIT_MARKET TP 주문 정상 배치
-- [ ] DIR_FLIP 시 MARKET 즉시 청산
-- [ ] 포지션 크기 계산 정확 (risk 2%, leverage 2x)
-- [ ] 1h 주기 사이클 안정 가동
-- [ ] trade_analysis.jsonl 기록 정상
-
-### Step 3: Live 소액 (2주)
-
-```bash
-# 실거래 $50~100로 시작
-BINANCE_TESTNET=false DATA_SOURCE=binance python run_tsmom_paper.py
-```
-
-**제한 설정:**
-- `max_positions: 1` (1개만)
-- `equity_risk_pct: 0.01` (1%로 축소)
-- 목표: 10+ 거래, WR > 35%, net PnL > 0
-
-### Step 4: Scale Up
-
-```
-10건 통과 → max_positions: 2, risk: 2%
-50건 통과 → 자본 증가 검토
-WR < 30% or MDD > 20% → 즉시 중단, 전략 재검토
-```
-
-### 데이터 흐름 (Binance 모드)
-
-```
-Binance API
-  │
-  ├─ fetch_ohlcv("1h", limit=500) ─→ 1h 봉 (매 사이클)
-  │    └─ ATR(14), RSI(14), CVD 계산
-  │
-  ├─ fetch_ticker() ─→ 실시간 가격 (SL/TP 모니터링)
-  │
-  ├─ create_limit_order(GTX) ─→ Post-Only 진입
-  │    └─ 거부 시 → 일반 limit 폴백
-  │
-  ├─ create_order(STOP_MARKET) ─→ SL 배치
-  │
-  └─ create_order(TAKE_PROFIT_MARKET) ─→ TP 배치
-
-로컬 저장
-  ├─ trades.jsonl          거래 내역
-  ├─ trade_analysis.jsonl  진입/청산 분석 + 손익 원인
-  ├─ trajectories.jsonl    bar-by-bar 궤적 (RL 학습용)
-  ├─ signal_log.jsonl      RL 시그널 기록
-  └─ state.json            현재 상태
-
-GitHub (push_logs.sh)
-  └─ 위 파일 전부 → 다른 머신에서 내려받기 가능
-```
-
-### 주문 타입 상세
-
-| 용도 | 주문 타입 | 수수료 | 비고 |
-|------|----------|--------|------|
-| 진입 | `LIMIT` + `timeInForce: GTX` (Post-Only) | Maker 0.02% | 거부 시 일반 LIMIT 폴백 |
-| SL | `STOP_MARKET` | Taker 0.05% | 즉시 체결 보장 |
-| TP | `TAKE_PROFIT_MARKET` | Taker 0.05% | |
-| DIR_FLIP | `MARKET` | Taker 0.05% | BTC 방향 전환 시 |
-| TTL | `MARKET` | Taker 0.05% | 96바 시간 초과 시 |
-
-### 안전장치
-
-| 항목 | 설정 | 설명 |
+| 모드 | 설명 | 주문 |
 |------|------|------|
-| 최대 포지션 | 2개 | 동시 보유 상한 |
-| 포지션당 리스크 | equity × 2% | SL 히트 시 최대 손실 |
-| 총 리스크 | equity × 4% | 2포지션 × 2% |
-| 레버리지 | 2x 고정 | 변동 없음 |
-| 일일 손실 한도 | -10% | → 전체 포지션 청산 + 당일 중단 |
-| 쿨다운 | 4 1h-bars | 청산 후 같은 코인 재진입 차단 |
-| 단일 인스턴스 | bot.lock | 중복 프로세스 방지 |
+| `paper` | 시뮬레이션 체결 (bid/ask 가격) | 실제 주문 없음 |
+| `demo` | Binance testnet 실주문 | 가상 자금 |
+| `live` | 실계좌 실매매 | **실제 자금 손실 가능** |
 
-### 기존 모듈 재사용
+---
+
+## 아키텍처
 
 ```
-src/execution/exchange_adapter.py  → 주문 실행 (이미 Binance ccxt)
-src/execution/sl_tp_monitor.py     → SL/TP 실시간 모니터링
-src/execution/risk_engine.py       → 9-gate 리스크 체크
-src/execution/position_store.py    → 포지션 영속화 (crash recovery)
-src/execution/cost_model.py        → 수수료 계산
+┌─────────────────────────────────────────────────────────────┐
+│  run_multi_strategy.py  (진입점)                            │
+│                                                             │
+│  ┌──────────────────────────────────────────────────────┐  │
+│  │  DataHub  — 1분/5분 OHLCV + CVD/OFI/청산 데이터 수집 │  │
+│  └──────────────────────┬───────────────────────────────┘  │
+│                         │ asyncio.gather (15 coins × 4 전략) │
+│                         ▼                                   │
+│  ┌────────────┐  ┌──────────────┐  ┌───────────────┐  ┌───────────────┐
+│  │ CVD Spike  │  │  Liq. Fade   │  │ Mom. Breakout │  │ Asym. Sniper  │
+│  │  1분 사이클 │  │  5분 사이클  │  │  5분 사이클   │  │  1분 사이클   │
+│  │ $900 / 3x  │  │  $600 / 2x   │  │  $600 / 3x    │  │ $2400 / 5x    │
+│  └─────┬──────┘  └──────┬───────┘  └───────┬───────┘  └──────┬────────┘
+│        └────────────────┴──────────────────┴──────────────────┘
+│                         │
+│  ┌──────────────────────▼───────────────────────────────┐  │
+│  │  PortfolioRiskManager                                │  │
+│  │  - exposure_cap: 250%  - same_dir_max: 8            │  │
+│  │  - daily_loss_limit: -20%  - strategy_pause: -40%   │  │
+│  └──────────────────────┬───────────────────────────────┘  │
+│                         │                                   │
+│  ┌──────────────────────▼───────────────────────────────┐  │
+│  │  MultiPositionManager + PositionSizer                │  │
+│  │  CoinProfileStore (코인별 adaptive params)           │  │
+│  └──────────────────────┬───────────────────────────────┘  │
+│                         │                                   │
+│  ┌──────────────────────▼───────────────────────────────┐  │
+│  │  ExchangeAdapter (ccxt Binance USDM Futures)         │  │
+│  │  Post-Only 진입 → SL/TP 거래소 등록 → 포지션 모니터 │  │
+│  └──────────────────────┬───────────────────────────────┘  │
+│                         │                                   │
+│  ┌──────────────────────▼───────────────────────────────┐  │
+│  │  SlTpMonitorV2 (15초 폴링)                           │  │
+│  │  OrderLedger + TradeLogger + StrategyAnalyzer        │  │
+│  └──────────────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────────┘
+
+Discord Webhook ← 진입/청산/에러 알림
+data/reports/multi_strategy/ ← 로그, 상태 파일
 ```
 
 ---
 
-## Architecture
+## 전략 상세
+
+### A. CVD Spike Reactor (`cvd_spike`)
+
+**개념:** Order Flow Imbalance(OFI)와 Cumulative Volume Delta(CVD)가 동시에 극단적 수치에 도달할 때 역추세 포지션을 취한다.
+
+| 파라미터 | 값 |
+|---------|-----|
+| 사이클 | 1분 |
+| 할당 자본 | $900 |
+| 레버리지 | 3x |
+| CVD/OFI 임계 | Q92 (상위 8%) |
+| CVD 롤링 윈도우 | 240봉 (4시간) |
+| SL | ATR × 3.0 |
+| 트레일링 SL | ATR × 1.5 |
+| 최대 동시 포지션 | 8개 |
+
+**진입 조건:**
+- CVD 단기 스파이크 ≥ Q92 분위수
+- OFI ≥ Q92 분위수
+- 두 조건 동시 충족 시 반대 방향 진입 (매수 스파이크 → SHORT)
+
+---
+
+### B. Liquidation Fade (`liquidation_fade`)
+
+**개념:** 강제 청산 캐스케이드로 인한 일시적 가격 왜곡을 이용한다. 청산 급증 + Taker 스파이크 발생 직후 역행 포지션을 취한다.
+
+| 파라미터 | 값 |
+|---------|-----|
+| 사이클 | 5분 |
+| 할당 자본 | $600 |
+| 레버리지 | 2x |
+| OI 변화 임계 | 1.5σ |
+| Taker 스파이크 | 평균 × 1.5배 |
+| 스윙 조회 기간 | 24봉 |
+| SL | ATR × 2.5 |
+| TP | ATR × 3.75 (RR ≈ 1.5) |
+| 최대 동시 포지션 | 4개 |
+
+**진입 조건:**
+- Open Interest 급감 (청산 발생 감지)
+- Taker 매수/매도량 이상 스파이크
+- 스윙 고/저점 근처에서 진입
+
+---
+
+### C. Momentum Breakout (`momentum_breakout`)
+
+**개념:** 거래량이 동반된 가격 돌파를 추세추종한다. 12시간 레인지를 기준으로 볼륨 확인된 상방/하방 돌파 시 진입한다.
+
+| 파라미터 | 값 |
+|---------|-----|
+| 사이클 | 5분 |
+| 할당 자본 | $600 |
+| 레버리지 | 3x |
+| 볼륨 배수 임계 | 평균 × 2.0배 |
+| 레인지 기준 | 12시간 고/저점 |
+| 최소 이동폭 | 0.5% |
+| SL | ATR × 2.0 |
+| 트레일링 SL | ATR × 2.0 |
+| 최대 동시 포지션 | 4개 |
+
+**진입 조건:**
+- 12시간 고점/저점 돌파
+- 현재 거래량 ≥ 20봉 평균 × 2.0
+- 최소 0.5% 이동 확인
+
+---
+
+### D. Asymmetric Sniper (`asymmetric_sniper`)
+
+**개념:** CVD Q97 + 3σ 수준의 극단적 orderflow 이상 발생 시 저위험 역추세 포지션. 단위 트레이드당 고정 달러 리스크로 운영된다.
+
+| 파라미터 | 값 |
+|---------|-----|
+| 사이클 | 1분 |
+| 할당 자본 | $2,400 |
+| 레버리지 | 5x |
+| CVD 임계 | Q97 (상위 3%) |
+| CVD 시그마 | 2.0σ 이상 |
+| 트레이드당 리스크 | $60 고정 |
+| 최소 RR | 3.0 (testnet: 비활성) |
+| SL | ATR × 1.0 |
+| 쿨다운 | 15분 |
+| 최대 일일 트레이드 | 8회 |
+| 트레일링 SL (초기) | ATR × 2.0 |
+| 트레일링 SL (긴축) | ATR × 1.0 (수익 ATR × 1.5 초과 시) |
+| 최대 동시 포지션 | 4개 |
+
+**진입 조건:**
+- CVD ≥ Q97 분위수 AND ≥ 2σ (극단적 쏠림)
+- Funding rate < 0.01% (testnet: 비활성)
+- 쿨다운 경과 확인
+- 일일 거래 한도 미초과
+
+---
+
+## 설정
+
+설정 파일: `config/multi_strategy.yaml`
+
+### 포트폴리오 설정
+
+```yaml
+version: "v8.2-demo"
+mode: "demo"          # paper | demo | live
+initial_equity: 5000.0
+daily_loss_limit: 0.20  # -20% 시 전략 중지
+
+portfolio:
+  total_exposure_pct: 2.5    # 250% 노출 상한 (공격적)
+  same_direction_max: 8      # 동방향 최대 포지션 수
+  daily_loss_pct: 0.20       # 일일 손실 한도
+  strategy_loss_pct: 0.40    # 전략별 일시 중단 손실 임계
+  min_notional_usdt: 5.0     # 최소 주문 금액
+  max_funding_rate: 0.003    # 펀딩비 게이트
+
+position_sizing:
+  risk_pct_per_trade: 0.15   # 트레이드당 리스크 15%
+  vol_adjust_enabled: true
+  min_factor: 0.7
+  max_factor: 3.0             # 최대 포지션 크기 배수
+```
+
+### Base 코인 목록 (15개)
 
 ```
-run_tsmom_paper.py              v6.1 Bot (1h, Binance/yfinance)
-push_logs.sh                    거래 로그 → GitHub push
+XRP / SOL / TAO / DOGE / ADA / BTC / ETH / BNB / DOT / AVAX / LINK / OP / ARB / SUI / APT
+```
 
-src/strategy/tsmom_core.py      시그널/백테스트/메트릭
-src/execution/                  주문/리스크/모니터링 (Binance ccxt)
-src/rl/                         RL (shadow mode, 데이터 수집 중)
+동적 코인 기능이 활성화된 경우 변동성 상위 30개 풀에서 추가 선택된다 (15분 갱신).
 
-docs/
-  binance_implementation_spec.md  Binance 구현 상세
-  v6_honest_portfolio_report.md   v6.0 성과 리포트
-  adaptive_exit_rl_brainstorm.md  RL exit 연구 (30+ 논문)
+### 전략별 자본 배분 요약
+
+| 전략 | 할당 | 레버리지 | 사이클 |
+|------|------|---------|--------|
+| CVD Spike | $900 | 3x | 1분 |
+| Liquidation Fade | $600 | 2x | 5분 |
+| Momentum Breakout | $600 | 3x | 5분 |
+| Asymmetric Sniper | $2,400 | 5x | 1분 |
+| **합계** | **$4,500** | | |
+
+### 수수료 설정
+
+```yaml
+exchange:
+  maker_fee: 0.0002     # 0.02% (Post-Only 진입)
+  taker_fee: 0.00055    # 0.055% (SL/TP 청산)
+  slippage_entry: 0.0003
+  slippage_exit: 0.0005
 ```
 
 ---
 
-## Trade Logs (GitHub 자동 저장)
+## 실행 방법
+
+### 필수 환경 변수
 
 ```bash
-# 로그 push
+export BINANCE_API_KEY="your_testnet_api_key"
+export BINANCE_API_SECRET="your_testnet_api_secret"
+export DISCORD_WEBHOOK_URL="https://discord.com/api/webhooks/..."   # 선택
+```
+
+### 실행
+
+```bash
+# Demo 모드 (기본, testnet 실주문)
+python3 run_multi_strategy.py
+
+# Paper 모드 (완전 시뮬레이션)
+python3 run_multi_strategy.py --mode paper
+
+# 커스텀 설정 파일 사용
+python3 run_multi_strategy.py --config config/my_config.yaml
+
+# Live 모드 (실계좌 — 주의)
+python3 run_multi_strategy.py --mode live
+```
+
+### Live 모드 전환 체크리스트
+
+Live 모드는 `BINANCE_TESTNET_API_KEY` 환경 변수가 **설정되지 않은** 경우 활성화된다.
+
+- [ ] Demo 모드에서 최소 2주 이상 가동 확인
+- [ ] 총 거래 50건 이상, WR > 45%, net PnL > 0 확인
+- [ ] `initial_equity` 실제 계좌 잔고로 변경
+- [ ] `mode: "live"` 설정
+- [ ] `position_sizing.risk_pct_per_trade` 축소 (0.05 권장 시작)
+- [ ] Discord 알림 webhook 설정 완료
+- [ ] `daily_loss_limit: 0.05` (초기 5% 제한 권장)
+
+---
+
+## 리스크 관리
+
+### 포트폴리오 레벨 게이트 (PortfolioRiskManager)
+
+| 조건 | 임계값 | 처리 |
+|------|--------|------|
+| 일일 손실 | -20% | 전 전략 진입 중지 |
+| 전략별 손실 | -40% | 해당 전략 일시 중단 |
+| 총 노출도 초과 | 250% 이상 | 신규 진입 차단 |
+| 동방향 포지션 초과 | 8개 초과 | 신규 진입 차단 |
+| 펀딩비 초과 | 0.3% 초과 | 해당 포지션 방향 진입 차단 |
+
+### 포지션 레벨 안전장치
+
+| 항목 | 설명 |
+|------|------|
+| SL | 모든 포지션 필수 (전략별 ATR 배수) |
+| 트레일링 SL | CVD Spike, Momentum Breakout, Asymmetric Sniper 적용 |
+| 최소 주문금액 | $5 (notional 기준) |
+| Post-Only 진입 | Maker 수수료 보장, GTX 거부 시 일반 LIMIT 폴백 |
+| Rate Limit | asyncio.Semaphore(2) — 동시 API 호출 2개 제한 |
+
+### 코인별 적응형 파라미터 (CoinProfileStore)
+
+각 코인의 변동성, 스프레드, 유동성 특성을 학습하여 포지션 크기를 자동 조정한다.
+
+```
+고변동성 코인 (예: TAO) → 포지션 크기 축소
+저변동성 코인 (예: BTC) → 포지션 크기 확대 또는 유지
+```
+
+---
+
+## 모니터링 및 로그
+
+### 로그 파일 위치
+
+```
+data/reports/multi_strategy/
+├── bot.log                  # 메인 로그 (INFO/ERROR)
+├── positions.json           # 현재 오픈 포지션 상태
+├── portfolio_state.json     # 포트폴리오 요약 (equity, PnL)
+├── trades.jsonl             # 전체 거래 내역 (JSONL)
+├── strategy_stats.json      # 전략별 성과 통계
+└── coin_profiles.json       # 코인별 학습된 파라미터
+```
+
+### Discord 알림 이벤트
+
+| 이벤트 | 조건 |
+|--------|------|
+| 진입 알림 | 신규 포지션 진입 시 |
+| 청산 알림 | SL/TP 체결 또는 수동 청산 시 |
+| 일일 손실 경고 | 손실 -10% 초과 시 |
+| 전략 중단 알림 | 전략별 손실 임계 초과 시 |
+| 에러 알림 | 연결 끊김, 주문 실패 등 |
+
+### 헬스체크
+
+봇은 60초마다 heartbeat 로그를 출력하며, SL/TP 상태는 15초 주기로 폴링한다.
+
+```bash
+# 로그 실시간 확인
+tail -f data/reports/multi_strategy/bot.log
+
+# 현재 포지션 확인
+cat data/reports/multi_strategy/positions.json | python3 -m json.tool
+
+# 거래 내역 최근 10건
+tail -n 10 data/reports/multi_strategy/trades.jsonl | python3 -m json.tool
+```
+
+---
+
+## 버전 이력
+
+| 버전 | 전략 | 주요 변경 | 상태 |
+|------|------|---------|------|
+| v4.x ~ v5.x | ML 2-Stage Binary | 데이터 leakage 확인, Sharpe 과대평가 | 폐기 |
+| v6.x | TSMOM BTC Dir + RS | BTC 방향 + 상대강도 선택 (1h) | 폐기 |
+| v8.1 | Multi-Strategy 초기 | CVD/OFI/청산/모멘텀 프레임워크 구축 | 구버전 |
+| **v8.2** | **Multi-Strategy 현재** | asyncio 병렬 평가, funding 필터 우회, R:R 오버라이드, exposure cap 2.5x 상향 | **현재** |
+
+### v8.2 주요 변경점 (vs v8.1)
+
+- asyncio.gather를 통한 15개 코인 병렬 동시 평가 (순차 → 병렬, 사이클 지연 감소)
+- asyncio.Semaphore(2) rate limiting 추가
+- testnet 환경에서 funding 필터 비활성화 (`funding_filter_enabled: false`)
+- testnet 1분봉 ATR 왜곡으로 R:R 체크 비활성화 (`rr_check_enabled: false`)
+- portfolio exposure cap 85% → 250% 상향 (가상매매 공격적 설정)
+- position_sizing risk_pct_per_trade 8% → 15% 상향
+- CVD/OFI 분위수 임계 0.95 → 0.92 완화 (진입 빈도 증가)
+- Asymmetric Sniper CVD 분위수 0.99 → 0.97 완화
+
+---
+
+## 환경 설정
+
+### 의존성 설치
+
+```bash
+pip install ccxt pandas numpy pyyaml aiohttp websockets
+```
+
+### 프로젝트 구조
+
+```
+ru_trading_newest/
+├── run_multi_strategy.py           # 진입점
+├── config/
+│   ├── multi_strategy.yaml         # 메인 설정 (전략/포트폴리오/코인)
+│   └── settings.yaml               # 거래소 연결 설정
+├── src/
+│   ├── execution/
+│   │   ├── exchange_adapter.py     # ccxt Binance USDM Futures 래퍼
+│   │   ├── order_ledger.py         # 주문 장부 관리
+│   │   └── sl_tp_monitor_v2.py     # SL/TP 실시간 폴링 (15초)
+│   └── strategies/
+│       ├── base.py                 # StrategyConfig 기반 클래스
+│       ├── cvd_spike.py            # CVD Spike Reactor
+│       ├── liquidation_fade.py     # Liquidation Fade
+│       ├── momentum_breakout.py    # Momentum Breakout
+│       ├── asymmetric_sniper.py    # Asymmetric Sniper
+│       ├── multi_position_manager.py
+│       ├── portfolio_risk.py       # PortfolioRiskManager
+│       ├── data_hub.py             # 시장 데이터 수집기
+│       ├── coin_profile.py         # CoinProfileStore
+│       ├── position_sizer.py       # PositionSizer
+│       ├── trade_logger.py         # JSONL 거래 기록
+│       └── strategy_analyzer.py   # 성과 분석
+├── data/
+│   └── reports/multi_strategy/    # 로그 및 상태 파일
+└── push_logs.sh                   # 거래 로그 GitHub push
+```
+
+### 로그 원격 동기화
+
+```bash
+# 거래 로그를 GitHub에 push (다른 머신에서 확인용)
 bash push_logs.sh
 
 # 다른 머신에서 내려받기
 git pull
 ```
 
-| 파일 | 내용 |
-|------|------|
-| `trades.jsonl` | 모든 거래 (진입/청산/PnL/레버리지) |
-| `trade_analysis.jsonl` | 진입/청산 시장 상태 + 손익 원인 자동 분류 |
-| `trajectories.jsonl` | bar-by-bar 포지션 궤적 (미래 RL 학습용) |
-| `signal_log.jsonl` | RL state/action 기록 |
-| `state.json` | 현재 equity/포지션 |
-
-### 손익 원인 자동 분류
-
-| 원인 | 조건 | 의미 |
-|------|------|------|
-| `volatility_spike` | 청산 ATR > 진입 ATR × 1.5 | 변동성 급증으로 SL |
-| `trend_reversal` | RSI 극단 (< 30 or > 70) | 추세 반전으로 SL |
-| `noise_stop` | 그 외 SL | 일반 노이즈 |
-| `trend_continuation` | TP 히트 | 추세 지속으로 수익 실현 |
-| `btc_direction_change` | DIR_FLIP | BTC 방향 전환 |
-| `no_momentum` | TTL + PnL < 0 | 모멘텀 부재 |
-| `slow_profit` | TTL + PnL > 0 | 느리지만 수익 |
-
 ---
 
-## Version History
+## 주의사항
 
-| Version | Strategy | per-trade Sharpe | Status |
-|---------|----------|-----------------|--------|
-| v4.0~4.3 | ML 2-Stage | INVALID (leakage) | Dead |
-| v5.0~5.3 | TSMOM 10 coins | 0.504 (fake, corr 0.80) | Dead |
-| v6.0 | BTC dir + RS top 2 (4h) | 0.208 (honest) | Superseded |
-| **v6.1** | **BTC dir + RS top 2 (1h)** | **Testing** | **Active** |
-
----
-
-## Environment
-
-```bash
-pip install ccxt pandas numpy scikit-learn lifelines arch joblib pyyaml
-# yfinance는 로컬 개발용 (선택)
-pip install yfinance  # optional
-```
-
-```bash
-# 실행
-DATA_SOURCE=binance python run_tsmom_paper.py     # Binance
-python run_tsmom_paper.py                          # yfinance (기본)
-```
+- **Demo/Live 전환 시 반드시 `initial_equity`를 실제 잔고에 맞게 수정한다.**
+- `daily_loss_limit: 0.20`은 가상매매용 공격적 설정이다. Live 전환 시 0.05~0.10으로 낮춘다.
+- `total_exposure_pct: 2.5` (250%)는 가상매매 전용이다. Live 전환 시 0.5~1.0 권장.
+- Asymmetric Sniper의 testnet 파라미터(`rr_check_enabled: false`, `funding_filter_enabled: false`)는 testnet 데이터 품질 이슈로 인한 우회 설정이다. Live 모드에서는 반드시 활성화해야 한다.
+- Post-Only(GTX) 주문이 거부될 경우 일반 LIMIT 주문으로 자동 폴백된다. 이 경우 Taker 수수료가 적용된다.

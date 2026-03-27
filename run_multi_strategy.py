@@ -439,7 +439,14 @@ class MultiStrategyBot:
 
                 # Evaluate
                 results = await strategy.tick(self.coins)
-                log.debug(f"[{strategy.name}] cycle done: {len(results)} trade(s)")
+                # Per-scan diagnostics: cache stats + result summary
+                cache_info = self.data_hub.cache_stats()
+                log.info(
+                    f"[Scan:{strategy.name}] trades={len(results)} | "
+                    f"cache hits={cache_info.get('hits',0)} miss={cache_info.get('misses',0)} "
+                    f"err={cache_info.get('errors',0)} | "
+                    f"positions={self.pos_manager.count()}"
+                )
                 for r in results:
                     log.info(f"[{strategy.name}] TRADE: {r}")
                     # Discord: 진입 알림 (base.py는 "side" 키로 반환)

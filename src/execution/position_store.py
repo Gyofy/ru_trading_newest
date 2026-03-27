@@ -47,6 +47,8 @@ class OpenPosition:
     strategy_tag: str = ""       # which strategy owns this position
     trailing_sl: bool = False    # whether SL trails price
     trail_distance: float = 0.0  # ATR-based trail distance (absolute)
+    # Trade lifecycle diagnostics
+    sl_tighten_count: int = 0    # how many times trailing SL moved (for MFE/trail analysis)
 
     def __post_init__(self):
         if self.price_high == 0.0:

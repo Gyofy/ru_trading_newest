@@ -1,4 +1,4 @@
-version: "v8.2-demo"
+version: "v8.3-demo"
 mode: "demo"  # paper | demo (testnet) | live
 initial_equity: 5000.0
 daily_loss_limit: 0.20  # -20%
@@ -24,7 +24,6 @@ dynamic_coins:
   base_coins:                    # 항상 포함 — 필터 무관 (testnet: bid/ask=0 우회)
     - XRP
     - SOL
-    - TAO
     - DOGE
     - ADA
     - BTC
@@ -36,7 +35,7 @@ dynamic_coins:
     - OP
     - ARB
     - SUI
-    - APT
+    # TAO, APT 제외: testnet에서 유동성 부족으로 WaitFill timeout 반복 (실측)
 
 portfolio:
   total_exposure_pct: 5.0        # 공격적: 500% 허용 — 전략 합산 최대 notional 대응
@@ -66,7 +65,8 @@ strategies:
       cvd_quantile: 0.90
       ofi_quantile: 0.90
       cvd_roll_window: 240
-      trailing_atr_mult: 1.5
+      trailing_atr_mult: 0.7          # 2.0→0.7: mfe/trail=0.37 실측 기반 축소
+      tp_rr_ratio: 2.0
 
   liquidation_fade:
     enabled: true
@@ -91,7 +91,8 @@ strategies:
     extra:
       volume_mult_threshold: 1.8
       range_lookback_hours: 12
-      trailing_atr_mult: 2.0
+      trailing_atr_mult: 0.7          # 2.0→0.7: mfe/trail=0.37 실측 기반 축소
+      tp_rr_ratio: 2.0
       leverage_base: 5
       leverage_confirmed: 5
       min_move_pct: 0.003
@@ -115,9 +116,9 @@ strategies:
       rr_check_enabled: false
       cooldown_bars: 10
       max_daily_trades: 12
-      trailing_atr_mult_initial: 2.0
-      trailing_atr_mult_tight: 1.0
-      profit_tighten_threshold_atr: 1.5
+      trailing_atr_mult_initial: 0.8    # 2.0→0.8: mfe/trail=0.37 실측 기반 축소
+      trailing_atr_mult_tight: 0.4      # 1.0→0.4: profit tighten 구간 강화
+      profit_tighten_threshold_atr: 0.8  # 1.5→0.8: 더 일찍 tighten 시작
 
 monitoring:
   sl_tp_poll_seconds: 15

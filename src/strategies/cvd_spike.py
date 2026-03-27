@@ -36,10 +36,11 @@ class CVDSpikeReactor(StrategyBase):
         if result is None:
             return None
 
-        direction, strength, trigger_type = result
+        direction, strength, trigger_type, diag = result
         self._log.info(
             f"[{coin}] CVD SPIKE → {direction} | "
-            f"trigger={trigger_type} strength={strength:.3f}"
+            f"trigger={trigger_type} strength={strength:.3f} "
+            f"cvd_z={diag.get('cvd_z', 0):.2f} ofi_q={diag.get('ofi_quantile_rank', 0):.2f}"
         )
         return Signal(
             symbol=coin,
@@ -53,7 +54,17 @@ class CVDSpikeReactor(StrategyBase):
             action=Action.LONG if direction == "LONG" else Action.SHORT,
             size=1.0,
             ttl_bars=150,
-            extra={"trigger": trigger_type, "strength": strength},
+            extra={
+                "trigger": trigger_type,
+                "strength": strength,
+                # Diagnostic fields for trade_context and algo development
+                "cvd_value": diag.get("cvd_value", 0.0),
+                "cvd_z_score": diag.get("cvd_z", 0.0),
+                "ofi_value": diag.get("ofi_value", 0.0),
+                "cvd_quantile_rank": diag.get("cvd_quantile_rank", 0.0),
+                "ofi_quantile_rank": diag.get("ofi_quantile_rank", 0.0),
+                "cvd_q_threshold": diag.get("cvd_q_threshold", 0.0),
+            },
         )
 
     def _check_extreme(
@@ -62,11 +73,12 @@ class CVDSpikeReactor(StrategyBase):
         cvd_q: float,
         ofi_q: float,
         window: int,
-    ) -> tuple[str, float, str] | None:
+    ) -> tuple[str, float, str, dict] | None:
         """Check if CVD or OFI is at extreme levels.
 
-        Returns (direction, strength, trigger_type) or None.
+        Returns (direction, strength, trigger_type, diag_dict) or None.
         Direction is COUNTER to the extreme (extreme buy → SHORT).
+        diag_dict contains raw values for trade_context logging.
         """
         # Compute CVD delta (not cumulative — use per-bar delta)
         cvd_series = self.data_hub.compute_cvd(df)
@@ -80,32 +92,50 @@ class CVDSpikeReactor(StrategyBase):
         # Rolling quantiles
         q_high = recent.quantile(cvd_q)
         q_low = recent.quantile(1 - cvd_q)
-        current_cvd = cvd_delta.iloc[-1]
+        current_cvd = float(cvd_delta.iloc[-1])
 
         # OFI check
         ofi_series = self.data_hub.compute_ofi(df)
         ofi_recent = ofi_series.iloc[-window:]
         ofi_q_high = ofi_recent.quantile(ofi_q)
         ofi_q_low = ofi_recent.quantile(1 - ofi_q)
-        current_ofi = ofi_series.iloc[-1]
+        current_ofi = float(ofi_series.iloc[-1])
+
+        # CVD z-score (standardised position within window)
+        cvd_std = float(recent.std()) or 1.0
+        cvd_mean = float(recent.mean())
+        cvd_z = (current_cvd - cvd_mean) / cvd_std
+
+        # Quantile ranks (0=min, 1=max)
+        cvd_q_rank = float((recent < current_cvd).mean())
+        ofi_q_rank = float((ofi_recent < current_ofi).mean())
+
+        diag = {
+            "cvd_value": current_cvd,
+            "cvd_z": cvd_z,
+            "ofi_value": current_ofi,
+            "cvd_quantile_rank": cvd_q_rank,
+            "ofi_quantile_rank": ofi_q_rank,
+            "cvd_q_threshold": float(q_high),
+        }
 
         # CVD extreme → counter-trend
         if current_cvd > q_high:
             strength = float((current_cvd - q_high) / (q_high if q_high != 0 else 1))
-            return ("SHORT", -strength, "cvd_extreme_buy")
+            return ("SHORT", -strength, "cvd_extreme_buy", diag)
 
         if current_cvd < q_low:
             strength = float((q_low - current_cvd) / (abs(q_low) if q_low != 0 else 1))
-            return ("LONG", strength, "cvd_extreme_sell")
+            return ("LONG", strength, "cvd_extreme_sell", diag)
 
         # OFI extreme → counter-trend
         if current_ofi > ofi_q_high:
             strength = float((current_ofi - ofi_q_high) / (ofi_q_high if ofi_q_high != 0 else 1))
-            return ("SHORT", -strength, "ofi_extreme_buy")
+            return ("SHORT", -strength, "ofi_extreme_buy", diag)
 
         if current_ofi < ofi_q_low:
             strength = float((ofi_q_low - current_ofi) / (abs(ofi_q_low) if ofi_q_low != 0 else 1))
-            return ("LONG", strength, "ofi_extreme_sell")
+            return ("LONG", strength, "ofi_extreme_sell", diag)
 
         return None
 

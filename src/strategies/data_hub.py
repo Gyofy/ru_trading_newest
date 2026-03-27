@@ -40,10 +40,29 @@ class DataHub:
         self.ohlcv_ttl = 58      # refresh just before next 1m bar
         self.ticker_ttl = 10      # ticker → 10s staleness ok (was 5s)
 
+        # Per-scan diagnostics (reset each tick cycle)
+        self._stat_hits = 0
+        self._stat_misses = 0
+        self._stat_errors = 0
+
     def _get_lock(self, key: str) -> asyncio.Lock:
         if key not in self._locks:
             self._locks[key] = asyncio.Lock()
         return self._locks[key]
+
+    def cache_stats(self) -> dict:
+        """Return and reset per-cycle cache diagnostics."""
+        stats = {
+            "hits": self._stat_hits,
+            "misses": self._stat_misses,
+            "errors": self._stat_errors,
+            "cache_size": len(self._ohlcv_cache),
+        }
+        # Reset for next cycle
+        self._stat_hits = 0
+        self._stat_misses = 0
+        self._stat_errors = 0
+        return stats
 
     # ── OHLCV ─────────────────────────────────────────────
 
@@ -61,6 +80,7 @@ class DataHub:
         if cache_key in self._ohlcv_cache:
             ts, df = self._ohlcv_cache[cache_key]
             if now - ts < self.ohlcv_ttl:
+                self._stat_hits += 1
                 return df
 
         # Fetch with lock (prevent duplicate requests)
@@ -70,6 +90,7 @@ class DataHub:
             if cache_key in self._ohlcv_cache:
                 ts, df = self._ohlcv_cache[cache_key]
                 if now - ts < self.ohlcv_ttl:
+                    self._stat_hits += 1
                     return df
 
             try:
@@ -77,9 +98,11 @@ class DataHub:
                     df = await self._fetch_ohlcv(coin, timeframe, limit)
                 if df is not None and len(df) > 0:
                     self._ohlcv_cache[cache_key] = (time.time(), df)
+                self._stat_misses += 1
                 return df
             except Exception as e:
                 logger.error(f"[DataHub] OHLCV fetch failed {coin}/{timeframe}: {e}")
+                self._stat_errors += 1
                 # Return stale cache if available
                 if cache_key in self._ohlcv_cache:
                     return self._ohlcv_cache[cache_key][1]

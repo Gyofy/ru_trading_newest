@@ -1,0 +1,70 @@
+2026-03-27 20:20:39,683 [INFO] [EquityState] Restored equity=$5000.00 (restarts=1)
+2026-03-27 20:20:39,685 [INFO] ProcessPoolExecutor initialized: 6 workers
+2026-03-27 20:20:39,686 [INFO] ============================================================
+2026-03-27 20:20:39,686 [INFO] Multi-Strategy Bot v8.2 | mode=demo
+2026-03-27 20:20:39,686 [INFO] equity=$5000.0 | coins=['XRP', 'SOL', 'TAO', 'DOGE', 'ADA', 'DOT', 'AVAX', 'BNB', 'LINK']
+2026-03-27 20:20:39,686 [INFO] ============================================================
+2026-03-27 20:20:39,686 [WARNING] [Demo] BINANCE_TESTNET_API_KEY not set — falling back to paper mode
+2026-03-27 20:20:40,230 [INFO] Exchange initialized (binance/live): 701 markets loaded
+2026-03-27 20:20:40,230 [INFO] Demo/testnet mode: virtual funds, real orders on testnet | equity=$5000.00
+2026-03-27 20:20:40,231 [INFO] [MultiPos] Recovered 5 positions
+2026-03-27 20:20:40,231 [INFO] No existing coin profiles at data/reports/multi_strategy/coin_profiles.json, starting fresh
+2026-03-27 20:20:40,231 [INFO] [cvd_spike] loaded | $3000.0 | 4x | cycle=60s | max_pos=10
+2026-03-27 20:20:40,231 [INFO] [liquidation_fade] loaded | $1500.0 | 3x | cycle=60s | max_pos=6
+2026-03-27 20:20:40,231 [INFO] [momentum_breakout] loaded | $1500.0 | 4x | cycle=60s | max_pos=6
+2026-03-27 20:20:40,231 [INFO] [asymmetric_sniper] loaded | $3000.0 | 6x | cycle=60s | max_pos=6
+2026-03-27 20:20:40,231 [INFO] [MonitorV2] Started (poll every 15s)
+2026-03-27 20:20:40,231 [WARNING] [Discord] DISCORD_WEBHOOK_URL not set
+2026-03-27 20:20:40,231 [INFO] [Recovery] Resuming monitoring for 5 recovered positions
+2026-03-27 20:20:40,231 [WARNING] [Discord] DISCORD_WEBHOOK_URL not set
+2026-03-27 20:20:40,232 [INFO] [Discord] System ready notification sent
+2026-03-27 20:20:40,232 [INFO] [cvd_spike] loop started (every 60s)
+2026-03-27 20:20:40,232 [INFO] [liquidation_fade] loop started (every 60s)
+2026-03-27 20:20:40,232 [INFO] [momentum_breakout] loop started (every 60s)
+2026-03-27 20:20:40,232 [INFO] [asymmetric_sniper] loop started (every 60s)
+2026-03-27 20:20:40,410 [INFO] [CoinSelect] Volatility top 30 → 5 passed safety filter | rejected: 0
+2026-03-27 20:20:40,410 [INFO]   ✓ BNB    vol%= 0.00% vol=$      0M spread= 0.0bps $0.0000
+2026-03-27 20:20:40,410 [INFO]   ✓ DOGE   vol%= 0.00% vol=$      0M spread= 0.0bps $0.0000
+2026-03-27 20:20:40,410 [INFO]   ✓ SOL    vol%= 0.00% vol=$      0M spread= 0.0bps $0.0000
+2026-03-27 20:20:40,410 [INFO]   ✓ XRP    vol%= 0.00% vol=$      0M spread= 0.0bps $0.0000
+2026-03-27 20:20:40,410 [INFO]   ✓ TAO    vol%= 0.00% vol=$      0M spread= 0.0bps $0.0000
+2026-03-27 20:20:40,411 [INFO] [CoinRefresh] 15 coins active (base=15 + selective=0) | +{'ETH', 'OP', 'ARB', 'BTC', 'SUI', 'APT'} -{}
+2026-03-27 20:20:40,411 [WARNING] [Discord] DISCORD_WEBHOOK_URL not set
+2026-03-27 20:21:00,439 [INFO] [ADA] BREAKOUT → SHORT | vol=6.7x cvd_conf=N lev=4x
+2026-03-27 20:21:00,590 [INFO] [BTC] BREAKOUT → SHORT | vol=5.2x cvd_conf=N lev=4x
+2026-03-27 20:21:00,850 [INFO] [ETH] BREAKOUT → SHORT | vol=6.0x cvd_conf=N lev=4x
+2026-03-27 20:21:01,095 [INFO] [DOT] BREAKOUT → SHORT | vol=2.8x cvd_conf=N lev=4x
+2026-03-27 20:21:01,341 [INFO] [AVAX] BREAKOUT → SHORT | vol=5.7x cvd_conf=N lev=4x
+2026-03-27 20:21:01,594 [INFO] [LINK] BREAKOUT → SHORT | vol=5.3x cvd_conf=N lev=4x
+2026-03-27 20:21:01,847 [INFO] [OP] BREAKOUT → SHORT | vol=4.7x cvd_conf=N lev=4x
+2026-03-27 20:21:02,098 [INFO] [ARB] BREAKOUT → SHORT | vol=5.6x cvd_conf=N lev=4x
+2026-03-27 20:21:02,345 [INFO] [SUI] BREAKOUT → SHORT | vol=5.0x cvd_conf=N lev=4x
+2026-03-27 20:21:02,593 [INFO] [APT] BREAKOUT → SHORT | vol=4.0x cvd_conf=N lev=4x
+2026-03-27 20:21:03,141 [INFO] [ADA] PAPER fill SELL @ 0.2471 qty=14569.0
+2026-03-27 20:21:03,141 [INFO] [MultiPos] Added momentum_breakout:ADA: SELL ADA @ 0.2471
+2026-03-27 20:21:03,445 [INFO] [TradeLog] Entry captured: momentum_breakout_ADA_0327_112103_0001
+2026-03-27 20:21:03,445 [INFO] [ADA] ENTRY SELL @ 0.2471 | qty=14569.0 | SL=0.2477 | trailing=Y | notional=$3600.01
+2026-03-27 20:21:03,693 [INFO] [BTC] notional 0.01 < $5, skip
+2026-03-27 20:21:03,941 [INFO] [ETH] notional 0.01 < $5, skip
+2026-03-27 20:21:04,181 [INFO] [DOT] notional 0.01 < $5, skip
+2026-03-27 20:21:04,182 [INFO] [momentum_breakout] TRADE: {'strategy': 'momentum_breakout', 'coin': 'ADA', 'side': 'SELL', 'price': 0.2471, 'qty': 14569.0, 'sl': 0.24766785714285713, 'tp': 0.0, 'trailing': True}
+2026-03-27 20:21:04,725 [WARNING] [Discord] DISCORD_WEBHOOK_URL not set
+2026-03-27 20:21:38,551 [INFO] [Heartbeat] equity=$5000.00 | daily=0.00% | pos=6 | notional=$10796.74 | kill=False
+2026-03-27 20:21:38,800 [INFO] [CoinSelect] Volatility top 30 → 0 passed safety filter | rejected: 0
+2026-03-27 20:21:42,218 [WARNING] [Discord] DISCORD_WEBHOOK_URL not set
+2026-03-27 20:21:46,222 [WARNING] [Discord] DISCORD_WEBHOOK_URL not set
+2026-03-27 20:21:46,222 [INFO] [SignalScan] 15 coins | 15 candidates
+2026-03-27 20:21:59,543 [INFO] Signal 15 received, shutting down...
+2026-03-27 20:21:59,543 [INFO] Shutting down...
+2026-03-27 20:21:59,545 [INFO] [MonitorV2] Stopped
+2026-03-27 20:21:59,546 [INFO] ============================================================
+2026-03-27 20:21:59,546 [INFO] Session summary:
+2026-03-27 20:21:59,546 [INFO]   Trades: 0
+2026-03-27 20:21:59,547 [INFO]   PnL: $+0.0000
+2026-03-27 20:21:59,547 [INFO]   Win rate: 0.0%
+2026-03-27 20:21:59,547 [INFO]   Final equity: $5000.00
+2026-03-27 20:21:59,547 [INFO]   [cvd_spike] trades=0 pnl=$+0.0000
+2026-03-27 20:21:59,547 [INFO]   [liquidation_fade] trades=0 pnl=$+0.0000
+2026-03-27 20:21:59,547 [INFO]   [momentum_breakout] trades=0 pnl=$+0.0000
+2026-03-27 20:21:59,547 [INFO]   [asymmetric_sniper] trades=0 pnl=$+0.0000
+2026-03-27 20:21:59,547 [INFO] ============================================================

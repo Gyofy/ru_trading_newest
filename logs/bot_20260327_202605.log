@@ -1,0 +1,160 @@
+2026-03-27 20:26:06,335 [INFO] [EquityState] Restored equity=$5000.00 (restarts=1)
+2026-03-27 20:26:06,339 [INFO] ProcessPoolExecutor initialized: 6 workers
+2026-03-27 20:26:06,339 [INFO] ============================================================
+2026-03-27 20:26:06,339 [INFO] Multi-Strategy Bot v8.2 | mode=demo
+2026-03-27 20:26:06,339 [INFO] equity=$5000.0 | coins=['XRP', 'SOL', 'TAO', 'DOGE', 'ADA', 'DOT', 'AVAX', 'BNB', 'LINK']
+2026-03-27 20:26:06,339 [INFO] ============================================================
+2026-03-27 20:26:06,339 [WARNING] [Demo] BINANCE_TESTNET_API_KEY not set — falling back to paper mode
+2026-03-27 20:26:06,853 [INFO] Exchange initialized (binance/live): 701 markets loaded
+2026-03-27 20:26:06,853 [INFO] Demo/testnet mode: virtual funds, real orders on testnet | equity=$5000.00
+2026-03-27 20:26:06,854 [INFO] [MultiPos] Recovered 0 positions
+2026-03-27 20:26:06,854 [INFO] No existing coin profiles at data/reports/multi_strategy/coin_profiles.json, starting fresh
+2026-03-27 20:26:06,854 [INFO] [cvd_spike] loaded | $3000.0 | 4x | cycle=60s | max_pos=10
+2026-03-27 20:26:06,854 [INFO] [liquidation_fade] loaded | $1500.0 | 3x | cycle=60s | max_pos=6
+2026-03-27 20:26:06,854 [INFO] [momentum_breakout] loaded | $1500.0 | 4x | cycle=60s | max_pos=6
+2026-03-27 20:26:06,854 [INFO] [asymmetric_sniper] loaded | $3000.0 | 6x | cycle=60s | max_pos=6
+2026-03-27 20:26:06,854 [INFO] [MonitorV2] Started (poll every 15s)
+2026-03-27 20:26:06,855 [INFO] [Discord] System ready notification sent
+2026-03-27 20:26:06,855 [INFO] [cvd_spike] loop started (every 60s)
+2026-03-27 20:26:06,855 [INFO] [liquidation_fade] loop started (every 60s)
+2026-03-27 20:26:06,855 [INFO] [momentum_breakout] loop started (every 60s)
+2026-03-27 20:26:06,855 [INFO] [asymmetric_sniper] loop started (every 60s)
+2026-03-27 20:26:06,982 [INFO] [CoinSelect] Volatility top 30 → 0 passed safety filter | rejected: 0
+2026-03-27 20:26:06,982 [INFO] [CoinRefresh] 15 coins active (base=15 + selective=0) | +{'ETH', 'BTC', 'SUI', 'OP', 'APT', 'ARB'} -{}
+2026-03-27 20:26:26,128 [INFO] [XRP] BREAKOUT → SHORT | vol=4.4x cvd_conf=N lev=4x
+2026-03-27 20:26:26,379 [INFO] [SOL] BREAKOUT → SHORT | vol=5.3x cvd_conf=N lev=4x
+2026-03-27 20:26:26,627 [INFO] [TAO] BREAKOUT → SHORT | vol=2.7x cvd_conf=N lev=4x
+2026-03-27 20:26:26,884 [INFO] [DOGE] BREAKOUT → SHORT | vol=5.8x cvd_conf=N lev=4x
+2026-03-27 20:26:27,125 [INFO] [ADA] BREAKOUT → SHORT | vol=6.7x cvd_conf=N lev=4x
+2026-03-27 20:26:27,376 [INFO] [BTC] BREAKOUT → SHORT | vol=5.3x cvd_conf=N lev=4x
+2026-03-27 20:26:27,624 [INFO] [ETH] BREAKOUT → SHORT | vol=6.1x cvd_conf=N lev=4x
+2026-03-27 20:26:27,876 [INFO] [BNB] BREAKOUT → SHORT | vol=7.0x cvd_conf=N lev=4x
+2026-03-27 20:26:28,124 [INFO] [DOT] BREAKOUT → SHORT | vol=2.8x cvd_conf=N lev=4x
+2026-03-27 20:26:28,376 [INFO] [AVAX] BREAKOUT → SHORT | vol=5.7x cvd_conf=N lev=4x
+2026-03-27 20:26:28,628 [INFO] [LINK] BREAKOUT → SHORT | vol=5.4x cvd_conf=N lev=4x
+2026-03-27 20:26:28,886 [INFO] [OP] BREAKOUT → SHORT | vol=4.7x cvd_conf=N lev=4x
+2026-03-27 20:26:29,129 [INFO] [ARB] BREAKOUT → SHORT | vol=5.7x cvd_conf=N lev=4x
+2026-03-27 20:26:29,373 [INFO] [SUI] BREAKOUT → SHORT | vol=5.0x cvd_conf=N lev=4x
+2026-03-27 20:26:29,624 [INFO] [APT] BREAKOUT → SHORT | vol=3.8x cvd_conf=N lev=4x
+2026-03-27 20:26:30,166 [INFO] [XRP] PAPER fill SELL @ 1.3359 qty=748.5
+2026-03-27 20:26:30,166 [INFO] [MultiPos] Added momentum_breakout:XRP: SELL XRP @ 1.3359
+2026-03-27 20:26:30,476 [INFO] [TradeLog] Entry captured: momentum_breakout_XRP_0327_112630_0001
+2026-03-27 20:26:30,476 [INFO] [XRP] ENTRY SELL @ 1.3359 | qty=748.5 | SL=1.3376 | trailing=Y | notional=$1000.00
+2026-03-27 20:26:30,876 [INFO] [SOL] PAPER fill SELL @ 83.3200 qty=12.0
+2026-03-27 20:26:30,876 [INFO] [MultiPos] Added momentum_breakout:SOL: SELL SOL @ 83.32
+2026-03-27 20:26:31,176 [INFO] [TradeLog] Entry captured: momentum_breakout_SOL_0327_112630_0002
+2026-03-27 20:26:31,176 [INFO] [SOL] ENTRY SELL @ 83.3200 | qty=12.0 | SL=83.4689 | trailing=Y | notional=$1000.00
+2026-03-27 20:26:31,580 [INFO] [TAO] PAPER fill SELL @ 323.7900 qty=3.088
+2026-03-27 20:26:31,580 [INFO] [MultiPos] Added momentum_breakout:TAO: SELL TAO @ 323.79
+2026-03-27 20:26:31,972 [INFO] [TradeLog] Entry captured: momentum_breakout_TAO_0327_112631_0003
+2026-03-27 20:26:31,972 [INFO] [TAO] ENTRY SELL @ 323.7900 | qty=3.088 | SL=325.0100 | trailing=Y | notional=$1000.00
+2026-03-27 20:26:32,380 [INFO] [DOGE] PAPER fill SELL @ 0.0900 qty=11111.0
+2026-03-27 20:26:32,380 [INFO] [MultiPos] Added momentum_breakout:DOGE: SELL DOGE @ 0.09
+2026-03-27 20:26:32,670 [INFO] [TradeLog] Entry captured: momentum_breakout_DOGE_0327_112632_0004
+2026-03-27 20:26:32,670 [INFO] [DOGE] ENTRY SELL @ 0.0900 | qty=11111.0 | SL=0.0901 | trailing=Y | notional=$1000.00
+2026-03-27 20:26:33,073 [INFO] [ADA] PAPER fill SELL @ 0.2474 qty=4042.0
+2026-03-27 20:26:33,074 [INFO] [MultiPos] Added momentum_breakout:ADA: SELL ADA @ 0.2474
+2026-03-27 20:26:33,384 [INFO] [TradeLog] Entry captured: momentum_breakout_ADA_0327_112633_0005
+2026-03-27 20:26:33,384 [INFO] [ADA] ENTRY SELL @ 0.2474 | qty=4042.0 | SL=0.2479 | trailing=Y | notional=$1000.00
+2026-03-27 20:26:33,790 [INFO] [BTC] PAPER fill SELL @ 66682.1000 qty=0.014
+2026-03-27 20:26:33,790 [INFO] [MultiPos] Added momentum_breakout:BTC: SELL BTC @ 66682.1
+2026-03-27 20:26:34,095 [INFO] [TradeLog] Entry captured: momentum_breakout_BTC_0327_112633_0006
+2026-03-27 20:26:34,095 [INFO] [BTC] ENTRY SELL @ 66682.1000 | qty=0.014 | SL=66776.7393 | trailing=Y | notional=$1000.00
+2026-03-27 20:26:34,095 [INFO] [momentum_breakout] TRADE: {'strategy': 'momentum_breakout', 'coin': 'XRP', 'side': 'SELL', 'price': 1.3359, 'qty': 748.5, 'sl': 1.3375928571428572, 'tp': 0.0, 'trailing': True}
+2026-03-27 20:26:34,096 [INFO] [momentum_breakout] TRADE: {'strategy': 'momentum_breakout', 'coin': 'SOL', 'side': 'SELL', 'price': 83.32, 'qty': 12.0, 'sl': 83.46892857142856, 'tp': 0.0, 'trailing': True}
+2026-03-27 20:26:34,096 [INFO] [momentum_breakout] TRADE: {'strategy': 'momentum_breakout', 'coin': 'TAO', 'side': 'SELL', 'price': 323.79, 'qty': 3.088, 'sl': 325.01, 'tp': 0.0, 'trailing': True}
+2026-03-27 20:26:34,096 [INFO] [momentum_breakout] TRADE: {'strategy': 'momentum_breakout', 'coin': 'DOGE', 'side': 'SELL', 'price': 0.09, 'qty': 11111.0, 'sl': 0.09012964285714285, 'tp': 0.0, 'trailing': True}
+2026-03-27 20:26:34,097 [INFO] [momentum_breakout] TRADE: {'strategy': 'momentum_breakout', 'coin': 'ADA', 'side': 'SELL', 'price': 0.2474, 'qty': 4042.0, 'sl': 0.2478607142857143, 'tp': 0.0, 'trailing': True}
+2026-03-27 20:26:34,097 [INFO] [momentum_breakout] TRADE: {'strategy': 'momentum_breakout', 'coin': 'BTC', 'side': 'SELL', 'price': 66682.1, 'qty': 0.014, 'sl': 66776.7392857143, 'tp': 0.0, 'trailing': True}
+2026-03-27 20:27:05,121 [INFO] [Heartbeat] equity=$5000.00 | daily=0.00% | pos=6 | notional=$5933.15 | kill=False
+2026-03-27 20:27:05,305 [INFO] [CoinSelect] Volatility top 30 → 0 passed safety filter | rejected: 0
+2026-03-27 20:27:08,027 [INFO] [SUI] CVD SPIKE → LONG | trigger=cvd_extreme_sell strength=0.128
+2026-03-27 20:27:08,772 [INFO] [LINK] CVD SPIKE → SHORT | trigger=ofi_extreme_buy strength=-0.011
+2026-03-27 20:27:09,870 [INFO] [LINK] PAPER fill SELL @ 8.6070 qty=139.42
+2026-03-27 20:27:09,871 [INFO] [MultiPos] Added cvd_spike:LINK: SELL LINK @ 8.607
+2026-03-27 20:27:10,775 [INFO] [TradeLog] Entry captured: cvd_spike_LINK_0327_112709_0007
+2026-03-27 20:27:10,775 [INFO] [LINK] ENTRY SELL @ 8.6070 | qty=139.42 | SL=8.6304 | trailing=Y | notional=$1200.00
+2026-03-27 20:27:11,770 [INFO] [SUI] PAPER fill BUY @ 0.8936 qty=1342.8
+2026-03-27 20:27:11,771 [INFO] [MultiPos] Added cvd_spike:SUI: BUY SUI @ 0.8936
+2026-03-27 20:27:13,286 [INFO] [SignalScan] 15 coins | 15 candidates
+2026-03-27 20:27:13,542 [INFO] [TradeLog] Entry captured: cvd_spike_SUI_0327_112711_0008
+2026-03-27 20:27:13,542 [INFO] [SUI] ENTRY BUY @ 0.8936 | qty=1342.8 | SL=0.8910 | trailing=Y | notional=$1200.00
+2026-03-27 20:27:13,542 [INFO] [cvd_spike] TRADE: {'strategy': 'cvd_spike', 'coin': 'LINK', 'side': 'SELL', 'price': 8.607, 'qty': 139.42, 'sl': 8.630357142857143, 'tp': 0.0, 'trailing': True}
+2026-03-27 20:27:13,543 [INFO] [cvd_spike] TRADE: {'strategy': 'cvd_spike', 'coin': 'SUI', 'side': 'BUY', 'price': 0.8936, 'qty': 1342.8, 'sl': 0.8909642857142857, 'tp': 0.0, 'trailing': True}
+2026-03-27 20:28:03,405 [INFO] [Heartbeat] equity=$5000.00 | daily=0.00% | pos=8 | notional=$8333.07 | kill=False
+2026-03-27 20:28:12,049 [INFO] [OP] CVD SPIKE → LONG | trigger=cvd_extreme_sell strength=0.427
+2026-03-27 20:28:13,020 [INFO] [OP] PAPER fill BUY @ 0.1053 qty=11396.0
+2026-03-27 20:28:13,021 [INFO] [MultiPos] Added cvd_spike:OP: BUY OP @ 0.1053
+2026-03-27 20:28:13,328 [INFO] [TradeLog] Entry captured: cvd_spike_OP_0327_112813_0009
+2026-03-27 20:28:13,328 [INFO] [OP] ENTRY BUY @ 0.1053 | qty=11396.0 | SL=0.1046 | trailing=Y | notional=$1200.00
+2026-03-27 20:28:13,328 [INFO] [cvd_spike] TRADE: {'strategy': 'cvd_spike', 'coin': 'OP', 'side': 'BUY', 'price': 0.1053, 'qty': 11396.0, 'sl': 0.1046357142857143, 'tp': 0.0, 'trailing': True}
+2026-03-27 20:29:02,071 [INFO] [Heartbeat] equity=$5000.00 | daily=0.00% | pos=9 | notional=$9533.07 | kill=False
+2026-03-27 20:30:01,271 [INFO] [Heartbeat] equity=$5000.00 | daily=0.00% | pos=9 | notional=$9533.07 | kill=False
+2026-03-27 20:30:10,738 [INFO] [ARB] CVD SPIKE → LONG | trigger=cvd_extreme_sell strength=0.246
+2026-03-27 20:30:11,482 [INFO] [ARB] PAPER fill BUY @ 0.0908 qty=13215.8
+2026-03-27 20:30:11,483 [INFO] [MultiPos] Added cvd_spike:ARB: BUY ARB @ 0.0908
+2026-03-27 20:30:11,807 [INFO] [TradeLog] Entry captured: cvd_spike_ARB_0327_113011_0010
+2026-03-27 20:30:11,807 [INFO] [ARB] ENTRY BUY @ 0.0908 | qty=13215.8 | SL=0.0903 | trailing=Y | notional=$1200.00
+2026-03-27 20:30:11,807 [INFO] [cvd_spike] TRADE: {'strategy': 'cvd_spike', 'coin': 'ARB', 'side': 'BUY', 'price': 0.0908, 'qty': 13215.8, 'sl': 0.09026428571428574, 'tp': 0.0, 'trailing': True}
+2026-03-27 20:30:30,476 [INFO] [MonitorV2] XRP SL HIT: 1.3375 vs 1.3373
+2026-03-27 20:30:30,476 [INFO] [PortRisk] momentum_breakout PnL: -1.1976 | equity: 4998.80 | daily: 0.02%
+2026-03-27 20:30:30,476 [INFO] [TradeLog] momentum_breakout_XRP_0327_112630_0001 closed: pnl=-0.12% reason=SL_HIT bars=4 mfe=0.07% mae=-0.12%
+2026-03-27 20:30:30,477 [INFO] [MultiPos] Removed momentum_breakout:XRP
+2026-03-27 20:30:30,477 [INFO] [Close] ❌ momentum_breakout:XRP SL_HIT | PnL=-1.1976 (-0.12%) | entry=1.3359 exit=1.3375 | bars=4 | mfe=0.07% mae=-0.12%
+2026-03-27 20:30:59,459 [INFO] [Heartbeat] equity=$4998.80 | daily=0.02% | pos=9 | notional=$9733.14 | kill=False
+2026-03-27 20:31:26,407 [INFO] [XRP] BREAKOUT → SHORT | vol=4.5x cvd_conf=N lev=4x
+2026-03-27 20:31:26,666 [INFO] [ETH] BREAKOUT → SHORT | vol=6.2x cvd_conf=N lev=4x
+2026-03-27 20:31:26,946 [INFO] [BNB] BREAKOUT → SHORT | vol=7.1x cvd_conf=N lev=4x
+2026-03-27 20:31:27,159 [INFO] [DOT] BREAKOUT → SHORT | vol=2.9x cvd_conf=N lev=4x
+2026-03-27 20:31:27,408 [INFO] [AVAX] BREAKOUT → SHORT | vol=5.8x cvd_conf=N lev=4x
+2026-03-27 20:31:27,661 [INFO] [APT] BREAKOUT → SHORT | vol=3.8x cvd_conf=N lev=4x
+2026-03-27 20:31:28,065 [WARNING] [XRP] SL too tight: 0.000929
+2026-03-27 20:31:57,746 [INFO] [Heartbeat] equity=$4998.80 | daily=0.02% | pos=9 | notional=$9733.14 | kill=False
+2026-03-27 20:32:26,526 [INFO] [XRP] BREAKOUT → SHORT | vol=4.5x cvd_conf=N lev=4x
+2026-03-27 20:32:26,782 [INFO] [ETH] BREAKOUT → SHORT | vol=6.2x cvd_conf=N lev=4x
+2026-03-27 20:32:27,029 [INFO] [BNB] BREAKOUT → SHORT | vol=7.1x cvd_conf=N lev=4x
+2026-03-27 20:32:27,278 [INFO] [DOT] BREAKOUT → SHORT | vol=3.0x cvd_conf=N lev=4x
+2026-03-27 20:32:27,521 [INFO] [AVAX] BREAKOUT → SHORT | vol=5.9x cvd_conf=N lev=4x
+2026-03-27 20:32:27,773 [INFO] [APT] BREAKOUT → SHORT | vol=3.7x cvd_conf=N lev=4x
+2026-03-27 20:32:28,324 [INFO] [XRP] PAPER fill SELL @ 1.3373 qty=747.7
+2026-03-27 20:32:28,325 [INFO] [MultiPos] Added momentum_breakout:XRP: SELL XRP @ 1.3373
+2026-03-27 20:32:28,628 [INFO] [TradeLog] Entry captured: momentum_breakout_XRP_0327_113228_0011
+2026-03-27 20:32:28,628 [INFO] [XRP] ENTRY SELL @ 1.3373 | qty=747.7 | SL=1.3387 | trailing=Y | notional=$1000.00
+2026-03-27 20:32:28,628 [INFO] [momentum_breakout] TRADE: {'strategy': 'momentum_breakout', 'coin': 'XRP', 'side': 'SELL', 'price': 1.3373, 'qty': 747.7, 'sl': 1.3386821428571427, 'tp': 0.0, 'trailing': True}
+2026-03-27 20:32:56,042 [INFO] [Heartbeat] equity=$4998.80 | daily=0.02% | pos=10 | notional=$10733.04 | kill=False
+2026-03-27 20:33:54,309 [INFO] [Heartbeat] equity=$4998.80 | daily=0.02% | pos=10 | notional=$10733.04 | kill=False
+2026-03-27 20:34:52,599 [INFO] [Heartbeat] equity=$4998.80 | daily=0.02% | pos=10 | notional=$10733.04 | kill=False
+2026-03-27 20:35:27,967 [INFO] [MonitorV2] DOGE SL HIT: 0.0901 vs 0.0901
+2026-03-27 20:35:27,967 [INFO] [PortRisk] momentum_breakout PnL: -0.7778 | equity: 4998.02 | daily: 0.04%
+2026-03-27 20:35:27,968 [INFO] [TradeLog] momentum_breakout_DOGE_0327_112632_0004 closed: pnl=-0.08% reason=SL_HIT bars=9 mfe=0.12% mae=-0.08%
+2026-03-27 20:35:27,968 [INFO] [MultiPos] Removed momentum_breakout:DOGE
+2026-03-27 20:35:27,968 [INFO] [Close] ❌ momentum_breakout:DOGE SL_HIT | PnL=-0.7778 (-0.08%) | entry=0.0900 exit=0.0901 | bars=9 | mfe=0.12% mae=-0.08%
+2026-03-27 20:35:51,698 [INFO] [Heartbeat] equity=$4998.02 | daily=0.04% | pos=9 | notional=$9733.05 | kill=False
+2026-03-27 20:36:23,607 [INFO] [DOGE] BREAKOUT → SHORT | vol=6.1x cvd_conf=N lev=4x
+2026-03-27 20:36:23,852 [INFO] [ETH] BREAKOUT → SHORT | vol=6.2x cvd_conf=N lev=4x
+2026-03-27 20:36:24,105 [INFO] [BNB] BREAKOUT → SHORT | vol=7.2x cvd_conf=N lev=4x
+2026-03-27 20:36:24,356 [INFO] [DOT] BREAKOUT → SHORT | vol=3.0x cvd_conf=N lev=4x
+2026-03-27 20:36:24,617 [INFO] [AVAX] BREAKOUT → SHORT | vol=5.9x cvd_conf=N lev=4x
+2026-03-27 20:36:24,860 [INFO] [APT] BREAKOUT → SHORT | vol=3.7x cvd_conf=N lev=4x
+2026-03-27 20:36:25,425 [INFO] [DOGE] PAPER fill SELL @ 0.0900 qty=11113.0
+2026-03-27 20:36:25,427 [INFO] [MultiPos] Added momentum_breakout:DOGE: SELL DOGE @ 0.08998
+2026-03-27 20:36:26,207 [INFO] [TradeLog] Entry captured: momentum_breakout_DOGE_0327_113625_0012
+2026-03-27 20:36:26,207 [INFO] [DOGE] ENTRY SELL @ 0.0900 | qty=11113.0 | SL=0.0901 | trailing=Y | notional=$1000.00
+2026-03-27 20:36:26,207 [INFO] [momentum_breakout] TRADE: {'strategy': 'momentum_breakout', 'coin': 'DOGE', 'side': 'SELL', 'price': 0.08998, 'qty': 11113.0, 'sl': 0.0901107142857143, 'tp': 0.0, 'trailing': True}
+2026-03-27 20:36:49,970 [INFO] [Heartbeat] equity=$4998.02 | daily=0.04% | pos=10 | notional=$10733.00 | kill=False
+2026-03-27 20:36:56,947 [INFO] [CoinSelect] Volatility top 30 → 0 passed safety filter | rejected: 0
+2026-03-27 20:37:05,570 [INFO] [SignalScan] 15 coins | 15 candidates
+2026-03-27 20:37:08,012 [INFO] Signal 15 received, shutting down...
+2026-03-27 20:37:08,012 [INFO] Shutting down...
+2026-03-27 20:37:08,013 [INFO] [MonitorV2] Stopped
+2026-03-27 20:37:08,015 [INFO] ============================================================
+2026-03-27 20:37:08,015 [INFO] Session summary:
+2026-03-27 20:37:08,015 [INFO]   Trades: 2
+2026-03-27 20:37:08,015 [INFO]   PnL: $-1.9754
+2026-03-27 20:37:08,015 [INFO]   Win rate: 0.0%
+2026-03-27 20:37:08,015 [INFO]   Final equity: $4998.02
+2026-03-27 20:37:08,016 [INFO]   [cvd_spike] trades=0 pnl=$+0.0000
+2026-03-27 20:37:08,016 [INFO]   [liquidation_fade] trades=0 pnl=$+0.0000
+2026-03-27 20:37:08,016 [INFO]   [momentum_breakout] trades=2 pnl=$-1.9754
+2026-03-27 20:37:08,016 [INFO]   [asymmetric_sniper] trades=0 pnl=$+0.0000
+2026-03-27 20:37:08,016 [INFO] ============================================================

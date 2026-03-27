@@ -175,6 +175,9 @@ class SlTpMonitorV2:
                 pos.sl_price = new_sl
                 moved = True
 
+        if moved:
+            pos.sl_tighten_count = getattr(pos, "sl_tighten_count", 0) + 1
+
         if not moved or self.paper_mode:
             return
 
