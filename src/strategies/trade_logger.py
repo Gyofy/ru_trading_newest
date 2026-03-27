@@ -136,6 +136,13 @@ class TradeContext:
     time_to_mfe_bars: int = 0        # bar number when MFE was reached
     bars_between_mfe_exit: int = 0   # bars from MFE to exit (reversal speed)
 
+    # ── Actual fee & net PnL (populated at close) ──
+    fee_actual_usdt: float = 0.0     # actual round-trip fee paid (entry + exit)
+    pnl_net_usdt: float = 0.0        # PnL after fees
+    pnl_net_pct: float = 0.0         # net PnL % after fees
+    fee_drag_pct: float = 0.0        # fee as % of entry notional (how much fee eats into trade)
+    breakeven_move_pct: float = 0.0  # minimum price move needed just to cover fees
+
     # ── Timestamps for duration calc ──
     _entry_unix: float = 0.0
 
@@ -175,6 +182,52 @@ class TradeLogger:
         self._trade_counter += 1
         now = datetime.now(timezone.utc)
         trade_id = f"{strategy_name}_{coin}_{now.strftime('%m%d_%H%M%S')}_{self._trade_counter:04d}"
+
+        # ── RACE CONDITION FIX: save skeleton to _pending BEFORE any async I/O ──
+        # If SL hits while we're awaiting ticker/ohlcv/BTC data (can take 10-20s),
+        # record_close will still find a valid context. Fields are enriched below.
+        from src.strategies.base import ROUND_TRIP_FEE_RATE as _FEE_RATE
+        _sl_dist_pct = abs(fill_price - sl_price) / fill_price * 100 if fill_price > 0 else 0
+        _tp_dist_pct = abs(tp_price - fill_price) / fill_price * 100 if (fill_price > 0 and tp_price > 0) else 0
+        _breakeven_pct = (_FEE_RATE * 100) if fill_price > 0 else 0  # round-trip fee % of notional
+        key = f"{strategy_name}:{coin}"
+        _skeleton = TradeContext(
+            trade_id=trade_id,
+            ts_entry=now.isoformat(),
+            coin=coin,
+            strategy=strategy_name,
+            side=side,
+            trigger_type=signal_extra.get("trigger", ""),
+            cvd_value=signal_extra.get("cvd_value", 0.0),
+            cvd_z_score=signal_extra.get("cvd_z_score", signal_extra.get("z_score", 0.0)),
+            ofi_value=signal_extra.get("ofi_value", 0.0),
+            signal_strength=signal_extra.get("strength", 0.0),
+            signal_confidence=signal_extra.get("confidence", 0.0),
+            entry_price=fill_price,
+            entry_atr=atr,
+            entry_atr_pct=atr / fill_price * 100 if fill_price > 0 else 0,
+            sl_price=sl_price,
+            tp_price=tp_price,
+            sl_distance_pct=_sl_dist_pct,
+            tp_distance_pct=_tp_dist_pct,
+            trailing_sl=trailing_sl,
+            trail_distance=trail_distance,
+            risk_usdt=risk_usdt,
+            rr_estimate=rr_estimate,
+            qty=qty,
+            notional_usdt=notional,
+            leverage=leverage,
+            fill_price=fill_price,
+            paper_mode=paper_mode,
+            strategy_params=strategy_params,
+            hour_utc=now.hour,
+            day_of_week=now.weekday(),
+            fee_estimate_usdt=round(notional * _FEE_RATE, 4),
+            breakeven_move_pct=round(_breakeven_pct, 4),
+            _entry_unix=time.time(),
+        )
+        self._pending[key] = _skeleton
+        logger.info(f"[TradeLog] Entry skeleton saved: {trade_id}")
 
         # Fetch current market data
         ticker = await data_hub.get_ticker(coin)
@@ -313,6 +366,7 @@ class TradeLogger:
         # Fee estimate
         from src.strategies.base import ROUND_TRIP_FEE_RATE
         fee_estimate_usdt = notional * ROUND_TRIP_FEE_RATE
+        breakeven_move_pct = ROUND_TRIP_FEE_RATE * 100  # % of notional to cover round-trip fees
 
         # Slippage
         slippage_bps = (fill_price - mid) / mid * 10000 if mid > 0 else 0
@@ -323,74 +377,40 @@ class TradeLogger:
         sl_dist_pct = abs(fill_price - sl_price) / fill_price * 100 if fill_price > 0 else 0
         tp_dist_pct = abs(tp_price - fill_price) / fill_price * 100 if (fill_price > 0 and tp_price > 0) else 0
 
-        ctx = TradeContext(
-            trade_id=trade_id,
-            ts_entry=now.isoformat(),
-            coin=coin,
-            strategy=strategy_name,
-            side=side,
-            # Signal
-            trigger_type=trigger,
-            cvd_value=cvd_value,
-            cvd_z_score=cvd_z,
-            ofi_value=ofi_value,
-            signal_strength=strength,
-            signal_confidence=signal_extra.get("confidence", 0.0),
-            # Market
-            entry_price=fill_price,
-            entry_atr=atr,
-            entry_atr_pct=atr / fill_price * 100 if fill_price > 0 else 0,
-            entry_volatility_24h=volatility_24h,
-            entry_volume_24h_usdt=vol_usdt,
-            entry_spread_bps=ticker.get("spread_bps", 0),
-            entry_vpin=vpin,
-            entry_funding_rate=funding,
-            entry_bid=bid,
-            entry_ask=ask,
-            # Barriers
-            sl_price=sl_price,
-            tp_price=tp_price,
-            sl_distance_pct=sl_dist_pct,
-            tp_distance_pct=tp_dist_pct,
-            trailing_sl=trailing_sl,
-            trail_distance=trail_distance,
-            risk_usdt=risk_usdt,
-            rr_estimate=rr_estimate,
-            # Sizing
-            qty=qty,
-            notional_usdt=notional,
-            leverage=leverage,
-            # Execution
-            fill_price=fill_price,
-            slippage_entry_bps=round(slippage_bps, 2),
-            paper_mode=paper_mode,
-            # Params snapshot
-            strategy_params=strategy_params,
-            # Time & regime features
-            hour_utc=hour_utc,
-            day_of_week=day_of_week,
-            session_utc=session_utc,
-            trend_5bar=round(trend_5bar, 6),
-            trend_20bar=round(trend_20bar, 6),
-            bb_position=round(bb_position, 4),
-            rsi_value=round(rsi_value, 2),
-            volatility_regime=volatility_regime,
-            # Macro regime
-            btc_ema20_1h=round(btc_ema20_1h, 2),
-            btc_ema50_1h=round(btc_ema50_1h, 2),
-            btc_regime_1h=btc_regime_1h,
-            btc_price_vs_ema20=round(btc_price_vs_ema20, 6),
-            trade_vs_btc_regime=trade_vs_btc_regime,
-            # Entry quality
-            fill_type=fill_type,
-            fee_estimate_usdt=round(fee_estimate_usdt, 4),
-            # Internal
-            _entry_unix=time.time(),
-        )
-
-        key = f"{strategy_name}:{coin}"
-        self._pending[key] = ctx
-        logger.info(f"[TradeLog] Entry captured: {trade_id}")
+        # Update the skeleton with all async-fetched fields
+        ctx = self._pending[key]  # skeleton saved earlier
+        ctx.trigger_type = trigger
+        ctx.cvd_value = cvd_value
+        ctx.cvd_z_score = cvd_z
+        ctx.ofi_value = ofi_value
+        ctx.signal_strength = strength
+        ctx.signal_confidence = signal_extra.get("confidence", 0.0)
+        ctx.entry_volatility_24h = volatility_24h
+        ctx.entry_volume_24h_usdt = vol_usdt
+        ctx.entry_spread_bps = ticker.get("spread_bps", 0)
+        ctx.entry_vpin = vpin
+        ctx.entry_funding_rate = funding
+        ctx.entry_bid = bid
+        ctx.entry_ask = ask
+        ctx.sl_distance_pct = sl_dist_pct
+        ctx.tp_distance_pct = tp_dist_pct
+        ctx.slippage_entry_bps = round(slippage_bps, 2)
+        ctx.session_utc = session_utc
+        ctx.trend_5bar = round(trend_5bar, 6)
+        ctx.trend_20bar = round(trend_20bar, 6)
+        ctx.bb_position = round(bb_position, 4)
+        ctx.rsi_value = round(rsi_value, 2)
+        ctx.volatility_regime = volatility_regime
+        ctx.btc_ema20_1h = round(btc_ema20_1h, 2)
+        ctx.btc_ema50_1h = round(btc_ema50_1h, 2)
+        ctx.btc_regime_1h = btc_regime_1h
+        ctx.btc_price_vs_ema20 = round(btc_price_vs_ema20, 6)
+        ctx.trade_vs_btc_regime = trade_vs_btc_regime
+        ctx.fill_type = fill_type
+        ctx.fee_estimate_usdt = round(fee_estimate_usdt, 4)
+        ctx.breakeven_move_pct = round(breakeven_move_pct, 4)
+        # skeleton already in _pending[key], no need to re-assign
+        logger.info(f"[TradeLog] Entry enriched: {trade_id}")
 
         return ctx
 
@@ -430,6 +450,15 @@ class TradeLogger:
             ctx.pnl_pct = (ctx.entry_price - exit_price) / ctx.entry_price
         ctx.pnl_usdt = ctx.pnl_pct * ctx.entry_price * ctx.qty
 
+        # Actual fee: entry notional × rate + exit notional × rate
+        from src.strategies.base import ROUND_TRIP_FEE_RATE
+        entry_notional = ctx.entry_price * ctx.qty
+        exit_notional = exit_price * ctx.qty
+        ctx.fee_actual_usdt = round((entry_notional + exit_notional) * (ROUND_TRIP_FEE_RATE / 2), 4)
+        ctx.pnl_net_usdt = round(ctx.pnl_usdt - ctx.fee_actual_usdt, 4)
+        ctx.pnl_net_pct = round(ctx.pnl_net_usdt / entry_notional, 6) if entry_notional > 0 else 0.0
+        ctx.fee_drag_pct = round(ctx.fee_actual_usdt / entry_notional * 100, 4) if entry_notional > 0 else 0.0
+
         # Position data
         if pos is not None:
             ctx.bars_held = getattr(pos, "bars_held", 0)
@@ -459,8 +488,10 @@ class TradeLogger:
                 f.write(json.dumps(record, default=str) + "\n")
             logger.info(
                 f"[TradeLog] {ctx.trade_id} closed: "
-                f"pnl={ctx.pnl_pct:+.2%} reason={exit_reason} "
-                f"bars={ctx.bars_held} mfe={ctx.mfe_pct:.2%} mae={ctx.mae_pct:.2%} "
+                f"pnl={ctx.pnl_pct:+.2%} net={ctx.pnl_net_pct:+.4%} "
+                f"fee={ctx.fee_actual_usdt:.4f}$ drag={ctx.fee_drag_pct:.3f}% "
+                f"reason={exit_reason} bars={ctx.bars_held} "
+                f"mfe={ctx.mfe_pct:.2%} mae={ctx.mae_pct:.2%} "
                 f"mfe/trail={ctx.mfe_to_trail_ratio:.2f} "
                 f"btc={ctx.btc_regime_1h} vs_btc={ctx.trade_vs_btc_regime}"
             )
