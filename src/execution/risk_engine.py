@@ -299,8 +299,8 @@ class RiskEngine:
         # 8. Fee-adjusted EV check
         # 예상 수수료(진입+청산) 합산 후 손익분기 확인
         # fee = taker_fee × 2 (진입+청산 각 1회), notional 기준
-        taker_fee = 0.00055   # Binance Futures taker
-        round_trip_fee_pct = taker_fee * 2  # 0.11%
+        taker_fee = 0.0005    # Binance Futures VIP 0 taker (0.0500%, 수정: 0.00055→0.0005)
+        round_trip_fee_pct = taker_fee * 2  # 0.10%
         fee_usdt = sizing.notional * round_trip_fee_pct
         sl_loss  = sizing.qty * abs(entry_price - sl_price)  # SL 도달 시 손실
         # SL 손실 + 수수료가 risk_usdt의 150%를 초과하면 수수료 비중이 너무 큼

@@ -23,14 +23,20 @@ from src.signals.contract import Signal, Action
 
 logger = logging.getLogger("strategy")
 
-# ── Fee constants (Binance USDT-M Futures, taker-only round-trip) ───────────
-# Entry: market/IOC taker 0.055%  |  Exit: STOP_MARKET / TP_MARKET taker 0.055%
-# Slippage: entry 0.03% + exit 0.05%
+# ── Fee constants (Binance USDT-M Futures, VIP 0 기준) ───────────────────────
+# Binance USDM Futures VIP 0: Maker 0.0200%, Taker 0.0500%
+# BNB 결제 시 10% 추가 할인: Taker 0.0450%
+# Entry: market/IOC taker 0.0500%  |  Exit: STOP_MARKET / TP_MARKET taker 0.0500%
+# Slippage: entry 0.03% + exit 0.05% (중형 페어 기준, 변동성 낮을 때)
 # Total round-trip rate applied to notional (= qty × price)
-_TAKER_FEE     = 0.00055   # 0.055%
-_SLIP_ENTRY    = 0.0003    # 0.030%
-_SLIP_EXIT     = 0.0005    # 0.050%
-ROUND_TRIP_FEE_RATE = _TAKER_FEE * 2 + _SLIP_ENTRY + _SLIP_EXIT  # ≈ 0.190%
+_MAKER_FEE     = 0.0002    # 0.0200% — Post-Only 진입 시
+_TAKER_FEE     = 0.0005    # 0.0500% — 시장가/SL/TP 청산 시 (VIP 0 정확값)
+_SLIP_ENTRY    = 0.0003    # 0.030%  — 진입 슬리피지 추정
+_SLIP_EXIT     = 0.0005    # 0.050%  — 청산 슬리피지 추정
+ROUND_TRIP_FEE_RATE = _TAKER_FEE * 2 + _SLIP_ENTRY + _SLIP_EXIT  # = 0.0018 (0.18%)
+
+# 강제 청산 수수료 — 일반 거래 수수료와 별도, 포지션 노셔널의 0.5%
+LIQUIDATION_FEE_RATE = 0.005  # 0.50% — 강제 청산 시에만 적용
 
 
 @dataclass

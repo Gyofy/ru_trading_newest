@@ -517,6 +517,9 @@ class TradeLogger:
         try:
             with open(self._path, "a", encoding="utf-8") as f:
                 f.write(json.dumps(record, default=str) + "\n")
+                f.flush()
+                import os as _os
+                _os.fsync(f.fileno())  # 크래시 시 마지막 레코드 손상 방지
             logger.info(
                 f"[TradeLog] {ctx.trade_id} closed: "
                 f"pnl={ctx.pnl_pct:+.2%} net={ctx.pnl_net_pct:+.4%} "

@@ -13,6 +13,7 @@ import logging
 from datetime import datetime, timezone
 
 from src.strategies.multi_position_manager import MultiPositionManager
+from src.strategies.base import ROUND_TRIP_FEE_RATE as _BASE_ROUND_TRIP_FEE_RATE
 
 logger = logging.getLogger("monitor_v2")
 
@@ -281,9 +282,9 @@ class SlTpMonitorV2:
     # _BREAKEVEN_TRIGGER_PCT is now computed dynamically per position (fee + trail_dist)
     _TRAIL_START_ATR_MULT = 1.5     # MFE > 1.5×trail_distance → start tightening
 
-    # Round-trip fee rate: taker×2 + slippage_entry + slippage_exit
-    # 0.00055*2 + 0.0003 + 0.0005 = 0.0019 (0.19%)
-    _ROUND_TRIP_FEE_RATE = 0.0019
+    # Round-trip fee rate — base.py에서 가져옴 (단일 소스)
+    # Binance VIP 0: taker×2 + slip_entry + slip_exit = 0.0005×2+0.0003+0.0005 = 0.0018 (0.18%)
+    _ROUND_TRIP_FEE_RATE = _BASE_ROUND_TRIP_FEE_RATE
 
     async def _update_trailing_sl(self, pos, coin: str, price: float) -> None:
         """3-phase trailing SL:

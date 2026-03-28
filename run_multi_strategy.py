@@ -22,6 +22,7 @@ import asyncio
 import concurrent.futures
 import json
 import logging
+import logging.handlers
 import os
 import signal
 import sys
@@ -61,7 +62,12 @@ logging.basicConfig(
     format="%(asctime)s [%(levelname)s] %(message)s",
     handlers=[
         logging.StreamHandler(),
-        logging.FileHandler(STATE_DIR / "bot.log", encoding="utf-8"),
+        logging.handlers.RotatingFileHandler(
+            STATE_DIR / "bot.log",
+            maxBytes=10 * 1024 * 1024,  # 10MB per file
+            backupCount=5,              # bot.log + bot.log.1~5 = 최대 60MB
+            encoding="utf-8",
+        ),
         _DiscordAlertHandler(),
     ],
 )
@@ -1040,7 +1046,8 @@ class MultiStrategyBot:
                     exit_atr=_exit_atr,
                 )
             except Exception as e:
-                log.warning(f"[TradeLog] record_close failed: {e}")
+                # ERROR (not WARNING) — trade_context 누락은 백테스트 데이터 손실
+                log.error(f"[TradeLog] record_close FAILED — trade_context missing for {strategy}:{coin} reason={reason}: {e}")
 
         # Update per-coin adaptive profiles
         if self.coin_profiles:
@@ -1353,9 +1360,14 @@ class MultiStrategyBot:
             return []
 
     def _save_trade(self, trade: dict) -> None:
-        """Append trade to JSONL file."""
-        with open(TRADES_FILE, "a", encoding="utf-8") as f:
-            f.write(json.dumps(trade, default=str) + "\n")
+        """Append trade to JSONL file with fsync for crash safety."""
+        try:
+            with open(TRADES_FILE, "a", encoding="utf-8") as f:
+                f.write(json.dumps(trade, default=str) + "\n")
+                f.flush()
+                os.fsync(f.fileno())  # 디스크 강제 동기화 — 크래시 시 손상 방지
+        except Exception as e:
+            log.error(f"[SaveTrade] Write failed: {e}")
         self._save_equity_state()
 
     async def _strategy_analysis_loop(self) -> None:
