@@ -1,4 +1,4 @@
-"""v8.2 Multi-Strategy Trading Bot — 4 strategies, asymmetric-first design.
+"""v8.5 Multi-Strategy Trading Bot — 4 strategies, asymmetric-first design.
 
 Strategies:
   A. CVD Spike Reactor   ($12, 3x, 1m cycle)  — counter-trend on extreme orderflow
@@ -221,7 +221,7 @@ class MultiStrategyBot:
     async def start(self) -> None:
         """Initialize all components and start trading."""
         log.info(f"{'='*60}")
-        log.info(f"Multi-Strategy Bot v8.2 | mode={self.mode}")
+        log.info(f"Multi-Strategy Bot v8.5 | mode={self.mode}")
         log.info(f"equity=${self.initial_equity} | coins={self.coins}")
         log.info(f"{'='*60}")
 
@@ -392,13 +392,14 @@ class MultiStrategyBot:
             for n, scfg in self.cfg.get("strategies", {}).items()
             if scfg.get("enabled", True)
         )
+        _bot_ver = self.cfg.get("version", "v8.5")
         discord_post(
             f"**모드:** `{self.mode}`\n"
             f"**자본금:** `${self.initial_equity:,.2f}`\n"
             f"**최대 노셔널:** `{self.cfg.get('portfolio',{}).get('total_exposure_pct',0.7)*100:.0f}%`\n"
             f"**코인:** `{', '.join(self.coins)}`\n\n"
             f"**전략 구성:**\n{strategy_summary}",
-            title="✅ v8.2 시스템 준비 완료 — 거래 시작",
+            title=f"✅ {_bot_ver} 시스템 준비 완료 — 거래 시작",
         )
         log.info("[Discord] System ready notification sent")
 
@@ -740,7 +741,7 @@ class MultiStrategyBot:
                 break
 
     async def _discord_signal_scan(self) -> None:
-        """매 10분마다 변동성 상위 30개 전체 신호 분석 리포트 출력."""
+        """매 15분마다 변동성 상위 30개 전체 신호 분석 리포트 출력."""
         await asyncio.sleep(60)  # 시작 후 1분 뒤 첫 실행
         while not self._shutdown_event.is_set():
             try:
@@ -750,7 +751,7 @@ class MultiStrategyBot:
                 msg = self._format_signal_scan_message(scored, pos_lines)
                 discord_post(
                     msg,
-                    title=f"📡 10분 전체 신호 스캔 — {now.strftime('%H:%M UTC')} | 상위30 분석",
+                    title=f"📡 15분 전체 신호 스캔 — {now.strftime('%H:%M UTC')} | 상위30 분석",
                 )
                 strong = [s for s in scored if s["score"] >= 2]
                 log.info(f"[SignalScan] {len(scored)} coins | {len(strong)} candidates")
@@ -760,7 +761,7 @@ class MultiStrategyBot:
                 log.error(f"[Discord] signal scan error: {e}", exc_info=True)
 
             try:
-                await asyncio.sleep(600)  # 10분
+                await asyncio.sleep(900)  # 15분
             except asyncio.CancelledError:
                 break
 

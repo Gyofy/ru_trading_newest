@@ -1,4 +1,4 @@
-version: "v8.4-demo"
+version: "v8.5-demo"
 mode: "demo"  # paper | demo (testnet) | live
 initial_equity: 5000.0
 daily_loss_limit: 0.20  # -20%
