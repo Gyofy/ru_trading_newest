@@ -338,23 +338,13 @@ class SlTpMonitorV2:
                 pos._last_exchange_sl = pos.sl_price
 
     async def _update_exchange_sl(self, pos, coin: str, new_sl: float) -> None:
-        """Cancel old exchange SL and place new one at updated trailing level."""
+        """Place new exchange SL first, then cancel old one only after success."""
         sl_side = "SELL" if pos.side == "BUY" else "BUY"
 
-        # Cancel old exchange SL
-        if hasattr(pos, "sl_exchange_id") and pos.sl_exchange_id:
-            try:
-                await self.exchange.cancel_order(
-                    coin,
-                    exchange_order_id=pos.sl_exchange_id,
-                    order_link_id=pos.sl_order_id if pos.sl_order_id else None,
-                )
-            except Exception as e:
-                logger.warning(f"[Trail] {coin} cancel old SL failed: {e}")
-
-        # Place new exchange SL at updated price — retry up to 3 times
+        # 1. Place new exchange SL FIRST — retry up to 3 times
         rounded_sl = self.exchange.round_price(coin, new_sl)
         result = {"success": False}
+        new_oid = None
         for attempt in range(3):
             if attempt > 0:
                 await asyncio.sleep(0.5)
@@ -367,17 +357,20 @@ class SlTpMonitorV2:
             except Exception as e:
                 result = {"success": False, "error": str(e)}
             if result.get("success"):
-                pos.sl_exchange_id = result.get("exchange_order_id", "")
-                pos.sl_order_id = new_oid
                 logger.debug(
-                    f"[Trail] {coin} exchange SL updated → {rounded_sl}"
+                    f"[Trail] {coin} new exchange SL placed → {rounded_sl}"
                     + (f" (retry {attempt})" if attempt > 0 else "")
                 )
                 break
 
         if not result.get("success"):
             err_msg = str(result.get("error", ""))
-            if "-4509" in err_msg or "-4130" in err_msg or "GTE" in err_msg:
+            if "-4130" in err_msg or "GTE" in err_msg:
+                # Duplicate SL — old one still active, no action needed
+                logger.warning(
+                    f"[Trail] {coin} duplicate SL order (-4130), old SL still active — skipping update"
+                )
+            elif "-4509" in err_msg:
                 # Position doesn't exist on exchange — clear tracking
                 logger.warning(
                     f"[Trail] {coin} position not on exchange (-4509), clearing SL tracking"
@@ -386,9 +379,28 @@ class SlTpMonitorV2:
                 pos.sl_order_id = ""
             else:
                 logger.error(
-                    f"[SL_FAIL] [Trail] {coin} SL update failed 3x: {err_msg} "
-                    f"— software SL only @ {new_sl:.4f}"
+                    f"[SL_FAIL] [Trail] {coin} new SL placement failed 3x: {err_msg} "
+                    f"— keeping OLD SL, software SL @ {new_sl:.4f}"
                 )
+            # Do NOT cancel old SL — position stays protected
+            return
+
+        # 2. New SL confirmed — NOW cancel the old one
+        old_exchange_id = getattr(pos, "sl_exchange_id", "")
+        old_order_id = getattr(pos, "sl_order_id", "")
+        if old_exchange_id:
+            try:
+                await self.exchange.cancel_order(
+                    coin,
+                    exchange_order_id=old_exchange_id,
+                    order_link_id=old_order_id if old_order_id else None,
+                )
+            except Exception as e:
+                logger.warning(f"[Trail] {coin} cancel old SL failed (new SL already active): {e}")
+
+        # 3. Update position tracking with new SL
+        pos.sl_exchange_id = result.get("exchange_order_id", "")
+        pos.sl_order_id = new_oid
 
     async def _cancel_exchange_order(
         self, pos, coin: str,

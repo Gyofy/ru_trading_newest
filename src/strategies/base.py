@@ -45,6 +45,7 @@ class StrategyConfig:
     sl_atr_mult: float = 3.0
     extra: dict = None
     paper_mode: bool = True  # True = simulate orders, False = real orders
+    bot_version: str = ""    # 봇 버전 (config YAML version 필드)
 
     def __post_init__(self):
         if self.extra is None:
@@ -514,7 +515,14 @@ class StrategyBase(ABC):
                         trail_distance=trail_dist,
                         risk_usdt=risk_usdt,
                         rr_estimate=_rr_est_log,
-                        strategy_params=self.config.extra,
+                        strategy_params={
+                            "bot_version": self.config.bot_version,
+                            "sl_atr_mult": self.config.sl_atr_mult,
+                            "leverage": self.config.leverage,
+                            "allocation_usdt": self.config.allocation_usdt,
+                            "max_positions": self.config.max_positions,
+                            **self.config.extra,
+                        },
                         paper_mode=self.config.paper_mode,
                         concurrent_positions=_concurrent,
                         portfolio_notional=_portfolio_notional,

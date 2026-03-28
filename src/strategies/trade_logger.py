@@ -108,8 +108,9 @@ class TradeContext:
     slippage_entry_bps: float = 0.0  # (fill - mid) / mid * 10000
     paper_mode: bool = True
 
-    # ── Strategy-specific params (frozen at entry) ──
-    strategy_params: dict = field(default_factory=dict)
+    # ── Bot version & strategy params (frozen at entry) ──
+    bot_version: str = ""    # config YAML의 version 필드 (예: "v8.4-demo")
+    strategy_params: dict = field(default_factory=dict)  # sl_atr_mult, leverage, tp_rr_ratio 등 전체 파라미터
 
     # ── Time & market regime features (added for strategy optimization) ──
     hour_utc: int = -1            # 0-23 UTC hour at entry
@@ -235,6 +236,7 @@ class TradeLogger:
             leverage=leverage,
             fill_price=fill_price,
             paper_mode=paper_mode,
+            bot_version=strategy_params.get("bot_version", ""),
             strategy_params=strategy_params,
             hour_utc=now.hour,
             day_of_week=now.weekday(),

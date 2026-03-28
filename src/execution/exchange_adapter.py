@@ -360,8 +360,37 @@ class ExchangeAdapter:
                 "raw": order,
             }
         except Exception as e:
+            err_str = str(e)
+            # -4130: closePosition 중복 — reduceOnly + 명시적 qty로 재시도
+            if "-4130" in err_str or "GTE" in err_str:
+                logger.warning(
+                    f"[TP] {symbol} closePosition 중복(-4130) → reduceOnly+qty 재시도 @ {tp_price}"
+                )
+                try:
+                    fb_oid = order_link_id + "_fb"
+                    order = await self._exchange.create_order(
+                        symbol=ccxt_sym,
+                        type=order_type,
+                        side=side.lower(),
+                        amount=qty,
+                        params={
+                            "stopPrice": tp_price,
+                            "reduceOnly": True,
+                            "newClientOrderId": fb_oid,
+                        },
+                    )
+                    return {
+                        "success": True,
+                        "order_id": fb_oid,
+                        "exchange_order_id": order.get("id", ""),
+                        "status": "conditional",
+                        "raw": order,
+                    }
+                except Exception as e2:
+                    logger.error(f"[TP] {symbol} {side} @ {tp_price} fallback도 실패: {e2}")
+                    return {"success": False, "order_id": order_link_id, "error": str(e2)}
             logger.error(f"[TP] {symbol} {side} @ {tp_price} failed: {e}")
-            return {"success": False, "order_id": order_link_id, "error": str(e)}
+            return {"success": False, "order_id": order_link_id, "error": err_str}
 
     # ── Market Close ─────────────────────────────────────────
 

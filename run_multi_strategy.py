@@ -348,6 +348,7 @@ class MultiStrategyBot:
                 sl_atr_mult=scfg.get("sl_atr_mult", 3.0),
                 extra=scfg.get("extra", {}),
                 paper_mode=(self.mode == "paper"),  # demo/live = real testnet/live orders
+                bot_version=self.cfg.get("version", "unknown"),
             )
             strategy = STRATEGY_MAP[name](
                 config=config,
@@ -1095,6 +1096,9 @@ class MultiStrategyBot:
             "concurrent_positions": _concurrent,
             "time_since_last_trade_sec": round(_time_since_last, 1),
             "max_drawdown_pct": round(_max_dd, 6),
+            # ── 버전 & 파라미터 (재현성 추적) ──
+            "bot_version": _tc.get("bot_version", self.cfg.get("version", "unknown")),
+            "strategy_params": _tc.get("strategy_params", {}),
         }
         self._session_trades.append(trade)
         # Cap in-memory list to prevent unbounded growth over long sessions

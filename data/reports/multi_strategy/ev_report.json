@@ -1,0 +1,52 @@
+{
+  "ts": "2026-03-28T07:02:22.959239+00:00",
+  "fee_budget_daily": 219.0407,
+  "daily_fee_total": 49.8087,
+  "daily_fee_pct_used": 22.74,
+  "fee_budget_exceeded": false,
+  "daily_fees_by_strategy": {
+    "liquidation_fade": 49.8087
+  },
+  "strategies": {
+    "momentum_breakout": {
+      "ev": 0.0,
+      "suspended": false,
+      "n_trades": 7,
+      "tp_hit_rate": 0.0,
+      "avg_tp_pct": 0.0,
+      "avg_sl_pct": 0.0,
+      "avg_fee_drag_pct": 0.0,
+      "reason": "insufficient_data"
+    },
+    "cvd_spike": {
+      "ev": -0.001541,
+      "suspended": true,
+      "n_trades": 66,
+      "tp_hit_rate": 0.0,
+      "avg_tp_pct": 0.0,
+      "avg_sl_pct": 0.001467,
+      "avg_fee_drag_pct": 0.001007,
+      "reason": "suspended_ev=-0.1541%"
+    },
+    "asymmetric_sniper": {
+      "ev": -0.001617,
+      "suspended": true,
+      "n_trades": 10,
+      "tp_hit_rate": 0.0,
+      "avg_tp_pct": 0.0,
+      "avg_sl_pct": 0.00072,
+      "avg_fee_drag_pct": 0.00133,
+      "reason": "suspended_ev=-0.1617%"
+    },
+    "liquidation_fade": {
+      "ev": 0.000419,
+      "suspended": false,
+      "n_trades": 17,
+      "tp_hit_rate": 0.5294,
+      "avg_tp_pct": 0.006344,
+      "avg_sl_pct": 0.003759,
+      "avg_fee_drag_pct": 0.001677,
+      "reason": "ok"
+    }
+  }
+}
