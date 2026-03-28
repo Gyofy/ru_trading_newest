@@ -164,8 +164,43 @@ class TradeLogger:
         self._dir = report_dir
         self._dir.mkdir(parents=True, exist_ok=True)
         self._path = self._dir / "trade_context.jsonl"
+        self._rejection_path = self._dir / "rejection_context.jsonl"
         self._pending: dict[str, TradeContext] = {}  # key = "strategy:coin"
         self._trade_counter = 0
+
+    def record_rejection(
+        self,
+        strategy: str,
+        coin: str,
+        reject_reason: str,
+        signal_strength: float = 0.0,
+        signal_confidence: float = 0.0,
+        atr: float = 0.0,
+        price: float = 0.0,
+        vpin: float = 0.0,
+        trigger_type: str = "",
+    ) -> None:
+        """Record a rejected signal to rejection_context.jsonl for filter analysis."""
+        now = datetime.now(timezone.utc)
+        record = {
+            "ts": now.isoformat(),
+            "strategy": strategy,
+            "coin": coin,
+            "reject_reason": reject_reason,
+            "signal_strength": round(signal_strength, 4),
+            "signal_confidence": round(signal_confidence, 4),
+            "trigger_type": trigger_type,
+            "atr": round(atr, 6),
+            "price": round(price, 6),
+            "vpin": round(vpin, 4),
+            "hour_utc": now.hour,
+            "day_of_week": now.weekday(),
+        }
+        try:
+            with open(self._rejection_path, "a", encoding="utf-8") as f:
+                f.write(json.dumps(record) + "\n")
+        except Exception as e:
+            logger.warning(f"[TradeLogger] rejection record failed: {e}")
 
     async def capture_entry_context(
         self,
@@ -260,6 +295,9 @@ class TradeLogger:
 
         # Volatility
         volatility_24h = (high_24h - low_24h) / last * 100 if last > 0 else 0
+
+        # Spread — raw ccxt ticker has no spread_bps key, compute from bid/ask
+        spread_bps = (ask - bid) / mid * 10000 if (mid > 0 and ask > bid) else 0.0
 
         # Volume
         vol_usdt = ticker.get("quoteVolume", 0) or 0
@@ -409,7 +447,7 @@ class TradeLogger:
         ctx.signal_confidence = signal_extra.get("confidence", 0.0)
         ctx.entry_volatility_24h = volatility_24h
         ctx.entry_volume_24h_usdt = vol_usdt
-        ctx.entry_spread_bps = ticker.get("spread_bps", 0)
+        ctx.entry_spread_bps = spread_bps
         ctx.entry_vpin = vpin
         ctx.entry_funding_rate = funding
         ctx.entry_bid = bid

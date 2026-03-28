@@ -1,4 +1,4 @@
-version: "v8.5-demo"
+version: "v8.7-demo"
 mode: "demo"  # paper | demo (testnet) | live
 initial_equity: 5000.0
 daily_loss_limit: 0.20  # -20%
@@ -43,20 +43,20 @@ dynamic_coins:
     - LINK
 
 portfolio:
-  total_exposure_pct: 5.0        # 공격적: 500% 허용 — 전략 합산 최대 notional 대응
-  same_direction_max: 8          # 더 많은 동방향 포지션 허용
+  total_exposure_pct: 6.0        # 600% — 레버리지 감소분 보상: 더 많은 동시 포지션 허용
+  same_direction_max: 12         # 8→12: 동방향 포지션 한도 확대
   daily_loss_pct: 0.20           # 일일 손실 한도 완화 (가상거래)
   strategy_loss_pct: 0.40
   min_notional_usdt: 5.0
   max_funding_rate: 0.003
 
 position_sizing:
-  risk_pct_per_trade: 0.15       # 15% — 공격적 투자 (↑ from 8%)
+  risk_pct_per_trade: 0.20       # 15%→20%: 레버리지 감소 보상 (5x×20% ≈ 8x×15%)
   vol_adjust_enabled: true
   spread_adjust_enabled: false   # testnet 스프레드 패널티 제거
   confidence_adjust_enabled: true
-  min_factor: 0.7                # 최소 포지션 크기 (↑ from 0.5)
-  max_factor: 3.0                # 최대 포지션 크기 (↑ from 2.0)
+  min_factor: 0.7                # 최소 포지션 크기
+  max_factor: 4.0                # 3.0→4.0: 고신뢰 신호 시 더 큰 포지션 허용
 
 strategies:
   cvd_spike:
@@ -64,7 +64,7 @@ strategies:
     allocation_usdt: 9000.0          # ×2: 수량 2배 증가
     leverage: 6                      # +1: 5→6
     cycle_seconds: 60
-    max_positions: 10
+    max_positions: 15                # 10→15: 동시 포지션 한도 확대
     sl_atr_mult: 5.0                 # 3.0→5.0: ATR 저변동성에서 SL too tight 방지
     extra:
       cvd_quantile: 0.92             # 0.97→0.92: 신호 생성 빈도 증가
@@ -80,8 +80,8 @@ strategies:
     allocation_usdt: 4500.0          # ×2: 수량 2배 증가
     leverage: 5                      # +1: 4→5
     cycle_seconds: 60
-    max_positions: 6
-    sl_atr_mult: 2.5
+    max_positions: 10                # 6→10: 동시 포지션 한도 확대
+    sl_atr_mult: 3.5                 # 2.5→3.5: 수수료 극복 위해 SL 넓힘
     extra:
       oi_sigma_threshold: 1.2
       taker_spike_mult: 1.2
@@ -107,22 +107,22 @@ strategies:
   asymmetric_sniper:
     enabled: true
     allocation_usdt: 9000.0          # ×2: 수량 2배 증가
-    leverage: 8                      # +1: 7→8
+    leverage: 5                      # 8→5: 수수료 극복 위해 레버리지 축소
     cycle_seconds: 60
-    max_positions: 6
-    sl_atr_mult: 1.0
+    max_positions: 10                # 6→10: 동시 포지션 한도 확대
+    sl_atr_mult: 2.5                 # 1.0→2.5: 수수료(0.18%) 극복 위해 SL 넓힘
     extra:
-      risk_per_trade_usdt: 200.0     # ×2: 100→200
+      risk_per_trade_usdt: 300.0     # 200→300: 레버리지 감소 보상 (거래당 리스크 증가)
       rr_minimum: 3.0
-      cvd_quantile: 0.92             # 0.95→0.92: 신호 빈도 증가
-      cvd_sigma_mult: 1.5            # 1.8→1.5: z-score 기준 완화
+      cvd_quantile: 0.90             # 0.92→0.90: 신호 빈도 소폭 증가
+      cvd_sigma_mult: 1.8            # 2.0→1.8: 품질 유지하면서 신호 빈도 균형
       cvd_roll_window: 240
       funding_threshold: 0.0001
       funding_filter_enabled: false
       funding_skip_on_null: false
       rr_check_enabled: false
-      cooldown_bars: 5               # 10→5: 쿨다운 단축 (데이터 수집 모드)
-      max_daily_trades: 20           # 12→20: 일일 거래 한도 증가
+      cooldown_bars: 3               # 5→3: 쿨다운 단축 (더 빠른 재진입)
+      max_daily_trades: 40           # 20→40: 일일 거래 한도 2배 증가
       trailing_atr_mult_initial: 0.8    # 2.0→0.8: mfe/trail=0.37 실측 기반 축소
       trailing_atr_mult_tight: 0.4      # 1.0→0.4: profit tighten 구간 강화
       profit_tighten_threshold_atr: 0.8  # 1.5→0.8: 더 일찍 tighten 시작

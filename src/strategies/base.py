@@ -194,6 +194,12 @@ class StrategyBase(ABC):
             )
             if not passed:
                 self._log.info(f"[{coin}] Filter rejected: {reject_reason}")
+                if self.trade_logger:
+                    self.trade_logger.record_rejection(
+                        strategy=self.name, coin=coin, reject_reason=reject_reason,
+                        signal_strength=signal.strength, signal_confidence=signal.confidence,
+                        atr=atr, price=price, vpin=_vpin, trigger_type=signal.trigger_type if hasattr(signal, "trigger_type") else "",
+                    )
                 return None
 
         # Apply per-coin adaptive params — pass as argument, never mutate self.config.extra.
@@ -286,6 +292,12 @@ class StrategyBase(ABC):
             )
             if not approved:
                 self._log.info(f"[{coin}] rejected: {reason}")
+                if self.trade_logger:
+                    self.trade_logger.record_rejection(
+                        strategy=self.name, coin=coin, reject_reason=f"portfolio:{reason}",
+                        signal_strength=signal.strength, signal_confidence=signal.confidence,
+                        atr=atr, price=price,
+                    )
                 return None
 
             # Round qty for exchange
@@ -504,12 +516,14 @@ class StrategyBase(ABC):
                     )
                     _concurrent = len(self.pos_manager.positions)
                     _portfolio_notional = self.pos_manager.total_notional() if hasattr(self.pos_manager, "total_notional") else 0.0
+                    # Merge signal.confidence into extra so trade_logger captures it
+                    _signal_extra_with_conf = {**(signal.extra or {}), "confidence": signal.confidence}
                     await self.trade_logger.capture_entry_context(
                         data_hub=self.data_hub,
                         coin=coin,
                         strategy_name=self.name,
                         side=side,
-                        signal_extra=signal.extra,
+                        signal_extra=_signal_extra_with_conf,
                         fill_price=fill_price,
                         sl_price=sl_price,
                         tp_price=tp_price,
