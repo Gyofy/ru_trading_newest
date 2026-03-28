@@ -286,6 +286,8 @@ class MultiStrategyBot:
             initial_equity=self.initial_equity,
             fee_budget_pct=ev_cfg.get("fee_budget_pct", 0.005),
             report_path=STATE_DIR / "ev_report.json",
+            ev_threshold=ev_cfg.get("ev_threshold", None),
+            ev_min_sample=ev_cfg.get("ev_min_sample", None),
         )
         # 시작 시 ev_reset.flag 파일 존재하면 EV 리셋 후 파일 삭제
         _ev_reset_flag = STATE_DIR / "ev_reset.flag"
@@ -1564,6 +1566,47 @@ def main():
         help="On shutdown, do NOT close exchange positions — save to JSON for next restart",
     )
     args = parser.parse_args()
+
+    # ── 중복 실행 방지 (PID 파일 락) ──────────────────────────
+    PID_FILE = STATE_DIR / "bot.pid"
+    import fcntl as _fcntl
+    _pid_fh = open(PID_FILE, "w")
+    try:
+        _fcntl.flock(_pid_fh, _fcntl.LOCK_EX | _fcntl.LOCK_NB)
+    except OSError:
+        try:
+            _existing_pid = PID_FILE.read_text().strip()
+        except Exception:
+            _existing_pid = "unknown"
+        print(
+            f"[FATAL] 봇이 이미 실행 중입니다 (PID {_existing_pid}). "
+            f"중복 실행을 차단합니다. 기존 프로세스를 먼저 종료하세요.",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+    _pid_fh.write(str(os.getpid()))
+    _pid_fh.flush()
+    import atexit as _atexit
+    _atexit.register(lambda: PID_FILE.unlink(missing_ok=True))
+
+    # ── Discord 연동 확인 (필수 전제조건) ──────────────────────
+    _discord_url = os.environ.get("DISCORD_WEBHOOK_URL", "")
+    if not _discord_url:
+        print("[FATAL] DISCORD_WEBHOOK_URL이 .env에 설정되지 않았습니다. 봇을 시작할 수 없습니다.", file=sys.stderr)
+        sys.exit(1)
+    try:
+        _dc_check_payload = json.dumps({"content": "🟢 봇 시작 — Discord 연동 확인 완료"}).encode("utf-8")
+        _dc_req = urllib.request.Request(
+            _discord_url,
+            data=_dc_check_payload,
+            headers={"Content-Type": "application/json", "User-Agent": "DiscordBot (ru_trading_bot, 1.0)"},
+            method="POST",
+        )
+        urllib.request.urlopen(_dc_req, timeout=8)
+        print("[OK] Discord 연동 확인 완료")
+    except Exception as _e:
+        print(f"[FATAL] Discord webhook 연결 실패: {_e}\n.env의 DISCORD_WEBHOOK_URL을 확인하세요.", file=sys.stderr)
+        sys.exit(1)
 
     bot = MultiStrategyBot(args.config, args.mode)
     bot._keep_positions = args.keep_positions

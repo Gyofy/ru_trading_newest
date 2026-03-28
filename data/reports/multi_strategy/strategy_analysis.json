@@ -1,63 +1,63 @@
 {
-  "generated_at": "2026-03-28T01:45:18.931696+00:00",
-  "total_trades": 94,
-  "total_pnl_usdt": -159.57466999999954,
-  "overall_win_rate": 0.2978723404255319,
+  "generated_at": "2026-03-28T15:56:03.825576+00:00",
+  "total_trades": 122,
+  "total_pnl_usdt": -146.85981999999836,
+  "overall_win_rate": 0.3360655737704918,
   "strategy_stats": [
     {
       "name": "liquidation_fade",
-      "total_trades": 11,
-      "wins": 5,
-      "losses": 6,
-      "total_pnl_usdt": 32.80060999999994,
-      "total_pnl_pct": 0.012088480386220268,
-      "gross_profit": 114.63048999999937,
-      "gross_loss": 81.82987999999942,
-      "avg_win_usdt": 22.926097999999875,
-      "avg_loss_usdt": 13.638313333333237,
+      "total_trades": 25,
+      "wins": 12,
+      "losses": 13,
+      "total_pnl_usdt": 37.5998300000002,
+      "total_pnl_pct": 0.013371117713608525,
+      "gross_profit": 218.98171999999997,
+      "gross_loss": 181.38188999999971,
+      "avg_win_usdt": 18.248476666666665,
+      "avg_loss_usdt": 13.952453076923055,
       "max_win": 32.798789999999926,
-      "max_loss": 20.062419999999687,
-      "avg_bars_held": 50.54545454545455,
-      "avg_mfe_pct": 0.004249605534629637,
-      "avg_mae_pct": -0.003936502490272046,
-      "sharpe": 2.7838588989584085,
-      "profit_factor": 1.4008390333702088,
+      "max_loss": 37.12869000000049,
+      "avg_bars_held": 52.6,
+      "avg_mfe_pct": 0.004032096712744515,
+      "avg_mae_pct": -0.0031221788438139473,
+      "sharpe": 1.5793814641205954,
+      "profit_factor": 1.2072964947051787,
       "mdd_pct": 1.0406290381433847,
-      "win_rate": 0.45454545454545453,
-      "exit_sl": 5,
-      "exit_tp": 5,
-      "exit_time": 1,
+      "win_rate": 0.48,
+      "exit_sl": 10,
+      "exit_tp": 9,
+      "exit_time": 4,
       "exit_trailing": 0,
       "suggestions": []
     },
     {
       "name": "asymmetric_sniper",
-      "total_trades": 10,
-      "wins": 5,
-      "losses": 5,
-      "total_pnl_usdt": -20.952409999997947,
-      "total_pnl_pct": -0.00286398136693885,
-      "gross_profit": 23.492369999999553,
-      "gross_loss": 44.44477999999749,
-      "avg_win_usdt": 4.69847399999991,
-      "avg_loss_usdt": 8.8889559999995,
-      "max_win": 9.72439999999893,
-      "max_loss": 16.067759999999716,
-      "avg_bars_held": 4.3,
-      "avg_mfe_pct": 0.0009232121097981691,
-      "avg_mae_pct": -0.0006091407514544816,
-      "sharpe": -5.836932687226145,
-      "profit_factor": 0.5285743342637961,
-      "mdd_pct": 0.0,
-      "win_rate": 0.5,
-      "exit_sl": 10,
+      "total_trades": 24,
+      "wins": 11,
+      "losses": 13,
+      "total_pnl_usdt": -13.036779999997023,
+      "total_pnl_pct": -0.00220629240136684,
+      "gross_profit": 92.15954999999994,
+      "gross_loss": 105.19632999999696,
+      "avg_win_usdt": 8.378140909090904,
+      "avg_loss_usdt": 8.092025384615152,
+      "max_win": 32.73599999999882,
+      "max_loss": 34.48274999999939,
+      "avg_bars_held": 4.75,
+      "avg_mfe_pct": 0.0007616239502322938,
+      "avg_mae_pct": -0.0006390111312642547,
+      "sharpe": -1.3837050995012647,
+      "profit_factor": 0.8760719123946872,
+      "mdd_pct": 1.8089718917782824,
+      "win_rate": 0.4583333333333333,
+      "exit_sl": 17,
       "exit_tp": 0,
       "exit_time": 0,
       "exit_trailing": 0,
       "suggestions": [
-        "PF 0.53 < 1.2 \u2014 TP \ud655\ub300 \ub610\ub294 SL \ucd95\uc18c \uac80\ud1a0",
-        "SL\ud788\ud2b8(10) >> TP\ud788\ud2b8(0) \u2014 SL \uac70\ub9ac ATR\u00d72.0 \uac80\ud1a0",
-        "\ud3c9\uade0 \ubcf4\uc720 4.3\ubc14 \u2014 \ub108\ubb34 \ube60\ub978 \uccad\uc0b0 (\ub178\uc774\uc988 SL?)"
+        "PF 0.88 < 1.2 \u2014 TP \ud655\ub300 \ub610\ub294 SL \ucd95\uc18c \uac80\ud1a0",
+        "SL\ud788\ud2b8(17) >> TP\ud788\ud2b8(0) \u2014 SL \uac70\ub9ac ATR\u00d72.0 \uac80\ud1a0",
+        "\ud3c9\uade0 \ubcf4\uc720 4.8\ubc14 \u2014 \ub108\ubb34 \ube60\ub978 \uccad\uc0b0 (\ub178\uc774\uc988 SL?)"
       ]
     },
     {
@@ -124,6 +124,28 @@
   "coin_stats": [
     {
       "coin": "OP",
+      "strategy": "liquidation_fade",
+      "total_trades": 4,
+      "win_rate": 0.75,
+      "total_pnl_usdt": 61.88199000000026,
+      "avg_pnl_pct": 0.004125469189991709,
+      "avg_mfe_pct": 0.005086083983459522,
+      "avg_mae_pct": -0.00241177711111915,
+      "avg_hold_bars": 33.75
+    },
+    {
+      "coin": "DOT",
+      "strategy": "liquidation_fade",
+      "total_trades": 3,
+      "win_rate": 0.6666666666666666,
+      "total_pnl_usdt": 44.15099999999971,
+      "avg_pnl_pct": 0.0039246467817896135,
+      "avg_mfe_pct": 0.0039246467817896135,
+      "avg_mae_pct": -0.0023521452092880976,
+      "avg_hold_bars": 50.0
+    },
+    {
+      "coin": "OP",
       "strategy": "cvd_spike",
       "total_trades": 6,
       "win_rate": 0.3333333333333333,
@@ -134,26 +156,15 @@
       "avg_hold_bars": 8.833333333333334
     },
     {
-      "coin": "OP",
-      "strategy": "liquidation_fade",
-      "total_trades": 3,
-      "win_rate": 0.6666666666666666,
-      "total_pnl_usdt": 36.47059000000003,
-      "avg_pnl_pct": 0.003241832427572016,
-      "avg_mfe_pct": 0.0045226521521957675,
-      "avg_mae_pct": -0.002893018077813585,
-      "avg_hold_bars": 35.666666666666664
-    },
-    {
-      "coin": "DOT",
-      "strategy": "liquidation_fade",
-      "total_trades": 1,
-      "win_rate": 1.0,
-      "total_pnl_usdt": 26.4905999999997,
-      "avg_pnl_pct": 0.007064364207221269,
-      "avg_mfe_pct": 0.007064364207221269,
-      "avg_mae_pct": -0.00392464678178973,
-      "avg_hold_bars": 96.0
+      "coin": "AVAX",
+      "strategy": "asymmetric_sniper",
+      "total_trades": 2,
+      "win_rate": 0.5,
+      "total_pnl_usdt": 32.73599999999882,
+      "avg_pnl_pct": 0.0013644115974985294,
+      "avg_mfe_pct": 0.0015349630471858582,
+      "avg_mae_pct": -0.0006179775280898446,
+      "avg_hold_bars": 11.0
     },
     {
       "coin": "TAO",
@@ -165,6 +176,50 @@
       "avg_mfe_pct": 0.012149795421182453,
       "avg_mae_pct": -0.006152981228722326,
       "avg_hold_bars": 77.0
+    },
+    {
+      "coin": "XRP",
+      "strategy": "liquidation_fade",
+      "total_trades": 1,
+      "win_rate": 1.0,
+      "total_pnl_usdt": 14.566240000000262,
+      "avg_pnl_pct": 0.003884075291305717,
+      "avg_mfe_pct": 0.003884075291305717,
+      "avg_mae_pct": -0.0013444876008365878,
+      "avg_hold_bars": 29.0
+    },
+    {
+      "coin": "ADA",
+      "strategy": "asymmetric_sniper",
+      "total_trades": 3,
+      "win_rate": 0.6666666666666666,
+      "total_pnl_usdt": 14.551099999999746,
+      "avg_pnl_pct": 0.0004041985196894233,
+      "avg_mfe_pct": 0.0009456028826829427,
+      "avg_mae_pct": -0.0001357220412594856,
+      "avg_hold_bars": 2.6666666666666665
+    },
+    {
+      "coin": "SOL",
+      "strategy": "liquidation_fade",
+      "total_trades": 1,
+      "win_rate": 1.0,
+      "total_pnl_usdt": 14.499200000000336,
+      "avg_pnl_pct": 0.0038666022232963673,
+      "avg_mfe_pct": 0.0038666022232963673,
+      "avg_mae_pct": -0.0008458192363459784,
+      "avg_hold_bars": 25.0
+    },
+    {
+      "coin": "ETH",
+      "strategy": "asymmetric_sniper",
+      "total_trades": 6,
+      "win_rate": 0.5,
+      "total_pnl_usdt": 11.112870000002305,
+      "avg_pnl_pct": -6.713774972545052e-05,
+      "avg_mfe_pct": 0.0009533120290605024,
+      "avg_mae_pct": -0.0005398000458190177,
+      "avg_hold_bars": 3.3333333333333335
     },
     {
       "coin": "ADA",
@@ -179,6 +234,28 @@
     },
     {
       "coin": "SUI",
+      "strategy": "liquidation_fade",
+      "total_trades": 6,
+      "win_rate": 0.5,
+      "total_pnl_usdt": 8.254450000000014,
+      "avg_pnl_pct": 0.0003667795788250574,
+      "avg_mfe_pct": 0.002943159405050589,
+      "avg_mae_pct": -0.002480536820663134,
+      "avg_hold_bars": 75.5
+    },
+    {
+      "coin": "XRP",
+      "strategy": "asymmetric_sniper",
+      "total_trades": 2,
+      "win_rate": 1.0,
+      "total_pnl_usdt": 5.507439999999393,
+      "avg_pnl_pct": 0.0003346495717639829,
+      "avg_mfe_pct": 0.0018256748174556208,
+      "avg_mae_pct": -0.000448732331164494,
+      "avg_hold_bars": 5.5
+    },
+    {
+      "coin": "SUI",
       "strategy": "cvd_spike",
       "total_trades": 2,
       "win_rate": 1.0,
@@ -189,15 +266,15 @@
       "avg_hold_bars": 28.5
     },
     {
-      "coin": "ADA",
+      "coin": "DOGE",
       "strategy": "asymmetric_sniper",
-      "total_trades": 2,
-      "win_rate": 0.5,
-      "total_pnl_usdt": 4.838499999999468,
-      "avg_pnl_pct": 0.0002016033238481662,
-      "avg_mfe_pct": 0.0008113626404954331,
-      "avg_mae_pct": -0.00020358306188922838,
-      "avg_hold_bars": 1.5
+      "total_trades": 1,
+      "win_rate": 1.0,
+      "total_pnl_usdt": 5.266039999999785,
+      "avg_pnl_pct": 0.00043883708173338864,
+      "avg_mfe_pct": 0.00043883708173338864,
+      "avg_mae_pct": -0.0006582556226001591,
+      "avg_hold_bars": 5.0
     },
     {
       "coin": "BTC",
@@ -211,17 +288,6 @@
       "avg_hold_bars": 8.5
     },
     {
-      "coin": "XRP",
-      "strategy": "asymmetric_sniper",
-      "total_trades": 1,
-      "win_rate": 1.0,
-      "total_pnl_usdt": 1.9631999999997838,
-      "avg_pnl_pct": 0.0003739436093036758,
-      "avg_mfe_pct": 0.002617605265126063,
-      "avg_mae_pct": -0.000897464662328988,
-      "avg_hold_bars": 9.0
-    },
-    {
       "coin": "DOT",
       "strategy": "cvd_spike",
       "total_trades": 1,
@@ -231,6 +297,17 @@
       "avg_mfe_pct": 0.0007794232268120733,
       "avg_mae_pct": 0.0,
       "avg_hold_bars": 1.0
+    },
+    {
+      "coin": "DOT",
+      "strategy": "asymmetric_sniper",
+      "total_trades": 2,
+      "win_rate": 0.0,
+      "total_pnl_usdt": 0.0,
+      "avg_pnl_pct": 0.0,
+      "avg_mfe_pct": 0.0,
+      "avg_mae_pct": -0.000774299143864276,
+      "avg_hold_bars": 5.0
     },
     {
       "coin": "DOGE",
@@ -253,17 +330,6 @@
       "avg_mfe_pct": 0.0005240193379411513,
       "avg_mae_pct": -0.0013100847724458985,
       "avg_hold_bars": 4.0
-    },
-    {
-      "coin": "ETH",
-      "strategy": "asymmetric_sniper",
-      "total_trades": 3,
-      "win_rate": 0.3333333333333333,
-      "total_pnl_usdt": -4.615429999999762,
-      "avg_pnl_pct": -0.0005711793059158186,
-      "avg_mfe_pct": 0.0008500643348205739,
-      "avg_mae_pct": -0.0007873922605915433,
-      "avg_hold_bars": 3.3333333333333335
     },
     {
       "coin": "BNB",
@@ -321,17 +387,6 @@
       "avg_hold_bars": 17.0
     },
     {
-      "coin": "ADA",
-      "strategy": "liquidation_fade",
-      "total_trades": 1,
-      "win_rate": 0.0,
-      "total_pnl_usdt": -9.094199999999839,
-      "avg_pnl_pct": -0.0024242424242423817,
-      "avg_mfe_pct": 0.0,
-      "avg_mae_pct": -0.0024242424242423817,
-      "avg_hold_bars": 7.0
-    },
-    {
       "coin": "APT",
       "strategy": "liquidation_fade",
       "total_trades": 1,
@@ -365,15 +420,15 @@
       "avg_hold_bars": 2.0
     },
     {
-      "coin": "SUI",
+      "coin": "BNB",
       "strategy": "liquidation_fade",
-      "total_trades": 3,
-      "win_rate": 0.3333333333333333,
-      "total_pnl_usdt": -12.585130000000056,
-      "avg_pnl_pct": -0.0011188835489071628,
-      "avg_mfe_pct": 0.0021851215656639228,
-      "avg_mae_pct": -0.003683439756953894,
-      "avg_hold_bars": 69.33333333333333
+      "total_trades": 1,
+      "win_rate": 0.0,
+      "total_pnl_usdt": -11.997300000000164,
+      "avg_pnl_pct": -0.003196858315888592,
+      "avg_mfe_pct": 0.0026451162715219892,
+      "avg_mae_pct": -0.003196858315888592,
+      "avg_hold_bars": 97.0
     },
     {
       "coin": "BTC",
@@ -409,15 +464,15 @@
       "avg_hold_bars": 5.125
     },
     {
-      "coin": "ARB",
+      "coin": "ADA",
       "strategy": "liquidation_fade",
-      "total_trades": 1,
+      "total_trades": 2,
       "win_rate": 0.0,
-      "total_pnl_usdt": -16.834999999999898,
-      "avg_pnl_pct": -0.004489337822671129,
-      "avg_mfe_pct": 0.0022446689113356424,
-      "avg_mae_pct": -0.004489337822671129,
-      "avg_hold_bars": 20.0
+      "total_pnl_usdt": -22.550999999999185,
+      "avg_pnl_pct": -0.003006379585326845,
+      "avg_mfe_pct": 0.004186602870813434,
+      "avg_mae_pct": -0.003006379585326845,
+      "avg_hold_bars": 54.5
     },
     {
       "coin": "LINK",
@@ -431,6 +486,17 @@
       "avg_hold_bars": 5.0
     },
     {
+      "coin": "SOL",
+      "strategy": "asymmetric_sniper",
+      "total_trades": 3,
+      "win_rate": 0.0,
+      "total_pnl_usdt": -24.588800000000244,
+      "avg_pnl_pct": -0.0006830362878631817,
+      "avg_mfe_pct": 4.019454158127383e-05,
+      "avg_mae_pct": -0.0006830362878631817,
+      "avg_hold_bars": 5.0
+    },
+    {
       "coin": "ARB",
       "strategy": "cvd_spike",
       "total_trades": 6,
@@ -440,6 +506,28 @@
       "avg_mfe_pct": 0.0020259864078619088,
       "avg_mae_pct": -0.0025762411132358655,
       "avg_hold_bars": 9.333333333333334
+    },
+    {
+      "coin": "DOGE",
+      "strategy": "liquidation_fade",
+      "total_trades": 2,
+      "win_rate": 0.0,
+      "total_pnl_usdt": -29.789440000000184,
+      "avg_pnl_pct": -0.003971763496818076,
+      "avg_mfe_pct": 0.004121197676119157,
+      "avg_mae_pct": -0.003971763496818076,
+      "avg_hold_bars": 26.5
+    },
+    {
+      "coin": "OP",
+      "strategy": "asymmetric_sniper",
+      "total_trades": 1,
+      "win_rate": 0.0,
+      "total_pnl_usdt": -34.48274999999939,
+      "avg_pnl_pct": -0.0028763183125598726,
+      "avg_mfe_pct": 0.0,
+      "avg_mae_pct": -0.0028763183125598726,
+      "avg_hold_bars": 2.0
     },
     {
       "coin": "DOGE",
@@ -462,78 +550,89 @@
       "avg_mfe_pct": 0.0007613915895514628,
       "avg_mae_pct": -0.005268431530584399,
       "avg_hold_bars": 3.0
+    },
+    {
+      "coin": "ARB",
+      "strategy": "liquidation_fade",
+      "total_trades": 3,
+      "win_rate": 0.3333333333333333,
+      "total_pnl_usdt": -49.76906000000085,
+      "avg_pnl_pct": -0.004423919896339698,
+      "avg_mfe_pct": 0.0022334945401077133,
+      "avg_mae_pct": -0.0047967759738937205,
+      "avg_hold_bars": 48.666666666666664
     }
   ],
   "session_stats": {
     "London": {
-      "trades": 5,
-      "win_rate": 0.0,
-      "total_pnl": -6.6646,
-      "avg_pnl": -1.3329
+      "trades": 11,
+      "win_rate": 0.2727272727272727,
+      "total_pnl": 20.0691,
+      "avg_pnl": 1.8245
     },
     "NY": {
-      "trades": 88,
-      "win_rate": 0.3181818181818182,
-      "total_pnl": -136.0751,
-      "avg_pnl": -1.5463
+      "trades": 104,
+      "win_rate": 0.3076923076923077,
+      "total_pnl": -238.3764,
+      "avg_pnl": -2.2921
     },
     "Asia": {
-      "trades": 1,
-      "win_rate": 0.0,
-      "total_pnl": -16.835,
-      "avg_pnl": -16.835
+      "trades": 7,
+      "win_rate": 0.8571428571428571,
+      "total_pnl": 71.4476,
+      "avg_pnl": 10.2068
     }
   },
   "regime_stats": {
     "MED": {
-      "trades": 73,
-      "win_rate": 0.3013698630136986,
-      "total_pnl": -104.916,
-      "avg_pnl": -1.4372
+      "trades": 87,
+      "win_rate": 0.3333333333333333,
+      "total_pnl": -43.1388,
+      "avg_pnl": -0.4958
     },
     "LOW": {
-      "trades": 2,
-      "win_rate": 0.0,
-      "total_pnl": -10.2257,
-      "avg_pnl": -5.1128
+      "trades": 5,
+      "win_rate": 0.4,
+      "total_pnl": -20.4966,
+      "avg_pnl": -4.0993
     },
     "HIGH": {
-      "trades": 19,
-      "win_rate": 0.3157894736842105,
-      "total_pnl": -44.433,
-      "avg_pnl": -2.3386
+      "trades": 30,
+      "win_rate": 0.3333333333333333,
+      "total_pnl": -83.2244,
+      "avg_pnl": -2.7741
     }
   },
   "zscore_buckets": {
     "z1-2": {
-      "trades": 10,
-      "win_rate": 0.5,
-      "avg_pnl": 3.8219,
-      "total_pnl": 38.2191
+      "trades": 14,
+      "win_rate": 0.429,
+      "avg_pnl": 2.5988,
+      "total_pnl": 36.383
     },
     "z2-3": {
-      "trades": 9,
-      "win_rate": 0.444,
-      "avg_pnl": -0.5373,
-      "total_pnl": -4.8356
+      "trades": 13,
+      "win_rate": 0.462,
+      "avg_pnl": -2.5922,
+      "total_pnl": -33.699
     },
     "z3-4": {
-      "trades": 2,
-      "win_rate": 1.0,
-      "avg_pnl": 1.5549,
-      "total_pnl": 3.1098
+      "trades": 6,
+      "win_rate": 0.667,
+      "avg_pnl": 6.0765,
+      "total_pnl": 36.4588
     },
     "z<1": {
-      "trades": 71,
-      "win_rate": 0.225,
-      "avg_pnl": -2.885,
-      "total_pnl": -204.8363
+      "trades": 85,
+      "win_rate": 0.271,
+      "avg_pnl": -2.3534,
+      "total_pnl": -200.0371
     },
     "z>4": {
-      "trades": 2,
+      "trades": 4,
       "win_rate": 0.5,
-      "avg_pnl": 4.3842,
-      "total_pnl": 8.7683
+      "avg_pnl": 3.5086,
+      "total_pnl": 14.0343
     }
   },
   "sl_tp_hints": {
@@ -560,22 +659,22 @@
       "note": "SL \uc801\uc808"
     },
     "asymmetric_sniper": {
-      "sample_size": 10,
-      "mae_p50_atr": 0.84,
-      "mae_p75_atr": 1.13,
+      "sample_size": 24,
+      "mae_p50_atr": 0.82,
+      "mae_p75_atr": 1.59,
       "mfe_p50_atr_wins": 2.46,
-      "mfe_p75_atr_wins": 2.47,
+      "mfe_p75_atr_wins": 3.82,
       "current_sl_atr_mult": 3.0,
-      "suggested_sl_atr_mult": 1.4,
+      "suggested_sl_atr_mult": 1.9,
       "suggested_tp_atr_mult": 2.2,
-      "note": "SL\uc774 \ub108\ubb34 \ub113\uc74c \u2014 \ub9ac\uc2a4\ud06c \uacfc\ub2e4"
+      "note": "SL \uc801\uc808"
     },
     "liquidation_fade": {
-      "sample_size": 11,
-      "mae_p50_atr": 2.33,
+      "sample_size": 25,
+      "mae_p50_atr": 2.1,
       "mae_p75_atr": 2.8,
       "mfe_p50_atr_wins": 3.83,
-      "mfe_p75_atr_wins": 3.89,
+      "mfe_p75_atr_wins": 4.7,
       "current_sl_atr_mult": 3.0,
       "suggested_sl_atr_mult": 3.4,
       "suggested_tp_atr_mult": 3.4,
@@ -584,7 +683,7 @@
   },
   "top_recommendations": [
     "[cvd_spike] \uc2b9\ub960 27% \u2014 \ube44\ud65c\uc131\ud654 \ub610\ub294 \uc2e0\ud638 \ud544\ud130 \uac15\ud654",
-    "London \uc138\uc158 \uc2b9\ub960 0% \u2014 \ud574\ub2f9 \uc138\uc158 \uac70\ub798 \uc911\ub2e8 \uace0\ub824",
-    "[asymmetric_sniper] SL \uc870\uc815: \ud604\uc7ac ATR\u00d73.0 \u2192 \uad8c\uc7a5 ATR\u00d71.4"
+    "London \uc138\uc158 \uc2b9\ub960 27% \u2014 \ud574\ub2f9 \uc138\uc158 \uac70\ub798 \uc911\ub2e8 \uace0\ub824",
+    "CVD z3-4 \uad6c\uac04\uc5d0\uc11c \uc2b9\ub960 67% \u2014 \uc774 \uad6c\uac04 \uc9c4\uc785 \uc6b0\uc120\ud654"
   ]
 }

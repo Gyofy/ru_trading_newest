@@ -44,10 +44,16 @@ class EVGuardian:
         initial_equity: float,
         fee_budget_pct: float = 0.005,   # 일일 수수료 한도: 잔고의 0.5%
         report_path: Optional[Path] = None,
+        ev_threshold: Optional[float] = None,  # None → use class default EV_THRESHOLD
+        ev_min_sample: Optional[int] = None,   # None → use class default MIN_SAMPLE
     ):
         self._jsonl_path = jsonl_path
         self._fee_budget_daily = initial_equity * fee_budget_pct
         self._report_path = report_path
+
+        # F1 인스턴스 임계값 (yaml config로 덮어쓰기 가능)
+        self._ev_threshold = ev_threshold if ev_threshold is not None else self.EV_THRESHOLD
+        self._ev_min_sample = ev_min_sample if ev_min_sample is not None else self.MIN_SAMPLE
 
         # F1: per-strategy EV 통계 {name: {ev, suspended, n_trades, reason, ...}}
         self._ev_stats: dict[str, dict] = {}
@@ -116,10 +122,10 @@ class EVGuardian:
                 "avg_fee_drag_pct": 0.0,
                 "avg_net_pnl_pct": 0.0,
                 "suspended": False,
-                "reason": "insufficient_data" if n < self.MIN_SAMPLE else "ok",
+                "reason": "insufficient_data" if n < self._ev_min_sample else "ok",
             }
 
-            if n < self.MIN_SAMPLE:
+            if n < self._ev_min_sample:
                 # 데이터 부족 → 기존 suspended 상태 유지
                 prev = self._ev_stats.get(strat, {})
                 stat["suspended"] = prev.get("suspended", False)
@@ -163,7 +169,7 @@ class EVGuardian:
                 suspended = ev < self.EV_RESUME_THRESHOLD  # 회복 기준
                 reason_str = "suspended_recovering" if not suspended else f"suspended_ev={ev:.4%}"
             else:
-                suspended = ev < self.EV_THRESHOLD
+                suspended = ev < self._ev_threshold
                 reason_str = f"ev={ev:.4%}_below_threshold" if suspended else "ok"
 
             stat.update(

@@ -1,266 +1,288 @@
-2026-03-27 21:13:10,892 [INFO] [EquityState] Restored equity=$4987.95 (restarts=1)
-2026-03-27 21:13:10,892 [INFO] [TradeHistory] Loaded 11 total trades from history
-2026-03-27 21:13:10,895 [INFO] ProcessPoolExecutor initialized: 6 workers
-2026-03-27 21:13:10,895 [INFO] ============================================================
-2026-03-27 21:13:10,895 [INFO] Multi-Strategy Bot v8.2 | mode=demo
-2026-03-27 21:13:10,895 [INFO] equity=$4987.95237 | coins=['XRP', 'SOL', 'TAO', 'DOGE', 'ADA', 'DOT', 'AVAX', 'BNB', 'LINK']
-2026-03-27 21:13:10,895 [INFO] ============================================================
-2026-03-27 21:13:11,389 [INFO] Exchange initialized (binance/sandbox): 704 markets loaded
-2026-03-27 21:13:11,389 [INFO] Demo/testnet mode: virtual funds, real orders on testnet | equity=$4987.95
-2026-03-27 21:13:11,390 [INFO] [MultiPos] Recovered 5 positions
-2026-03-27 21:13:11,390 [INFO] Loaded 5 coin profiles from data/reports/multi_strategy/coin_profiles.json
-2026-03-27 21:13:11,390 [INFO] [cvd_spike] loaded | $4500.0 | 5x | cycle=60s | max_pos=10
-2026-03-27 21:13:11,390 [INFO] [liquidation_fade] loaded | $2250.0 | 4x | cycle=60s | max_pos=6
-2026-03-27 21:13:11,390 [INFO] [momentum_breakout] loaded | $2250.0 | 5x | cycle=60s | max_pos=6
-2026-03-27 21:13:11,390 [INFO] [asymmetric_sniper] loaded | $4500.0 | 7x | cycle=60s | max_pos=6
-2026-03-27 21:13:11,390 [INFO] [MonitorV2] Started (poll every 15s)
-2026-03-27 21:13:11,391 [INFO] [Recovery] Resuming monitoring for 5 recovered positions
-2026-03-27 21:13:11,391 [INFO] [Discord] System ready notification sent
-2026-03-27 21:13:11,391 [INFO] [cvd_spike] loop started (every 60s)
-2026-03-27 21:13:11,391 [INFO] [liquidation_fade] loop started (every 60s)
-2026-03-27 21:13:11,391 [INFO] [momentum_breakout] loop started (every 60s)
-2026-03-27 21:13:11,391 [INFO] [asymmetric_sniper] loop started (every 60s)
-2026-03-27 21:13:11,585 [INFO] [CoinSelect] Volatility top 30 → 5 passed safety filter | rejected: 0
-2026-03-27 21:13:11,585 [INFO]   ✓ ARB    vol%= 0.00% vol=$      0M spread= 0.0bps $0.0000
-2026-03-27 21:13:11,585 [INFO]   ✓ OP     vol%= 0.00% vol=$      0M spread= 0.0bps $0.0000
-2026-03-27 21:13:11,585 [INFO]   ✓ DOT    vol%= 0.00% vol=$      0M spread= 0.0bps $0.0000
-2026-03-27 21:13:11,585 [INFO]   ✓ AVAX   vol%= 0.00% vol=$      0M spread= 0.0bps $0.0000
-2026-03-27 21:13:11,585 [INFO]   ✓ SOL    vol%= 0.00% vol=$      0M spread= 0.0bps $0.0000
-2026-03-27 21:13:11,586 [INFO] [CoinRefresh] 15 coins active (base=15 + selective=0) | +{'APT', 'ARB', 'OP', 'BTC', 'SUI', 'ETH'} -{}
-2026-03-27 21:13:13,547 [INFO] [XRP] CVD SPIKE → SHORT | trigger=cvd_extreme_buy strength=-0.574
-2026-03-27 21:13:13,744 [INFO] [MonitorV2] ARB SL HIT: 0.0907 vs 0.0906
-2026-03-27 21:13:13,801 [INFO] [DOGE] CVD SPIKE → SHORT | trigger=cvd_extreme_buy strength=-0.281
-2026-03-27 21:13:13,902 [INFO] [ADA] CVD SPIKE → SHORT | trigger=ofi_extreme_buy strength=-3.586
-2026-03-27 21:13:13,993 [ERROR] [MKT_CLOSE] ARB BUY failed: binanceusdm {"code":-2022,"msg":"ReduceOnly Order is rejected."}
-2026-03-27 21:13:13,993 [INFO] [PortRisk] momentum_breakout PnL: +3.2967 | equity: 4991.25 | daily: 0.00%
-2026-03-27 21:13:13,993 [WARNING] [TradeLog] No pending context for momentum_breakout:ARB
-2026-03-27 21:13:13,993 [INFO] [MultiPos] Removed momentum_breakout:ARB
-2026-03-27 21:13:13,994 [INFO] [Close] ✅ momentum_breakout:ARB SL_HIT | PnL=+3.2967 (+0.33%) | entry=0.0910 exit=0.0907 | bars=15 | mfe=0.66% mae=-0.11%
-2026-03-27 21:13:15,055 [INFO] [Leverage] XRP set to 5x (isolated)
-2026-03-27 21:13:16,398 [INFO] [XRP] ASYMMETRIC SNIPER -> SHORT | z=2.57 strength=-0.162
-2026-03-27 21:13:22,233 [INFO] [APT] LIQ CASCADE → LONG | OI_drop=2.81σ taker=4.3x
-2026-03-27 21:13:31,175 [INFO] [MultiPos] Added cvd_spike:XRP: SELL XRP @ 1.3331
-2026-03-27 21:13:31,711 [INFO] [XRP] Exchange SL registered @ 1.3360
-2026-03-27 21:13:32,306 [INFO] [XRP] Exchange TP registered @ 1.3272
-2026-03-27 21:13:32,365 [INFO] [Cancel] SOL order already gone
-2026-03-27 21:13:32,922 [ERROR] [SL] SOL SELL @ 82.75 failed: binanceusdm {"code":-4509,"msg":"Time in Force (TIF) GTE can only be used with open positions. Please ensure that positions are available."}
-2026-03-27 21:13:32,922 [WARNING] [Trail] SOL no exchange position (-4509) — software SL only @ 82.7471
-2026-03-27 21:13:37,159 [INFO] [TradeLog] Entry captured: cvd_spike_XRP_0327_121332_0001
-2026-03-27 21:13:37,159 [INFO] [XRP] ENTRY SELL @ 1.3331 | qty=1687.7 | SL=1.3360 | trailing=Y | notional=$2250.00
-2026-03-27 21:13:37,162 [INFO] [XRP] rejected: coin_duplicate: XRP
-2026-03-27 21:13:37,342 [INFO] [Leverage] APT set to 4x (isolated)
-2026-03-27 21:13:48,929 [INFO] [Cancel] XRP algo order cancelled: 1000000035441534
-2026-03-27 21:13:57,738 [INFO] [WaitFill] APT timeout (20.0s), cancelling
-2026-03-27 21:13:58,143 [INFO] [Leverage] DOGE set to 5x (isolated)
-2026-03-27 21:13:58,356 [WARNING] [Entry] DOGE Post-Only FAILED, fallback to limit: binanceusdm {"code":-5022,"msg":"Due to the order could not be executed as maker, the Post Only order will be rejected. The order will not be recorded in the order history"}
-2026-03-27 21:14:01,186 [INFO] [MultiPos] Added cvd_spike:DOGE: SELL DOGE @ 0.08996
-2026-03-27 21:14:01,500 [INFO] [DOGE] Exchange SL registered @ 0.0901
-2026-03-27 21:14:01,619 [INFO] [DOGE] Exchange TP registered @ 0.0896
-2026-03-27 21:14:02,045 [INFO] [TradeLog] Entry captured: cvd_spike_DOGE_0327_121401_0002
-2026-03-27 21:14:02,045 [INFO] [DOGE] ENTRY SELL @ 0.0900 | qty=25008.0 | SL=0.0901 | trailing=Y | notional=$2250.00
-2026-03-27 21:14:02,564 [INFO] [Leverage] ADA set to 5x (isolated)
-2026-03-27 21:14:02,776 [WARNING] [Entry] ADA Post-Only FAILED, fallback to limit: binanceusdm {"code":-5022,"msg":"Due to the order could not be executed as maker, the Post Only order will be rejected. The order will not be recorded in the order history"}
-2026-03-27 21:14:03,297 [INFO] [MultiPos] Added cvd_spike:ADA: SELL ADA @ 0.2465
-2026-03-27 21:14:03,607 [INFO] [ADA] Exchange SL registered @ 0.2474
-2026-03-27 21:14:03,728 [INFO] [ADA] Exchange TP registered @ 0.2447
-2026-03-27 21:14:04,073 [INFO] [TradeLog] Entry captured: cvd_spike_ADA_0327_121403_0003
-2026-03-27 21:14:04,073 [INFO] [ADA] ENTRY SELL @ 0.2465 | qty=9127.0 | SL=0.2474 | trailing=Y | notional=$2250.00
-2026-03-27 21:14:04,073 [INFO] [cvd_spike] TRADE: {'strategy': 'cvd_spike', 'coin': 'XRP', 'side': 'SELL', 'price': 1.3331, 'qty': 1687.7, 'sl': 1.336035714285714, 'tp': 1.3272285714285719, 'trailing': True}
-2026-03-27 21:14:04,628 [INFO] [cvd_spike] TRADE: {'strategy': 'cvd_spike', 'coin': 'DOGE', 'side': 'SELL', 'price': 0.08996, 'qty': 25008.0, 'sl': 0.09014214285714287, 'tp': 0.08959571428571426, 'trailing': True}
-2026-03-27 21:14:04,629 [INFO] [cvd_spike] TRADE: {'strategy': 'cvd_spike', 'coin': 'ADA', 'side': 'SELL', 'price': 0.2465, 'qty': 9127.0, 'sl': 0.2474214285714286, 'tp': 0.2446571428571428, 'trailing': True}
-2026-03-27 21:14:09,615 [INFO] [Heartbeat] equity=$4991.25 | daily=0.00% | pos=7 | notional=$12595.37 | kill=False
-2026-03-27 21:14:09,738 [INFO] [CoinSelect] Volatility top 30 → 0 passed safety filter | rejected: 0
-2026-03-27 21:14:17,133 [INFO] [SignalScan] 15 coins | 15 candidates
-2026-03-27 21:14:37,610 [INFO] [Cancel] ADA algo order cancelled: 1000000035441894
-2026-03-27 21:14:38,186 [ERROR] [DataHub] OHLCV fetch failed LINK/1m: binanceusdm 429 Too Many Requests {"code":-1003,"msg":"Too many requests; current limit of IP(15.158.3.40) is 6000 requests per minute. Please use the websocket for live updates to avoid polling the API."}
-2026-03-27 21:14:57,904 [INFO] [APT] LIQ CASCADE → LONG | OI_drop=2.98σ taker=4.3x
-2026-03-27 21:14:58,362 [INFO] [Leverage] APT set to 4x (isolated)
-2026-03-27 21:15:03,523 [INFO] [BNB] CVD SPIKE → LONG | trigger=cvd_extreme_sell strength=0.120
-2026-03-27 21:15:07,630 [INFO] [Heartbeat] equity=$4991.25 | daily=0.00% | pos=7 | notional=$12595.37 | kill=False
-2026-03-27 21:15:20,419 [INFO] [WaitFill] APT timeout (20.0s), cancelling
-2026-03-27 21:15:20,825 [INFO] [Leverage] BNB set to 5x (isolated)
-2026-03-27 21:15:21,042 [WARNING] [Entry] BNB Post-Only FAILED, fallback to limit: binanceusdm {"code":-5022,"msg":"Due to the order could not be executed as maker, the Post Only order will be rejected. The order will not be recorded in the order history"}
-2026-03-27 21:15:21,562 [INFO] [MultiPos] Added cvd_spike:BNB: BUY BNB @ 610.75
-2026-03-27 21:15:21,874 [INFO] [BNB] Exchange SL registered @ 609.8221
-2026-03-27 21:15:21,983 [INFO] [BNB] Exchange TP registered @ 612.6057
-2026-03-27 21:15:22,386 [INFO] [TradeLog] Entry captured: cvd_spike_BNB_0327_121521_0004
-2026-03-27 21:15:22,386 [INFO] [BNB] ENTRY BUY @ 610.7500 | qty=3.68 | SL=609.8221 | trailing=Y | notional=$2250.00
-2026-03-27 21:15:22,386 [INFO] [cvd_spike] TRADE: {'strategy': 'cvd_spike', 'coin': 'BNB', 'side': 'BUY', 'price': 610.75, 'qty': 3.68, 'sl': 609.8221428571428, 'tp': 612.6057142857144, 'trailing': True}
-2026-03-27 21:15:39,351 [ERROR] [DataHub] OHLCV fetch failed LINK/1m: binanceusdm 429 Too Many Requests {"code":-1003,"msg":"Too many requests; current limit of IP(15.158.3.40) is 6000 requests per minute. Please use the websocket for live updates to avoid polling the API."}
-2026-03-27 21:15:40,671 [ERROR] [DataHub] OHLCV fetch failed BTC/1m: binanceusdm 429 Too Many Requests {"code":-1003,"msg":"Too many requests; current limit of IP(15.158.3.40) is 6000 requests per minute. Please use the websocket for live updates to avoid polling the API."}
-2026-03-27 21:15:41,028 [ERROR] [DataHub] OHLCV fetch failed ARB/1m: binanceusdm 429 Too Many Requests {"code":-1003,"msg":"Too many requests; current limit of IP(15.158.3.40) is 6000 requests per minute. Please use the websocket for live updates to avoid polling the API."}
-2026-03-27 21:16:06,776 [INFO] [Heartbeat] equity=$4991.25 | daily=0.00% | pos=8 | notional=$14842.93 | kill=False
-2026-03-27 21:16:39,847 [ERROR] [DataHub] OHLCV fetch failed BTC/1m: binanceusdm 429 Too Many Requests {"code":-1003,"msg":"Too many requests; current limit of IP(15.158.3.40) is 6000 requests per minute. Please use the websocket for live updates to avoid polling the API."}
-2026-03-27 21:17:05,062 [INFO] [Heartbeat] equity=$4991.25 | daily=0.00% | pos=8 | notional=$14842.93 | kill=False
-2026-03-27 21:17:20,233 [INFO] [LINK] CVD SPIKE → LONG | trigger=cvd_extreme_sell strength=0.084
-2026-03-27 21:17:20,756 [WARNING] [LINK] SL too tight: 0.008571
-2026-03-27 21:17:41,676 [ERROR] [DataHub] OHLCV fetch failed ARB/1m: binanceusdm 429 Too Many Requests {"code":-1003,"msg":"Too many requests; current limit of IP(15.158.3.4) is 6000 requests per minute. Please use the websocket for live updates to avoid polling the API."}
-2026-03-27 21:18:03,342 [INFO] [Heartbeat] equity=$4991.25 | daily=0.00% | pos=8 | notional=$14842.93 | kill=False
-2026-03-27 21:18:17,311 [INFO] [Cancel] XRP algo order cancelled: 1000000035441760
-2026-03-27 21:18:19,038 [INFO] [LINK] CVD SPIKE → LONG | trigger=cvd_extreme_sell strength=0.084
-2026-03-27 21:18:19,040 [INFO] [APT] CVD SPIKE → LONG | trigger=cvd_extreme_sell strength=0.225
-2026-03-27 21:18:19,748 [INFO] [Leverage] LINK set to 5x (isolated)
-2026-03-27 21:18:40,374 [INFO] [WaitFill] LINK timeout (20.0s), cancelling
-2026-03-27 21:18:41,144 [INFO] [Leverage] APT set to 5x (isolated)
-2026-03-27 21:18:44,898 [ERROR] [DataHub] OHLCV fetch failed TAO/1m: binanceusdm 429 Too Many Requests {"code":-1003,"msg":"Too many requests; current limit of IP(15.158.3.4) is 6000 requests per minute. Please use the websocket for live updates to avoid polling the API."}
-2026-03-27 21:19:01,602 [INFO] [Heartbeat] equity=$4991.25 | daily=0.00% | pos=8 | notional=$14842.93 | kill=False
-2026-03-27 21:19:01,783 [INFO] [WaitFill] APT timeout (20.0s), cancelling
-2026-03-27 21:19:04,727 [ERROR] [SL] OP BUY @ 0.1053 failed: binanceusdm {"code":-4509,"msg":"Time in Force (TIF) GTE can only be used with open positions. Please ensure that positions are available."}
-2026-03-27 21:19:04,727 [WARNING] [Trail] OP no exchange position (-4509) — software SL only @ 0.1053
-2026-03-27 21:19:44,267 [ERROR] [DataHub] OHLCV fetch failed LINK/1m: binanceusdm 429 Too Many Requests {"code":-1003,"msg":"Too many requests; current limit of IP(15.158.3.4) is 6000 requests per minute. Please use the websocket for live updates to avoid polling the API."}
-2026-03-27 21:19:45,003 [ERROR] [DataHub] OHLCV fetch failed APT/1m: binanceusdm 429 Too Many Requests {"code":-1003,"msg":"Too many requests; current limit of IP(15.158.3.4) is 6000 requests per minute. Please use the websocket for live updates to avoid polling the API."}
-2026-03-27 21:19:45,250 [ERROR] [DataHub] OHLCV fetch failed TAO/1m: binanceusdm 429 Too Many Requests {"code":-1003,"msg":"Too many requests; current limit of IP(15.158.3.4) is 6000 requests per minute. Please use the websocket for live updates to avoid polling the API."}
-2026-03-27 21:19:45,450 [ERROR] [DataHub] OHLCV fetch failed ETH/1m: binanceusdm 429 Too Many Requests {"code":-1003,"msg":"Too many requests; current limit of IP(15.158.3.4) is 6000 requests per minute. Please use the websocket for live updates to avoid polling the API."}
-2026-03-27 21:19:45,665 [ERROR] [DataHub] OHLCV fetch failed ARB/1m: binanceusdm 429 Too Many Requests {"code":-1003,"msg":"Too many requests; current limit of IP(15.158.3.4) is 6000 requests per minute. Please use the websocket for live updates to avoid polling the API."}
-2026-03-27 21:19:59,883 [INFO] [Heartbeat] equity=$4991.25 | daily=0.00% | pos=8 | notional=$14842.93 | kill=False
-2026-03-27 21:20:00,440 [INFO] [BTC] CVD SPIKE → LONG | trigger=ofi_extreme_sell strength=0.858
-2026-03-27 21:20:00,443 [INFO] [APT] CVD SPIKE → LONG | trigger=cvd_extreme_sell strength=0.225
-2026-03-27 21:20:01,276 [INFO] [Leverage] BTC set to 5x (isolated)
-2026-03-27 21:20:01,484 [WARNING] [Entry] BTC Post-Only FAILED, fallback to limit: binanceusdm {"code":-5022,"msg":"Due to the order could not be executed as maker, the Post Only order will be rejected. The order will not be recorded in the order history"}
-2026-03-27 21:20:04,307 [INFO] [MultiPos] Added cvd_spike:BTC: BUY BTC @ 66616.2
-2026-03-27 21:20:04,625 [INFO] [BTC] Exchange SL registered @ 66535.4786
-2026-03-27 21:20:04,734 [INFO] [BTC] Exchange TP registered @ 66777.6429
-2026-03-27 21:20:05,054 [INFO] [TradeLog] Entry captured: cvd_spike_BTC_0327_122004_0005
-2026-03-27 21:20:05,054 [INFO] [BTC] ENTRY BUY @ 66616.2000 | qty=0.033 | SL=66535.4786 | trailing=Y | notional=$2250.00
-2026-03-27 21:20:05,557 [INFO] [Leverage] APT set to 5x (isolated)
-2026-03-27 21:20:27,128 [INFO] [WaitFill] APT timeout (20.0s), cancelling
-2026-03-27 21:20:27,425 [INFO] [cvd_spike] TRADE: {'strategy': 'cvd_spike', 'coin': 'BTC', 'side': 'BUY', 'price': 66616.2, 'qty': 0.033, 'sl': 66535.47857142857, 'tp': 66777.64285714286, 'trailing': True}
-2026-03-27 21:20:58,166 [INFO] [Heartbeat] equity=$4991.25 | daily=0.00% | pos=9 | notional=$17041.26 | kill=False
-2026-03-27 21:21:57,301 [INFO] [Heartbeat] equity=$4991.25 | daily=0.00% | pos=9 | notional=$17041.26 | kill=False
-2026-03-27 21:22:55,566 [INFO] [Heartbeat] equity=$4991.25 | daily=0.00% | pos=9 | notional=$17041.26 | kill=False
-2026-03-27 21:23:53,789 [INFO] [Heartbeat] equity=$4991.25 | daily=0.00% | pos=9 | notional=$17041.26 | kill=False
-2026-03-27 21:24:01,427 [INFO] [CoinSelect] Volatility top 30 → 0 passed safety filter | rejected: 0
-2026-03-27 21:24:09,032 [INFO] [SignalScan] 15 coins | 14 candidates
-2026-03-27 21:24:23,467 [INFO] [ETH] CVD SPIKE → LONG | trigger=cvd_extreme_sell strength=300.484
-2026-03-27 21:24:24,157 [INFO] [Leverage] ETH set to 5x (isolated)
-2026-03-27 21:24:26,947 [INFO] [MultiPos] Added cvd_spike:ETH: BUY ETH @ 1987.54
-2026-03-27 21:24:27,283 [INFO] [ETH] Exchange SL registered @ 1983.8736
-2026-03-27 21:24:27,428 [INFO] [ETH] Exchange TP registered @ 1994.8729
-2026-03-27 21:24:27,738 [INFO] [TradeLog] Entry captured: cvd_spike_ETH_0327_122427_0006
-2026-03-27 21:24:27,738 [INFO] [ETH] ENTRY BUY @ 1987.5400 | qty=1.132 | SL=1983.8736 | trailing=Y | notional=$2250.00
-2026-03-27 21:24:27,739 [INFO] [cvd_spike] TRADE: {'strategy': 'cvd_spike', 'coin': 'ETH', 'side': 'BUY', 'price': 1987.54, 'qty': 1.132, 'sl': 1983.8735714285715, 'tp': 1994.872857142857, 'trailing': True}
-2026-03-27 21:24:52,060 [INFO] [Heartbeat] equity=$4991.25 | daily=0.00% | pos=10 | notional=$19291.16 | kill=False
-2026-03-27 21:25:11,197 [INFO] [TAO] LIQ CASCADE → LONG | OI_drop=2.40σ taker=2.8x
-2026-03-27 21:25:11,678 [INFO] [Leverage] TAO set to 4x (isolated)
-2026-03-27 21:25:32,496 [INFO] [WaitFill] TAO timeout (20.0s), cancelling
-2026-03-27 21:25:50,320 [INFO] [Heartbeat] equity=$4991.25 | daily=0.00% | pos=10 | notional=$19291.16 | kill=False
-2026-03-27 21:26:42,554 [INFO] [MonitorV2] BTC SL HIT: 66552.3000 vs 66552.9786
-2026-03-27 21:26:42,870 [INFO] [Cancel] BTC algo order cancelled: 1000000035445427
-2026-03-27 21:26:42,870 [INFO] [MonitorV2] BTC exchange SL order cancelled
-2026-03-27 21:26:43,189 [INFO] [Cancel] BTC algo order cancelled: 1000000035445429
-2026-03-27 21:26:43,190 [INFO] [MonitorV2] BTC exchange TP order cancelled
-2026-03-27 21:26:43,290 [INFO] [PortRisk] cvd_spike PnL: -2.1087 | equity: 4989.14 | daily: 0.00%
-2026-03-27 21:26:43,290 [INFO] [TradeLog] cvd_spike_BTC_0327_122004_0005 closed: pnl=-0.10% reason=SL_HIT bars=6 mfe=0.03% mae=-0.10%
-2026-03-27 21:26:43,291 [INFO] [MultiPos] Removed cvd_spike:BTC
-2026-03-27 21:26:43,291 [INFO] [Close] ❌ cvd_spike:BTC SL_HIT | PnL=-2.1087 (-0.10%) | entry=66616.2000 exit=66552.3000 | bars=6 | mfe=0.03% mae=-0.10%
-2026-03-27 21:26:48,603 [INFO] [Heartbeat] equity=$4989.14 | daily=0.00% | pos=9 | notional=$17092.83 | kill=False
-2026-03-27 21:27:23,553 [INFO] [TAO] CVD SPIKE → SHORT | trigger=ofi_extreme_buy strength=-2.388
-2026-03-27 21:27:24,011 [INFO] [Leverage] TAO set to 5x (isolated)
-2026-03-27 21:27:44,600 [INFO] [WaitFill] TAO timeout (20.0s), cancelling
-2026-03-27 21:27:46,843 [INFO] [Heartbeat] equity=$4989.14 | daily=0.00% | pos=9 | notional=$17092.83 | kill=False
-2026-03-27 21:27:47,163 [INFO] [CoinSelect] Volatility top 30 → 9 passed safety filter | rejected: 0
-2026-03-27 21:27:47,164 [INFO]   ✓ OP     vol%= 0.00% vol=$      0M spread= 0.0bps $0.0000
-2026-03-27 21:27:47,164 [INFO]   ✓ DOT    vol%= 0.00% vol=$      0M spread= 0.0bps $0.0000
-2026-03-27 21:27:47,164 [INFO]   ✓ ADA    vol%= 0.00% vol=$      0M spread= 0.0bps $0.0000
-2026-03-27 21:27:47,164 [INFO]   ✓ AVAX   vol%= 0.00% vol=$      0M spread= 0.0bps $0.0000
-2026-03-27 21:27:47,164 [INFO]   ✓ SOL    vol%= 0.00% vol=$      0M spread= 0.0bps $0.0000
-2026-03-27 21:27:47,164 [INFO]   ✓ BNB    vol%= 0.00% vol=$      0M spread= 0.0bps $0.0000
-2026-03-27 21:27:47,164 [INFO]   ✓ XRP    vol%= 0.00% vol=$      0M spread= 0.0bps $0.0000
-2026-03-27 21:27:47,164 [INFO]   ✓ DOGE   vol%= 0.00% vol=$      0M spread= 0.0bps $0.0000
-2026-03-27 21:27:47,164 [INFO]   ✓ ETH    vol%= 0.00% vol=$      0M spread= 0.0bps $0.0000
-2026-03-27 21:27:47,164 [INFO] [CoinRefresh] 15 coins active (base=15 + selective=0) | +{} -{}
-2026-03-27 21:27:55,773 [ERROR] [DataHub] OHLCV fetch failed ARB/1m: binanceusdm 429 Too Many Requests {"code":-1003,"msg":"Too many requests; current limit of IP(15.158.3.4) is 6000 requests per minute. Please use the websocket for live updates to avoid polling the API."}
-2026-03-27 21:28:43,140 [INFO] [BTC] CVD SPIKE → SHORT | trigger=ofi_extreme_buy strength=-0.346
-2026-03-27 21:28:43,786 [INFO] [Leverage] BTC set to 5x (isolated)
-2026-03-27 21:28:45,930 [INFO] [Heartbeat] equity=$4989.14 | daily=0.00% | pos=9 | notional=$17092.83 | kill=False
-2026-03-27 21:28:46,568 [INFO] [MultiPos] Added cvd_spike:BTC: SELL BTC @ 66523.6
-2026-03-27 21:28:46,896 [INFO] [BTC] Exchange SL registered @ 66608.6714
-2026-03-27 21:28:47,015 [INFO] [BTC] Exchange TP registered @ 66353.4571
-2026-03-27 21:28:47,390 [INFO] [TradeLog] Entry captured: cvd_spike_BTC_0327_122847_0007
-2026-03-27 21:28:47,390 [INFO] [BTC] ENTRY SELL @ 66523.6000 | qty=0.033 | SL=66608.6714 | trailing=Y | notional=$2250.00
-2026-03-27 21:28:47,390 [INFO] [cvd_spike] TRADE: {'strategy': 'cvd_spike', 'coin': 'BTC', 'side': 'SELL', 'price': 66523.6, 'qty': 0.033, 'sl': 66608.67142857144, 'tp': 66353.45714285714, 'trailing': True}
-2026-03-27 21:28:53,887 [ERROR] [DataHub] OHLCV fetch failed TAO/1m: binanceusdm 429 Too Many Requests {"code":-1003,"msg":"Too many requests; current limit of IP(15.158.3.4) is 6000 requests per minute. Please use the websocket for live updates to avoid polling the API."}
-2026-03-27 21:29:20,528 [ERROR] [SL] OP BUY @ 0.105 failed: binanceusdm {"code":-4509,"msg":"Time in Force (TIF) GTE can only be used with open positions. Please ensure that positions are available."}
-2026-03-27 21:29:20,528 [WARNING] [Trail] OP no exchange position (-4509) — software SL only @ 0.1050
-2026-03-27 21:29:28,313 [INFO] [TAO] LIQ CASCADE → LONG | OI_drop=1.48σ taker=1.6x
-2026-03-27 21:29:28,762 [INFO] [Leverage] TAO set to 4x (isolated)
-2026-03-27 21:29:36,245 [INFO] [MultiPos] Added liquidation_fade:TAO: BUY TAO @ 320.17
-2026-03-27 21:29:36,565 [INFO] [TAO] Exchange SL registered @ 317.6289
-2026-03-27 21:29:36,690 [INFO] [TAO] Exchange TP registered @ 323.9816
-2026-03-27 21:29:37,000 [INFO] [TradeLog] Entry captured: liquidation_fade_TAO_0327_122936_0008
-2026-03-27 21:29:37,000 [INFO] [TAO] ENTRY BUY @ 320.1700 | qty=4.685 | SL=317.6289 | trailing=N | notional=$1500.00
-2026-03-27 21:29:37,000 [INFO] [liquidation_fade] TRADE: {'strategy': 'liquidation_fade', 'coin': 'TAO', 'side': 'BUY', 'price': 320.17, 'qty': 4.685, 'sl': 317.6289285714286, 'tp': 323.9816071428572, 'trailing': False}
-2026-03-27 21:29:44,224 [INFO] [Heartbeat] equity=$4989.14 | daily=0.00% | pos=11 | notional=$20788.10 | kill=False
-2026-03-27 21:30:40,103 [INFO] [MonitorV2] DOGE SL HIT: 0.0900 vs 0.0900
-2026-03-27 21:30:40,439 [INFO] [Cancel] DOGE order already gone
-2026-03-27 21:30:40,439 [INFO] [MonitorV2] DOGE exchange SL order cancelled
-2026-03-27 21:30:40,765 [INFO] [Cancel] DOGE order already gone
-2026-03-27 21:30:40,765 [INFO] [MonitorV2] DOGE exchange TP order cancelled
-2026-03-27 21:30:40,936 [ERROR] [MKT_CLOSE] DOGE BUY failed: binanceusdm {"code":-2022,"msg":"ReduceOnly Order is rejected."}
-2026-03-27 21:30:40,936 [INFO] [PortRisk] cvd_spike PnL: -0.5002 | equity: 4988.64 | daily: 0.00%
-2026-03-27 21:30:40,937 [INFO] [TradeLog] cvd_spike_DOGE_0327_121401_0002 closed: pnl=-0.02% reason=SL_HIT bars=17 mfe=0.19% mae=-0.02%
-2026-03-27 21:30:40,937 [INFO] [MultiPos] Removed cvd_spike:DOGE
-2026-03-27 21:30:40,937 [INFO] [Close] ❌ cvd_spike:DOGE SL_HIT | PnL=-0.5002 (-0.02%) | entry=0.0900 exit=0.0900 | bars=17 | mfe=0.19% mae=-0.02%
-2026-03-27 21:30:42,475 [INFO] [Heartbeat] equity=$4988.64 | daily=0.00% | pos=10 | notional=$18538.38 | kill=False
-2026-03-27 21:31:29,261 [INFO] [MonitorV2] ETH SL HIT: 1983.4900 vs 1984.0736
-2026-03-27 21:31:29,606 [INFO] [Cancel] ETH order already gone
-2026-03-27 21:31:29,607 [INFO] [MonitorV2] ETH exchange SL order cancelled
-2026-03-27 21:31:29,932 [INFO] [Cancel] ETH order already gone
-2026-03-27 21:31:29,932 [INFO] [MonitorV2] ETH exchange TP order cancelled
-2026-03-27 21:31:30,041 [ERROR] [MKT_CLOSE] ETH SELL failed: binanceusdm {"code":-2022,"msg":"ReduceOnly Order is rejected."}
-2026-03-27 21:31:30,042 [INFO] [PortRisk] cvd_spike PnL: -4.5846 | equity: 4984.06 | daily: 0.08%
-2026-03-27 21:31:30,042 [INFO] [TradeLog] cvd_spike_ETH_0327_122427_0006 closed: pnl=-0.20% reason=SL_HIT bars=7 mfe=0.01% mae=-0.20%
-2026-03-27 21:31:30,043 [INFO] [MultiPos] Removed cvd_spike:ETH
-2026-03-27 21:31:30,043 [INFO] [Close] ❌ cvd_spike:ETH SL_HIT | PnL=-4.5846 (-0.20%) | entry=1987.5400 exit=1983.4900 | bars=7 | mfe=0.01% mae=-0.20%
-2026-03-27 21:31:40,745 [INFO] [Heartbeat] equity=$4984.06 | daily=0.08% | pos=9 | notional=$16288.49 | kill=False
-2026-03-27 21:31:56,698 [ERROR] [DataHub] OHLCV fetch failed ARB/1m: binanceusdm 429 Too Many Requests {"code":-1003,"msg":"Too many requests; current limit of IP(15.158.3.14) is 6000 requests per minute. Please use the websocket for live updates to avoid polling the API."}
-2026-03-27 21:31:56,847 [ERROR] [DataHub] OHLCV fetch failed SUI/1m: binanceusdm 429 Too Many Requests {"code":-1003,"msg":"Too many requests; current limit of IP(15.158.3.14) is 6000 requests per minute. Please use the websocket for live updates to avoid polling the API."}
-2026-03-27 21:32:18,246 [INFO] [MonitorV2] BTC SL HIT: 66600.1000 vs 66585.0714
-2026-03-27 21:32:18,618 [INFO] [Cancel] BTC order already gone
-2026-03-27 21:32:18,618 [INFO] [MonitorV2] BTC exchange SL order cancelled
-2026-03-27 21:32:18,945 [INFO] [Cancel] BTC order already gone
-2026-03-27 21:32:18,945 [INFO] [MonitorV2] BTC exchange TP order cancelled
-2026-03-27 21:32:19,054 [ERROR] [MKT_CLOSE] BTC BUY failed: binanceusdm {"code":-2022,"msg":"ReduceOnly Order is rejected."}
-2026-03-27 21:32:19,054 [INFO] [PortRisk] cvd_spike PnL: -2.5245 | equity: 4981.53 | daily: 0.13%
-2026-03-27 21:32:19,054 [INFO] [TradeLog] cvd_spike_BTC_0327_122847_0007 closed: pnl=-0.11% reason=SL_HIT bars=3 mfe=0.04% mae=-0.11%
-2026-03-27 21:32:19,055 [INFO] [MultiPos] Removed cvd_spike:BTC
-2026-03-27 21:32:19,055 [INFO] [Close] ❌ cvd_spike:BTC SL_HIT | PnL=-2.5245 (-0.11%) | entry=66523.6000 exit=66600.1000 | bars=3 | mfe=0.04% mae=-0.11%
-2026-03-27 21:32:38,985 [INFO] [Heartbeat] equity=$4981.53 | daily=0.13% | pos=8 | notional=$14093.21 | kill=False
-2026-03-27 21:32:41,803 [INFO] [LINK] CVD SPIKE → LONG | trigger=cvd_extreme_sell strength=1.524
-2026-03-27 21:32:42,864 [INFO] [Leverage] LINK set to 5x (isolated)
-2026-03-27 21:32:57,723 [ERROR] [DataHub] OHLCV fetch failed ARB/1m: binanceusdm 429 Too Many Requests {"code":-1003,"msg":"Too many requests; current limit of IP(15.158.3.14) is 6000 requests per minute. Please use the websocket for live updates to avoid polling the API."}
-2026-03-27 21:32:58,225 [ERROR] [DataHub] OHLCV fetch failed APT/1m: binanceusdm 429 Too Many Requests {"code":-1003,"msg":"Too many requests; current limit of IP(15.158.3.14) is 6000 requests per minute. Please use the websocket for live updates to avoid polling the API."}
-2026-03-27 21:33:05,056 [INFO] [WaitFill] LINK timeout (20.0s), cancelling
-2026-03-27 21:33:37,201 [INFO] [Heartbeat] equity=$4981.53 | daily=0.13% | pos=8 | notional=$14093.21 | kill=False
-2026-03-27 21:33:53,388 [INFO] [CoinSelect] Volatility top 30 → 0 passed safety filter | rejected: 0
-2026-03-27 21:34:04,784 [INFO] [SignalScan] 15 coins | 13 candidates
-2026-03-27 21:34:08,078 [INFO] [MonitorV2] BNB SL HIT: 610.0300 vs 610.1521
-2026-03-27 21:34:08,401 [INFO] [Cancel] BNB algo order cancelled: 1000000035442661
-2026-03-27 21:34:08,401 [INFO] [MonitorV2] BNB exchange SL order cancelled
-2026-03-27 21:34:08,778 [INFO] [Cancel] BNB algo order cancelled: 1000000035442663
-2026-03-27 21:34:08,778 [INFO] [MonitorV2] BNB exchange TP order cancelled
-2026-03-27 21:34:08,883 [INFO] [PortRisk] cvd_spike PnL: -2.6496 | equity: 4978.88 | daily: 0.18%
-2026-03-27 21:34:08,883 [INFO] [TradeLog] cvd_spike_BNB_0327_121521_0004 closed: pnl=-0.12% reason=SL_HIT bars=19 mfe=0.05% mae=-0.12%
-2026-03-27 21:34:08,883 [INFO] [MultiPos] Removed cvd_spike:BNB
-2026-03-27 21:34:08,883 [INFO] [Close] ❌ cvd_spike:BNB SL_HIT | PnL=-2.6496 (-0.12%) | entry=610.7500 exit=610.0300 | bars=19 | mfe=0.05% mae=-0.12%
-2026-03-27 21:34:36,320 [INFO] [Heartbeat] equity=$4978.88 | daily=0.18% | pos=7 | notional=$11845.65 | kill=False
-2026-03-27 21:35:01,825 [INFO] [ETH] ASYMMETRIC SNIPER -> SHORT | z=2.21 strength=-0.061
-2026-03-27 21:35:02,009 [INFO] [SUI] ASYMMETRIC SNIPER -> SHORT | z=3.68 strength=-1.401
-2026-03-27 21:35:02,487 [INFO] [Leverage] ETH set to 7x (isolated)
-2026-03-27 21:35:02,712 [WARNING] [Entry] ETH Post-Only FAILED, fallback to limit: binanceusdm {"code":-5022,"msg":"Due to the order could not be executed as maker, the Post Only order will be rejected. The order will not be recorded in the order history"}
-2026-03-27 21:35:02,752 [INFO] [ETH] CVD SPIKE → SHORT | trigger=cvd_extreme_buy strength=-0.511
-2026-03-27 21:35:02,754 [INFO] [LINK] CVD SPIKE → LONG | trigger=cvd_extreme_sell strength=1.364
-2026-03-27 21:35:02,756 [INFO] [SUI] CVD SPIKE → SHORT | trigger=cvd_extreme_buy strength=-8.496
-2026-03-27 21:35:05,543 [INFO] [MultiPos] Added asymmetric_sniper:ETH: SELL ETH @ 1984.27
-2026-03-27 21:35:05,873 [INFO] [ETH] Exchange SL registered @ 1990.5693
-2026-03-27 21:35:05,996 [INFO] [ETH] Exchange TP registered @ 1965.3722
-2026-03-27 21:35:06,320 [INFO] [TradeLog] Entry captured: asymmetric_sniper_ETH_0327_123505_0009
-2026-03-27 21:35:06,320 [INFO] [ETH] ENTRY SELL @ 1984.2700 | qty=2.645 | SL=1990.5693 | risk=$16.66 | trail_dist=2.0071 | notional=$5250.00 | trade #1 today
-2026-03-27 21:35:06,320 [INFO] [asymmetric_sniper] TRADE: {'strategy': 'asymmetric_sniper', 'coin': 'ETH', 'side': 'SELL', 'price': 1984.27, 'qty': 2.645, 'sl': 1990.5692698412697, 'tp': 1965.3721904761908, 'trailing': True, 'risk_usdt': 16.661568730158447, 'rr_estimate': 0.0}
-2026-03-27 21:35:06,320 [INFO] [ETH] rejected: coin_duplicate: ETH
-2026-03-27 21:35:07,719 [INFO] [Leverage] LINK set to 5x (isolated)
-2026-03-27 21:35:10,204 [ERROR] [SL] AVAX BUY @ 8.829 failed: binanceusdm {"code":-4509,"msg":"Time in Force (TIF) GTE can only be used with open positions. Please ensure that positions are available."}
-2026-03-27 21:35:10,204 [WARNING] [Trail] AVAX no exchange position (-4509) — software SL only @ 8.8291
-2026-03-27 21:35:28,399 [INFO] [WaitFill] LINK timeout (20.0s), cancelling
-2026-03-27 21:35:28,962 [INFO] [Leverage] SUI set to 5x (isolated)
-2026-03-27 21:35:34,565 [INFO] [Heartbeat] equity=$4978.88 | daily=0.18% | pos=8 | notional=$17094.04 | kill=False
+2026-03-28 02:43:06,236 [INFO] [EquityState] Restored equity=$4451.03 (restarts=1)
+2026-03-28 02:43:06,236 [INFO] [TradeHistory] Loaded 108 total trades from history
+2026-03-28 02:43:06,240 [INFO] ProcessPoolExecutor initialized: 6 workers
+2026-03-28 02:43:06,240 [INFO] ============================================================
+2026-03-28 02:43:06,240 [INFO] Multi-Strategy Bot v8.2 | mode=demo
+2026-03-28 02:43:06,240 [INFO] equity=$4451.02633 | coins=['XRP', 'SOL', 'TAO', 'DOGE', 'ADA', 'DOT', 'AVAX', 'BNB', 'LINK']
+2026-03-28 02:43:06,240 [INFO] ============================================================
+2026-03-28 02:43:06,781 [INFO] Exchange initialized (binance/sandbox): 704 markets loaded
+2026-03-28 02:43:06,781 [INFO] Demo/testnet mode: virtual funds, real orders on testnet | equity=$4451.03
+2026-03-28 02:43:06,782 [INFO] [MultiPos] Recovered 0 positions
+2026-03-28 02:43:06,784 [INFO] [EVGuardian] Initial evaluation: ['momentum_breakout', 'cvd_spike', 'asymmetric_sniper', 'liquidation_fade']
+2026-03-28 02:43:06,785 [INFO] Loaded 15 coin profiles from data/reports/multi_strategy/coin_profiles.json
+2026-03-28 02:43:06,785 [INFO] [cvd_spike] loaded | $9000.0 | 6x | cycle=60s | max_pos=10
+2026-03-28 02:43:06,785 [INFO] [liquidation_fade] loaded | $4500.0 | 5x | cycle=60s | max_pos=6
+2026-03-28 02:43:06,785 [INFO] [momentum_breakout] loaded | $4500.0 | 6x | cycle=60s | max_pos=6
+2026-03-28 02:43:06,785 [INFO] [asymmetric_sniper] loaded | $9000.0 | 8x | cycle=60s | max_pos=6
+2026-03-28 02:43:06,785 [INFO] [MonitorV2] Started (poll every 15s)
+2026-03-28 02:43:06,785 [INFO] [Discord] System ready notification sent
+2026-03-28 02:43:06,786 [INFO] [cvd_spike] loop started (every 60s)
+2026-03-28 02:43:06,786 [INFO] [liquidation_fade] loop started (every 60s)
+2026-03-28 02:43:06,786 [INFO] [momentum_breakout] loop started (every 60s)
+2026-03-28 02:43:06,786 [INFO] [asymmetric_sniper] loop started (every 60s)
+2026-03-28 02:43:06,931 [INFO] [CoinSelect] Volatility top 30 → 0 passed safety filter | rejected: 0
+2026-03-28 02:43:06,932 [INFO] [CoinRefresh] 13 coins active (base=13 + selective=0) | +{'ETH', 'SUI', 'ARB', 'BTC', 'OP'} -{'TAO'}
+2026-03-28 02:43:09,304 [INFO] [ADA] CVD SPIKE → SHORT | trigger=cvd_extreme_buy strength=-0.685 cvd_z=2.52 ofi_q=0.02
+2026-03-28 02:43:09,465 [INFO] [DOT] CVD SPIKE → SHORT | trigger=ofi_extreme_buy strength=-0.016 cvd_z=-0.02 ofi_q=0.90
+2026-03-28 02:43:09,722 [INFO] [LINK] CVD SPIKE → LONG | trigger=ofi_extreme_sell strength=0.408 cvd_z=0.01 ofi_q=0.09
+2026-03-28 02:43:09,979 [WARNING] [ADA] SL too tight: 0.000321 < fee_threshold 0.000469 (0.190% of price) — skip
+2026-03-28 02:43:10,682 [INFO] [Leverage] DOT set to 6x (isolated)
+2026-03-28 02:43:10,886 [WARNING] [Entry] DOT Post-Only FAILED, fallback to limit: binanceusdm {"code":-5022,"msg":"Due to the order could not be executed as maker, the Post Only order will be rejected. The order will not be recorded in the order history"}
+2026-03-28 02:43:11,797 [INFO] [ADA] ASYMMETRIC SNIPER -> SHORT | z=2.52 strength=-0.296
+2026-03-28 02:43:13,094 [INFO] [ARB] ASYMMETRIC SNIPER -> SHORT | z=4.16 strength=-0.682
+2026-03-28 02:43:13,510 [INFO] [MultiPos] Added cvd_spike:DOT: SELL DOT @ 1.283
+2026-03-28 02:43:13,510 [INFO] [DOT] 신규 종목 — SL/TP 등록 전 3.0s 대기 (margin mode 전파 대기)
+2026-03-28 02:43:16,820 [INFO] [DOT] Exchange SL registered @ 1.2860
+2026-03-28 02:43:17,118 [INFO] [DOT] Exchange TP registered @ 1.2746
+2026-03-28 02:43:17,118 [INFO] [TradeLog] Entry skeleton saved: cvd_spike_DOT_0327_174317_0001
+2026-03-28 02:43:18,054 [INFO] [Scan:liquidation_fade] trades=0 | cache hits=9 miss=28 err=0 | positions=1
+2026-03-28 02:43:18,504 [INFO] [TradeLog] Entry enriched: cvd_spike_DOT_0327_174317_0001
+2026-03-28 02:43:18,504 [INFO] [DOT] ENTRY SELL @ 1.2830 | qty=4208.8 | SL=1.2860(-0.23%) | TP=1.2746(+0.66%) | trailing=Y | notional=$5400.00 | fee≈$10.260(0.190%)
+2026-03-28 02:43:18,609 [INFO] [Leverage] ADA set to 8x (isolated)
+2026-03-28 02:43:18,905 [WARNING] [Entry] ADA Post-Only FAILED, fallback to limit: binanceusdm {"code":-5022,"msg":"Due to the order could not be executed as maker, the Post Only order will be rejected. The order will not be recorded in the order history"}
+2026-03-28 02:43:21,544 [INFO] [MultiPos] Added asymmetric_sniper:ADA: SELL ADA @ 0.2468
+2026-03-28 02:43:21,544 [INFO] [ADA] 신규 종목 — SL/TP 등록 전 3.0s 대기 (margin mode 전파 대기)
+2026-03-28 02:43:24,860 [INFO] [ADA] Exchange SL registered @ 0.2475
+2026-03-28 02:43:24,970 [INFO] [ADA] Exchange TP registered @ 0.2443
+2026-03-28 02:43:24,970 [INFO] [TradeLog] Entry skeleton saved: asymmetric_sniper_ADA_0327_174324_0002
+2026-03-28 02:43:25,392 [INFO] [TradeLog] Entry enriched: asymmetric_sniper_ADA_0327_174324_0002
+2026-03-28 02:43:25,392 [INFO] [ADA] ENTRY SELL @ 0.2468 | qty=48622.0 | SL=0.2475(-0.28%) | TP=0.2443(+1.02%) | risk=$33.33 | notional=$12000.00 | fee≈$22.800(0.190%) | trade #1 today
+2026-03-28 02:43:25,392 [INFO] [Scan:asymmetric_sniper] trades=1 | cache hits=1 miss=6 err=0 | positions=2
+2026-03-28 02:43:25,392 [INFO] [asymmetric_sniper] TRADE: {'strategy': 'asymmetric_sniper', 'coin': 'ADA', 'side': 'SELL', 'price': 0.2468, 'qty': 48622.0, 'sl': 0.24748555555555554, 'tp': 0.24427441333333333, 'trailing': True, 'risk_usdt': 33.33308222222197, 'rr_estimate': 0.12502894188468502}
+2026-03-28 02:43:25,392 [INFO] [LINK] rejected: exposure_cap: 22799.80 > 22255.13
+2026-03-28 02:43:25,392 [INFO] [Scan:cvd_spike] trades=1 | cache hits=0 miss=0 err=0 | positions=2
+2026-03-28 02:43:25,392 [INFO] [cvd_spike] TRADE: {'strategy': 'cvd_spike', 'coin': 'DOT', 'side': 'SELL', 'price': 1.283, 'qty': 4208.8, 'sl': 1.2859999999999998, 'tp': 1.2745623000000001, 'trailing': True}
+2026-03-28 02:43:29,307 [INFO] [Scan:momentum_breakout] trades=0 | cache hits=0 miss=11 err=0 | positions=2
+2026-03-28 02:44:04,790 [INFO] [Heartbeat] equity=$4451.03 | daily=0.00% | pos=2 | notional=$17399.80 | kill=False
+2026-03-28 02:44:05,049 [INFO] [CoinSelect] Volatility top 30 → 0 passed safety filter | rejected: 0
+2026-03-28 02:44:07,235 [INFO] [MonitorV2] DOT SL HIT: 1.2830 vs 1.2827
+2026-03-28 02:44:08,163 [INFO] [Cancel] DOT algo order cancelled: 1000000035630139
+2026-03-28 02:44:08,163 [INFO] [MonitorV2] DOT exchange SL order cancelled
+2026-03-28 02:44:09,089 [INFO] [Cancel] DOT algo order cancelled: 1000000035630144
+2026-03-28 02:44:09,089 [INFO] [MonitorV2] DOT exchange TP order cancelled
+2026-03-28 02:44:09,387 [INFO] [PortRisk] cvd_spike PnL: -10.2598 | equity: 4440.77 | daily: 0.23%
+2026-03-28 02:44:09,836 [INFO] [TradeLog] cvd_spike_DOT_0327_174317_0001 closed: pnl=+0.00% net=-0.1900% fee=10.2598$ drag=0.190% reason=SL_HIT bars=1 mfe=0.08% mae=0.00% mfe/trail=1.43 btc=BEAR vs_btc=ALIGNED
+2026-03-28 02:44:09,837 [INFO] [MultiPos] Removed cvd_spike:DOT
+2026-03-28 02:44:09,837 [INFO] [Close] ❌ cvd_spike:DOT SL_HIT | PnL=+0.0000 net=-10.2598 fee=10.2598 | entry=1.2830 exit=1.2830 | bars=1 | mfe=0.08% mae=0.00%
+2026-03-28 02:44:10,833 [INFO] [SignalScan] 13 coins | 13 candidates
+2026-03-28 02:44:18,563 [INFO] [SOL] LIQ CASCADE → LONG | OI_drop=1.75σ taker=3.5x move=-0.506%
+2026-03-28 02:44:18,768 [WARNING] [SOL] SL too tight: 0.116071 < fee_threshold 0.156636 (0.190% of price) — skip
+2026-03-28 02:44:18,769 [INFO] [Scan:liquidation_fade] trades=0 | cache hits=0 miss=28 err=0 | positions=1
+2026-03-28 02:44:23,508 [INFO] [Scan:asymmetric_sniper] trades=0 | cache hits=0 miss=0 err=0 | positions=1
+2026-03-28 02:44:23,811 [INFO] [SOL] CVD SPIKE → LONG | trigger=ofi_extreme_sell strength=0.680 cvd_z=0.03 ofi_q=0.07
+2026-03-28 02:44:24,116 [INFO] [ETH] CVD SPIKE → LONG | trigger=cvd_extreme_sell strength=0.954 cvd_z=-0.71 ofi_q=0.49
+2026-03-28 02:44:24,566 [INFO] [LINK] CVD SPIKE → LONG | trigger=ofi_extreme_sell strength=0.408 cvd_z=0.01 ofi_q=0.09
+2026-03-28 02:44:24,767 [INFO] [ARB] CVD SPIKE → SHORT | trigger=cvd_extreme_buy strength=-1.562 cvd_z=4.16 ofi_q=0.00
+2026-03-28 02:44:24,858 [WARNING] [SOL] SL too tight: 0.139286 < fee_threshold 0.156636 (0.190% of price) — skip
+2026-03-28 02:44:25,115 [WARNING] [ETH] SL too tight: 3.405000 < fee_threshold 3.757535 (0.190% of price) — skip
+2026-03-28 02:44:30,646 [INFO] [Scan:momentum_breakout] trades=0 | cache hits=2 miss=25 err=0 | positions=1
+2026-03-28 02:44:44,740 [INFO] [MultiPos] Added cvd_spike:LINK: BUY LINK @ 8.558
+2026-03-28 02:44:44,740 [INFO] [LINK] 신규 종목 — SL/TP 등록 전 3.0s 대기 (margin mode 전파 대기)
+2026-03-28 02:44:48,048 [INFO] [LINK] Exchange SL registered @ 8.5359
+2026-03-28 02:44:48,154 [INFO] [LINK] Exchange TP registered @ 8.6184
+2026-03-28 02:44:48,154 [INFO] [TradeLog] Entry skeleton saved: cvd_spike_LINK_0327_174448_0003
+2026-03-28 02:44:48,355 [ERROR] [DataHub] OHLCV fetch failed LINK/1m: binanceusdm 429 Too Many Requests {"code":-1003,"msg":"Too many requests; current limit of IP(15.158.3.51) is 6000 requests per minute. Please use the websocket for live updates to avoid polling the API."}
+2026-03-28 02:44:48,728 [ERROR] [DataHub] OHLCV fetch failed BTC/1h: binanceusdm 429 Too Many Requests {"code":-1003,"msg":"Too many requests; current limit of IP(15.158.3.51) is 6000 requests per minute. Please use the websocket for live updates to avoid polling the API."}
+2026-03-28 02:44:48,728 [INFO] [TradeLog] Entry enriched: cvd_spike_LINK_0327_174448_0003
+2026-03-28 02:44:48,728 [INFO] [LINK] ENTRY BUY @ 8.5580 | qty=630.98 | SL=8.5359(-0.26%) | TP=8.6184(+0.71%) | trailing=Y | notional=$5400.00 | fee≈$10.260(0.190%)
+2026-03-28 02:44:49,082 [INFO] [ARB] rejected: exposure_cap: 22799.84 > 22203.83
+2026-03-28 02:44:49,082 [INFO] [Scan:cvd_spike] trades=1 | cache hits=0 miss=2 err=2 | positions=2
+2026-03-28 02:44:49,082 [INFO] [cvd_spike] TRADE: {'strategy': 'cvd_spike', 'coin': 'LINK', 'side': 'BUY', 'price': 8.558, 'qty': 630.98, 'sl': 8.53592857142857, 'tp': 8.618403057142858, 'trailing': True}
+2026-03-28 02:45:02,733 [INFO] [Heartbeat] equity=$4440.77 | daily=0.23% | pos=2 | notional=$17399.84 | kill=False
+2026-03-28 02:45:17,909 [INFO] [SOL] LIQ CASCADE → LONG | OI_drop=4.50σ taker=6.3x move=-0.711%
+2026-03-28 02:45:18,111 [WARNING] [SOL] SL too tight: 0.141071 < fee_threshold 0.156446 (0.190% of price) — skip
+2026-03-28 02:45:18,111 [INFO] [Scan:liquidation_fade] trades=0 | cache hits=0 miss=13 err=0 | positions=2
+2026-03-28 02:45:22,479 [INFO] [Scan:asymmetric_sniper] trades=0 | cache hits=0 miss=0 err=0 | positions=2
+2026-03-28 02:45:23,286 [INFO] [MonitorV2] ADA SL HIT: 0.2466 vs 0.2466
+2026-03-28 02:45:23,585 [INFO] [Cancel] ADA algo order cancelled: 1000000035630243
+2026-03-28 02:45:23,585 [INFO] [MonitorV2] ADA exchange SL order cancelled
+2026-03-28 02:45:23,903 [INFO] [Cancel] ADA algo order cancelled: 1000000035630246
+2026-03-28 02:45:23,903 [INFO] [MonitorV2] ADA exchange TP order cancelled
+2026-03-28 02:45:23,998 [INFO] [PortRisk] asymmetric_sniper PnL: -13.0662 | equity: 4427.70 | daily: 0.52%
+2026-03-28 02:45:24,253 [INFO] [TradeLog] asymmetric_sniper_ADA_0327_174324_0002 closed: pnl=+0.08% net=-0.1089% fee=22.7906$ drag=0.190% reason=SL_HIT bars=2 mfe=0.12% mae=0.00% mfe/trail=3.50 btc=BEAR vs_btc=ALIGNED
+2026-03-28 02:45:24,254 [INFO] [MultiPos] Removed asymmetric_sniper:ADA
+2026-03-28 02:45:24,254 [INFO] [Close] ❌ asymmetric_sniper:ADA SL_HIT | PnL=+9.7244 net=-13.0662 fee=22.7906 | entry=0.2468 exit=0.2466 | bars=2 | mfe=0.12% mae=0.00%
+2026-03-28 02:45:33,712 [INFO] [Scan:momentum_breakout] trades=0 | cache hits=0 miss=13 err=0 | positions=1
+2026-03-28 02:45:47,304 [INFO] [XRP] CVD SPIKE → LONG | trigger=cvd_extreme_sell strength=1071703.917 cvd_z=-0.90 ofi_q=0.47
+2026-03-28 02:45:47,394 [ERROR] [DataHub] OHLCV fetch failed SOL/1m: binanceusdm 429 Too Many Requests {"code":-1003,"msg":"Too many requests; current limit of IP(15.158.3.51) is 6000 requests per minute. Please use the websocket for live updates to avoid polling the API."}
+2026-03-28 02:45:47,395 [INFO] [SOL] CVD SPIKE → LONG | trigger=ofi_extreme_sell strength=0.680 cvd_z=0.03 ofi_q=0.07
+2026-03-28 02:45:47,604 [INFO] [ADA] CVD SPIKE → LONG | trigger=cvd_extreme_sell strength=234.080 cvd_z=-0.98 ofi_q=0.35
+2026-03-28 02:45:48,106 [INFO] [AVAX] CVD SPIKE → SHORT | trigger=cvd_extreme_buy strength=-0.554 cvd_z=1.98 ofi_q=0.03
+2026-03-28 02:45:48,198 [ERROR] [DataHub] OHLCV fetch failed OP/1m: binanceusdm 429 Too Many Requests {"code":-1003,"msg":"Too many requests; current limit of IP(15.158.3.51) is 6000 requests per minute. Please use the websocket for live updates to avoid polling the API."}
+2026-03-28 02:45:48,653 [WARNING] [XRP] SL too tight: 0.002100 < fee_threshold 0.002517 (0.190% of price) — skip
+2026-03-28 02:45:49,016 [INFO] [Leverage] SOL set to 6x (isolated)
+2026-03-28 02:46:00,770 [INFO] [Heartbeat] equity=$4427.70 | daily=0.52% | pos=1 | notional=$5399.93 | kill=False
+2026-03-28 02:46:11,159 [INFO] [WaitFill] SOL timeout (20.0s), cancelling
+2026-03-28 02:46:11,445 [WARNING] [ADA] SL too tight: 0.000343 < fee_threshold 0.000469 (0.190% of price) — skip
+2026-03-28 02:46:11,942 [INFO] [Leverage] AVAX set to 6x (isolated)
+2026-03-28 02:46:12,137 [WARNING] [Entry] AVAX Post-Only FAILED, fallback to limit: binanceusdm {"code":-5022,"msg":"Due to the order could not be executed as maker, the Post Only order will be rejected. The order will not be recorded in the order history"}
+2026-03-28 02:46:14,989 [INFO] [MultiPos] Added cvd_spike:AVAX: SELL AVAX @ 8.75
+2026-03-28 02:46:14,989 [INFO] [AVAX] 신규 종목 — SL/TP 등록 전 3.0s 대기 (margin mode 전파 대기)
+2026-03-28 02:46:17,433 [INFO] [Scan:liquidation_fade] trades=0 | cache hits=1 miss=24 err=2 | positions=2
+2026-03-28 02:46:18,154 [INFO] [AVAX] Exchange SL registered @ 8.7701
+2026-03-28 02:46:18,271 [INFO] [AVAX] Exchange TP registered @ 8.6931
+2026-03-28 02:46:18,271 [INFO] [TradeLog] Entry skeleton saved: cvd_spike_AVAX_0327_174618_0004
+2026-03-28 02:46:18,825 [INFO] [TradeLog] Entry enriched: cvd_spike_AVAX_0327_174618_0004
+2026-03-28 02:46:18,825 [INFO] [AVAX] ENTRY SELL @ 8.7500 | qty=617.0 | SL=8.7701(-0.23%) | TP=8.6931(+0.65%) | trailing=Y | notional=$5400.00 | fee≈$10.260(0.190%)
+2026-03-28 02:46:18,825 [INFO] [Scan:cvd_spike] trades=1 | cache hits=0 miss=3 err=0 | positions=2
+2026-03-28 02:46:18,826 [INFO] [cvd_spike] TRADE: {'strategy': 'cvd_spike', 'coin': 'AVAX', 'side': 'SELL', 'price': 8.75, 'qty': 617.0, 'sl': 8.770142857142858, 'tp': 8.693089285714285, 'trailing': True}
+2026-03-28 02:46:20,492 [INFO] [Scan:asymmetric_sniper] trades=0 | cache hits=0 miss=0 err=0 | positions=2
+2026-03-28 02:46:25,490 [INFO] [MonitorV2] LINK SL HIT: 8.5490 vs 8.5498
+2026-03-28 02:46:25,798 [INFO] [Cancel] LINK algo order cancelled: 1000000035631246
+2026-03-28 02:46:25,798 [INFO] [MonitorV2] LINK exchange SL order cancelled
+2026-03-28 02:46:26,124 [INFO] [Cancel] LINK algo order cancelled: 1000000035631248
+2026-03-28 02:46:26,124 [INFO] [MonitorV2] LINK exchange TP order cancelled
+2026-03-28 02:46:26,222 [INFO] [PortRisk] cvd_spike PnL: -15.9333 | equity: 4411.77 | daily: 0.88%
+2026-03-28 02:46:26,474 [INFO] [TradeLog] cvd_spike_LINK_0327_174448_0003 closed: pnl=-0.11% net=-0.2951% fee=10.2545$ drag=0.190% reason=SL_HIT bars=2 mfe=0.00% mae=-0.11% mfe/trail=0.00 btc=BEAR vs_btc=COUNTER
+2026-03-28 02:46:26,474 [INFO] [MultiPos] Removed cvd_spike:LINK
+2026-03-28 02:46:26,475 [INFO] [Close] ❌ cvd_spike:LINK SL_HIT | PnL=-5.6788 net=-15.9333 fee=10.2545 | entry=8.5580 exit=8.5490 | bars=2 | mfe=0.00% mae=-0.11%
+2026-03-28 02:46:37,272 [INFO] [Scan:momentum_breakout] trades=0 | cache hits=0 miss=13 err=0 | positions=1
+2026-03-28 02:46:58,752 [INFO] [Heartbeat] equity=$4411.77 | daily=0.88% | pos=1 | notional=$5398.75 | kill=False
+2026-03-28 02:47:16,523 [INFO] [Scan:liquidation_fade] trades=0 | cache hits=1 miss=11 err=0 | positions=1
+2026-03-28 02:47:17,177 [INFO] [SOL] CVD SPIKE → SHORT | trigger=ofi_extreme_buy strength=-0.106 cvd_z=0.45 ofi_q=0.91
+2026-03-28 02:47:17,869 [INFO] [LINK] CVD SPIKE → LONG | trigger=ofi_extreme_sell strength=1.643 cvd_z=0.25 ofi_q=0.06
+2026-03-28 02:47:17,972 [INFO] [OP] CVD SPIKE → LONG | trigger=cvd_extreme_sell strength=456.408 cvd_z=-2.06 ofi_q=0.31
+2026-03-28 02:47:18,469 [INFO] [Scan:asymmetric_sniper] trades=0 | cache hits=0 miss=13 err=0 | positions=1
+2026-03-28 02:47:18,682 [INFO] [Leverage] SOL set to 6x (isolated)
+2026-03-28 02:47:23,787 [INFO] [MultiPos] Added cvd_spike:SOL: SELL SOL @ 82.33
+2026-03-28 02:47:25,123 [INFO] [SOL] Exchange SL registered @ 82.5229
+2026-03-28 02:47:25,239 [INFO] [SOL] Exchange TP registered @ 81.7879
+2026-03-28 02:47:25,239 [INFO] [TradeLog] Entry skeleton saved: cvd_spike_SOL_0327_174725_0005
+2026-03-28 02:47:25,699 [INFO] [TradeLog] Entry enriched: cvd_spike_SOL_0327_174725_0005
+2026-03-28 02:47:25,699 [INFO] [SOL] ENTRY SELL @ 82.3300 | qty=65.59 | SL=82.5229(-0.23%) | TP=81.7879(+0.66%) | trailing=Y | notional=$5400.00 | fee≈$10.260(0.190%)
+2026-03-28 02:47:25,908 [WARNING] [LINK] SL too tight: 0.013071 < fee_threshold 0.016235 (0.190% of price) — skip
+2026-03-28 02:47:26,415 [INFO] [Leverage] OP set to 6x (isolated)
+2026-03-28 02:47:26,694 [WARNING] [Entry] OP Post-Only FAILED, fallback to limit: binanceusdm {"code":-5022,"msg":"Due to the order could not be executed as maker, the Post Only order will be rejected. The order will not be recorded in the order history"}
+2026-03-28 02:47:29,515 [INFO] [MultiPos] Added cvd_spike:OP: BUY OP @ 0.1029
+2026-03-28 02:47:29,515 [INFO] [OP] 신규 종목 — SL/TP 등록 전 3.0s 대기 (margin mode 전파 대기)
+2026-03-28 02:47:32,833 [INFO] [OP] Exchange SL registered @ 0.1026
+2026-03-28 02:47:32,951 [INFO] [OP] Exchange TP registered @ 0.1037
+2026-03-28 02:47:32,952 [INFO] [TradeLog] Entry skeleton saved: cvd_spike_OP_0327_174732_0006
+2026-03-28 02:47:33,264 [INFO] [TradeLog] Entry enriched: cvd_spike_OP_0327_174732_0006
+2026-03-28 02:47:33,264 [INFO] [OP] ENTRY BUY @ 0.1029 | qty=52478.1 | SL=0.1026(-0.29%) | TP=0.1037(+0.77%) | trailing=Y | notional=$5400.00 | fee≈$10.260(0.190%)
+2026-03-28 02:47:33,264 [INFO] [Scan:cvd_spike] trades=2 | cache hits=1 miss=7 err=0 | positions=3
+2026-03-28 02:47:33,265 [INFO] [cvd_spike] TRADE: {'strategy': 'cvd_spike', 'coin': 'SOL', 'side': 'SELL', 'price': 82.33, 'qty': 65.59, 'sl': 82.52285714285715, 'tp': 81.7878587142857, 'trailing': True}
+2026-03-28 02:47:33,519 [INFO] [cvd_spike] TRADE: {'strategy': 'cvd_spike', 'coin': 'OP', 'side': 'BUY', 'price': 0.1029, 'qty': 52478.1, 'sl': 0.1026, 'tp': 0.10369551000000002, 'trailing': True}
+2026-03-28 02:47:39,525 [INFO] [Scan:momentum_breakout] trades=0 | cache hits=1 miss=9 err=0 | positions=3
+2026-03-28 02:47:57,751 [INFO] [Heartbeat] equity=$4411.77 | daily=0.88% | pos=3 | notional=$16198.77 | kill=False
+2026-03-28 02:48:10,723 [INFO] [MonitorV2] OP SL HIT: 0.1028 vs 0.1028
+2026-03-28 02:48:11,037 [INFO] [Cancel] OP algo order cancelled: 1000000035633153
+2026-03-28 02:48:11,037 [INFO] [MonitorV2] OP exchange SL order cancelled
+2026-03-28 02:48:11,386 [INFO] [Cancel] OP algo order cancelled: 1000000035633155
+2026-03-28 02:48:11,386 [INFO] [MonitorV2] OP exchange TP order cancelled
+2026-03-28 02:48:11,493 [INFO] [PortRisk] cvd_spike PnL: -15.5028 | equity: 4396.26 | daily: 1.23%
+2026-03-28 02:48:11,753 [INFO] [TradeLog] cvd_spike_OP_0327_174732_0006 closed: pnl=-0.10% net=-0.2871% fee=10.2550$ drag=0.190% reason=SL_HIT bars=1 mfe=0.00% mae=-0.10% mfe/trail=0.00 btc=BEAR vs_btc=COUNTER
+2026-03-28 02:48:11,754 [INFO] [MultiPos] Removed cvd_spike:OP
+2026-03-28 02:48:11,754 [INFO] [Close] ❌ cvd_spike:OP SL_HIT | PnL=-5.2478 net=-15.5028 fee=10.2550 | entry=0.1029 exit=0.1028 | bars=1 | mfe=0.00% mae=-0.10%
+2026-03-28 02:48:15,629 [INFO] [Scan:liquidation_fade] trades=0 | cache hits=0 miss=12 err=0 | positions=2
+2026-03-28 02:48:16,440 [INFO] [Scan:asymmetric_sniper] trades=0 | cache hits=0 miss=0 err=0 | positions=2
+2026-03-28 02:48:31,600 [INFO] [XRP] CVD SPIKE → LONG | trigger=cvd_extreme_sell strength=17.380 cvd_z=-0.75 ofi_q=0.47
+2026-03-28 02:48:32,007 [INFO] [ETH] CVD SPIKE → LONG | trigger=cvd_extreme_sell strength=0.652 cvd_z=-0.71 ofi_q=0.46
+2026-03-28 02:48:32,110 [INFO] [BNB] CVD SPIKE → LONG | trigger=cvd_extreme_sell strength=4.567 cvd_z=-0.65 ofi_q=0.44
+2026-03-28 02:48:32,277 [INFO] [LINK] CVD SPIKE → SHORT | trigger=cvd_extreme_buy strength=-0.122 cvd_z=0.89 ofi_q=0.05
+2026-03-28 02:48:32,841 [WARNING] [XRP] SL too tight: 0.002271 < fee_threshold 0.002515 (0.190% of price) — skip
+2026-03-28 02:48:33,350 [INFO] [Leverage] ETH set to 6x (isolated)
+2026-03-28 02:48:40,942 [INFO] [MultiPos] Added cvd_spike:ETH: BUY ETH @ 1977.79
+2026-03-28 02:48:40,943 [INFO] [ETH] 신규 종목 — SL/TP 등록 전 3.0s 대기 (margin mode 전파 대기)
+2026-03-28 02:48:41,974 [INFO] [Scan:momentum_breakout] trades=0 | cache hits=1 miss=23 err=0 | positions=3
+2026-03-28 02:48:42,088 [INFO] [MonitorV2] ETH SL re-registered @ 1972.37
+2026-03-28 02:48:42,201 [INFO] [MonitorV2] ETH TP re-registered @ 1992.38
+2026-03-28 02:48:44,069 [ERROR] [SL] ETH SELL @ 1972.37 failed: binanceusdm {"code":-4130,"msg":"An open stop or take profit order with GTE and closePosition in the direction is existing."}
+2026-03-28 02:48:45,185 [ERROR] [SL] ETH SELL @ 1972.37 failed: binanceusdm {"code":-4130,"msg":"An open stop or take profit order with GTE and closePosition in the direction is existing."}
+2026-03-28 02:48:46,330 [ERROR] [SL] ETH SELL @ 1972.37 failed: binanceusdm {"code":-4130,"msg":"An open stop or take profit order with GTE and closePosition in the direction is existing."}
+2026-03-28 02:48:47,450 [ERROR] [SL] ETH SELL @ 1972.37 failed: binanceusdm {"code":-4130,"msg":"An open stop or take profit order with GTE and closePosition in the direction is existing."}
+2026-03-28 02:48:48,578 [ERROR] [SL] ETH SELL @ 1972.37 failed: binanceusdm {"code":-4130,"msg":"An open stop or take profit order with GTE and closePosition in the direction is existing."}
+2026-03-28 02:48:48,578 [ERROR] [SL_FAIL_CRITICAL] ⚠️ ETH SL 5회 실패 → 포지션 강제 청산 (err: binanceusdm {"code":-4130,"msg":"An open stop or take profit order with GTE and closePosition in the direction is existing."})
+2026-03-28 02:48:48,697 [INFO] [MultiPos] Removed cvd_spike:ETH
+2026-03-28 02:48:49,051 [WARNING] [BNB] SL too tight: 0.872143 < fee_threshold 1.153433 (0.190% of price) — skip
+2026-03-28 02:48:49,308 [WARNING] [LINK] SL too tight: 0.013071 < fee_threshold 0.016222 (0.190% of price) — skip
+2026-03-28 02:48:49,309 [INFO] [Scan:cvd_spike] trades=0 | cache hits=0 miss=2 err=0 | positions=2
+2026-03-28 02:48:55,694 [INFO] [Heartbeat] equity=$4396.26 | daily=1.23% | pos=2 | notional=$10798.77 | kill=False
+2026-03-28 02:49:14,405 [INFO] [Scan:asymmetric_sniper] trades=0 | cache hits=1 miss=8 err=0 | positions=2
+2026-03-28 02:49:14,696 [INFO] [OP] LIQ CASCADE → LONG | OI_drop=1.56σ taker=2.0x move=-0.773%
+2026-03-28 02:49:15,164 [INFO] [Leverage] OP set to 5x (isolated)
+2026-03-28 02:49:15,369 [WARNING] [Entry] OP Post-Only FAILED, fallback to limit: binanceusdm {"code":-5022,"msg":"Due to the order could not be executed as maker, the Post Only order will be rejected. The order will not be recorded in the order history"}
+2026-03-28 02:49:15,949 [INFO] [MultiPos] Added liquidation_fade:OP: BUY OP @ 0.1028
+2026-03-28 02:49:15,949 [INFO] [OP] 신규 종목 — SL/TP 등록 전 3.0s 대기 (margin mode 전파 대기)
+2026-03-28 02:49:19,267 [INFO] [OP] Exchange SL registered @ 0.1025
+2026-03-28 02:49:19,380 [INFO] [OP] Exchange TP registered @ 0.1032
+2026-03-28 02:49:19,381 [INFO] [TradeLog] Entry skeleton saved: liquidation_fade_OP_0327_174919_0007
+2026-03-28 02:49:19,896 [INFO] [TradeLog] Entry enriched: liquidation_fade_OP_0327_174919_0007
+2026-03-28 02:49:19,897 [INFO] [OP] ENTRY BUY @ 0.1028 | qty=36478.5 | SL=0.1025(-0.28%) | TP=0.1032(+0.42%) | trailing=N | notional=$3750.00 | fee≈$7.125(0.190%)
+2026-03-28 02:49:19,897 [INFO] [Scan:liquidation_fade] trades=1 | cache hits=0 miss=7 err=0 | positions=3
+2026-03-28 02:49:19,897 [INFO] [liquidation_fade] TRADE: {'strategy': 'liquidation_fade', 'coin': 'OP', 'side': 'BUY', 'price': 0.1028, 'qty': 36478.5, 'sl': 0.10251428571428571, 'tp': 0.10322857142857143, 'trailing': False}
+2026-03-28 02:49:43,394 [INFO] [Scan:momentum_breakout] trades=0 | cache hits=1 miss=9 err=0 | positions=3
+2026-03-28 02:49:47,609 [INFO] [XRP] CVD SPIKE → LONG | trigger=cvd_extreme_sell strength=17.380 cvd_z=-0.75 ofi_q=0.47
+2026-03-28 02:49:47,712 [INFO] [DOGE] CVD SPIKE → LONG | trigger=cvd_extreme_sell strength=755.981 cvd_z=-0.87 ofi_q=0.38
+2026-03-28 02:49:48,006 [INFO] [ETH] CVD SPIKE → LONG | trigger=cvd_extreme_sell strength=0.578 cvd_z=-0.71 ofi_q=0.46
+2026-03-28 02:49:48,109 [INFO] [BNB] CVD SPIKE → LONG | trigger=cvd_extreme_sell strength=48.945 cvd_z=-0.65 ofi_q=0.44
+2026-03-28 02:49:48,779 [WARNING] [XRP] SL too tight: 0.002271 < fee_threshold 0.002515 (0.190% of price) — skip
+2026-03-28 02:49:49,289 [INFO] [Leverage] DOGE set to 6x (isolated)
+2026-03-28 02:49:53,686 [INFO] [Heartbeat] equity=$4396.26 | daily=1.23% | pos=3 | notional=$14548.76 | kill=False
+2026-03-28 02:50:11,416 [INFO] [WaitFill] DOGE timeout (20.0s), cancelling
+2026-03-28 02:50:12,183 [INFO] [Leverage] ETH set to 6x (isolated)
+2026-03-28 02:50:12,195 [INFO] [MonitorV2] AVAX SL HIT: 8.7380 vs 8.7377
+2026-03-28 02:50:12,382 [INFO] [Scan:asymmetric_sniper] trades=0 | cache hits=0 miss=13 err=0 | positions=3
+2026-03-28 02:50:12,924 [INFO] [Cancel] AVAX algo order cancelled: 1000000035632308
+2026-03-28 02:50:12,924 [INFO] [MonitorV2] AVAX exchange SL order cancelled
+2026-03-28 02:50:13,236 [INFO] [Cancel] AVAX algo order cancelled: 1000000035632312
+2026-03-28 02:50:13,236 [INFO] [MonitorV2] AVAX exchange TP order cancelled
+2026-03-28 02:50:13,340 [INFO] [PortRisk] cvd_spike PnL: -2.8466 | equity: 4393.42 | daily: 1.29%
+2026-03-28 02:50:13,592 [INFO] [TradeLog] cvd_spike_AVAX_0327_174618_0004 closed: pnl=+0.14% net=-0.0527% fee=10.2506$ drag=0.190% reason=SL_HIT bars=4 mfe=0.19% mae=0.00% mfe/trail=3.62 btc=BEAR vs_btc=ALIGNED
+2026-03-28 02:50:13,592 [INFO] [MultiPos] Removed cvd_spike:AVAX
+2026-03-28 02:50:13,593 [INFO] [Close] ❌ cvd_spike:AVAX SL_HIT | PnL=+7.4040 net=-2.8466 fee=10.2506 | entry=8.7500 exit=8.7380 | bars=4 | mfe=0.19% mae=0.00%
+2026-03-28 02:50:19,645 [INFO] [Scan:liquidation_fade] trades=0 | cache hits=0 miss=12 err=0 | positions=2
+2026-03-28 02:50:21,547 [INFO] [MultiPos] Added cvd_spike:ETH: BUY ETH @ 1976.66
+2026-03-28 02:50:22,875 [INFO] [ETH] Exchange SL registered @ 1970.8807
+2026-03-28 02:50:22,985 [INFO] [ETH] Exchange TP registered @ 1991.9742
+2026-03-28 02:50:22,986 [INFO] [TradeLog] Entry skeleton saved: cvd_spike_ETH_0327_175022_0008
+2026-03-28 02:50:23,565 [INFO] [TradeLog] Entry enriched: cvd_spike_ETH_0327_175022_0008
+2026-03-28 02:50:23,565 [INFO] [ETH] ENTRY BUY @ 1976.6600 | qty=2.731 | SL=1970.8807(-0.29%) | TP=1991.9742(+0.77%) | trailing=Y | notional=$5400.00 | fee≈$10.260(0.190%)
+2026-03-28 02:50:23,777 [WARNING] [BNB] SL too tight: 0.938571 < fee_threshold 1.153965 (0.190% of price) — skip
+2026-03-28 02:50:23,777 [INFO] [Scan:cvd_spike] trades=1 | cache hits=0 miss=4 err=0 | positions=3
+2026-03-28 02:50:23,777 [INFO] [cvd_spike] TRADE: {'strategy': 'cvd_spike', 'coin': 'ETH', 'side': 'BUY', 'price': 1976.66, 'qty': 2.731, 'sl': 1970.8807142857145, 'tp': 1991.9742254285713, 'trailing': True}
+2026-03-28 02:50:45,166 [INFO] [Scan:momentum_breakout] trades=0 | cache hits=1 miss=9 err=0 | positions=3
+2026-03-28 02:50:51,670 [INFO] [Heartbeat] equity=$4393.42 | daily=1.29% | pos=3 | notional=$14548.27 | kill=False
+2026-03-28 02:51:10,364 [INFO] [Scan:asymmetric_sniper] trades=0 | cache hits=0 miss=0 err=0 | positions=3
+2026-03-28 02:51:18,537 [INFO] [Scan:liquidation_fade] trades=0 | cache hits=1 miss=9 err=0 | positions=3
+2026-03-28 02:51:23,080 [INFO] [Scan:cvd_spike] trades=0 | cache hits=0 miss=10 err=0 | positions=3
+2026-03-28 02:51:46,462 [INFO] [Scan:momentum_breakout] trades=0 | cache hits=1 miss=9 err=0 | positions=3
+2026-03-28 02:51:49,632 [INFO] [Heartbeat] equity=$4393.42 | daily=1.29% | pos=3 | notional=$14548.27 | kill=False
+2026-03-28 02:52:09,353 [INFO] [Scan:asymmetric_sniper] trades=0 | cache hits=0 miss=0 err=0 | positions=3
+2026-03-28 02:52:17,376 [INFO] [Scan:liquidation_fade] trades=0 | cache hits=1 miss=9 err=0 | positions=3
+2026-03-28 02:52:21,585 [INFO] [BNB] CVD SPIKE → LONG | trigger=cvd_extreme_sell strength=4.622 cvd_z=-0.65 ofi_q=0.44
+2026-03-28 02:52:22,227 [WARNING] [BNB] SL too tight: 0.985714 < fee_threshold 1.153946 (0.190% of price) — skip
+2026-03-28 02:52:22,227 [INFO] [Scan:cvd_spike] trades=0 | cache hits=1 miss=10 err=0 | positions=3
+2026-03-28 02:52:44,346 [INFO] [MonitorV2] ETH SL HIT: 1975.8000 vs 1976.0377
+2026-03-28 02:52:45,600 [INFO] [Cancel] ETH algo order cancelled: 1000000035635062
+2026-03-28 02:52:45,600 [INFO] [MonitorV2] ETH exchange SL order cancelled
+2026-03-28 02:52:46,657 [INFO] [Scan:momentum_breakout] trades=0 | cache hits=2 miss=8 err=0 | positions=3
+2026-03-28 02:52:46,749 [INFO] [Cancel] ETH algo order cancelled: 1000000035635064
+2026-03-28 02:52:46,749 [INFO] [MonitorV2] ETH exchange TP order cancelled
+2026-03-28 02:52:46,850 [INFO] [PortRisk] cvd_spike PnL: -12.6032 | equity: 4380.81 | daily: 1.58%
+2026-03-28 02:52:47,106 [INFO] [TradeLog] cvd_spike_ETH_0327_175022_0008 closed: pnl=-0.04% net=-0.2335% fee=10.2545$ drag=0.190% reason=SL_HIT bars=2 mfe=0.04% mae=-0.04% mfe/trail=0.57 btc=BEAR vs_btc=COUNTER
+2026-03-28 02:52:47,107 [INFO] [MultiPos] Removed cvd_spike:ETH
+2026-03-28 02:52:47,107 [INFO] [Close] ❌ cvd_spike:ETH SL_HIT | PnL=-2.3487 net=-12.6032 fee=10.2545 | entry=1976.6600 exit=1975.8000 | bars=2 | mfe=0.04% mae=-0.04%
+2026-03-28 02:52:47,593 [INFO] [Heartbeat] equity=$4380.81 | daily=1.58% | pos=2 | notional=$9150.01 | kill=False
+2026-03-28 02:52:59,767 [INFO] Signal 15 received, shutting down...
+2026-03-28 02:52:59,767 [INFO] Shutting down...
+2026-03-28 02:52:59,767 [INFO] [MonitorV2] Stopped
+2026-03-28 02:53:00,108 [INFO] [Cancel] SOL algo order cancelled: 1000000035633072
+2026-03-28 02:53:00,108 [INFO] [Shutdown] SOL exchange SL cancelled
+2026-03-28 02:53:00,426 [INFO] [Cancel] SOL algo order cancelled: 1000000035633074
+2026-03-28 02:53:00,426 [INFO] [Shutdown] SOL exchange TP cancelled
+2026-03-28 02:53:01,000 [INFO] [Cancel] OP algo order cancelled: 1000000035634336
+2026-03-28 02:53:01,000 [INFO] [Shutdown] OP exchange SL cancelled
+2026-03-28 02:53:01,336 [INFO] [Cancel] OP algo order cancelled: 1000000035634337
+2026-03-28 02:53:01,337 [INFO] [Shutdown] OP exchange TP cancelled
+2026-03-28 02:53:01,434 [INFO] ============================================================
+2026-03-28 02:53:01,434 [INFO] Session summary:
+2026-03-28 02:53:01,434 [INFO]   Trades: 114
+2026-03-28 02:53:01,434 [INFO]   PnL: $-170.7419
+2026-03-28 02:53:01,434 [INFO]   Win rate: 28.1%
+2026-03-28 02:53:01,434 [INFO]   Final equity: $4380.81
+2026-03-28 02:53:01,434 [INFO]   [cvd_spike] trades=83 pnl=$-197.2979
+2026-03-28 02:53:01,434 [INFO]   [liquidation_fade] trades=8 pnl=$+160.7546
+2026-03-28 02:53:01,434 [INFO]   [momentum_breakout] trades=12 pnl=$-78.4960
+2026-03-28 02:53:01,434 [INFO]   [asymmetric_sniper] trades=11 pnl=$-55.7026
+2026-03-28 02:53:01,434 [INFO] ============================================================
