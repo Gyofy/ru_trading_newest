@@ -1102,6 +1102,17 @@ class MultiStrategyBot:
             self._session_trades = self._session_trades[-1000:]
         self._save_trade(trade)
 
+        # Record to OrderLedger (SQLite)
+        if self.ledger:
+            try:
+                self.ledger.record_pnl(
+                    symbol=coin,
+                    realized_pnl=pnl_usdt,
+                    fees=_fee_usdt,
+                )
+            except Exception as e:
+                log.warning(f"[Ledger] record_pnl failed: {e}")
+
         # Discord: 거래 완료 + 잔고 + 거래내역 요약
         total_trades = len(self._session_trades)
         session_pnl = sum(t["pnl_usdt"] for t in self._session_trades)

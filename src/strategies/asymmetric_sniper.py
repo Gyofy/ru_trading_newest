@@ -77,7 +77,7 @@ class AsymmetricSniper(StrategyBase):
         if extreme_result is None:
             return None
 
-        direction, strength, z_score = extreme_result
+        direction, strength, z_score, cvd_raw = extreme_result
 
         funding_ok = await self._check_funding(coin, direction, funding_threshold)
         if not funding_ok:
@@ -103,6 +103,9 @@ class AsymmetricSniper(StrategyBase):
                 "trigger": "cvd_q99_3sigma",
                 "strength": strength,
                 "z_score": z_score,
+                "cvd_value": cvd_raw,
+                "cvd_z_score": z_score,
+                "ofi_value": 0.0,  # asymmetric_sniper uses CVD only
                 "rr_target": cfg.get("rr_minimum", 3.0),
             },
         )
@@ -115,10 +118,10 @@ class AsymmetricSniper(StrategyBase):
         quantile: float,
         sigma_mult: float,
         window: int,
-    ) -> tuple[str, float, float] | None:
+    ) -> tuple[str, float, float, float] | None:
         """Check if CVD delta is at Q99 AND > 3-sigma extreme.
 
-        Returns (direction, strength, z_score) or None.
+        Returns (direction, strength, z_score, cvd_raw) or None.
         Direction is COUNTER to the extreme (extreme buy -> SHORT).
         """
         # Compute CVD delta (per-bar, not cumulative)
@@ -151,12 +154,12 @@ class AsymmetricSniper(StrategyBase):
         if current > q_high and z_score > sigma_mult:
             # Extreme buying -> expect exhaustion -> SHORT
             strength = float((current - q_high) / (q_high if q_high != 0 else 1))
-            return ("SHORT", -strength, z_score)
+            return ("SHORT", -strength, z_score, float(current))
 
         if current < q_low and z_score < -sigma_mult:
             # Extreme selling -> expect exhaustion -> LONG
             strength = float((q_low - current) / (abs(q_low) if q_low != 0 else 1))
-            return ("LONG", strength, z_score)
+            return ("LONG", strength, z_score, float(current))
 
         return None
 
@@ -372,6 +375,29 @@ class AsymmetricSniper(StrategyBase):
                 return None
 
             fill_price = result.get("fill_price", price)
+
+            # Record entry to OrderLedger
+            if self.ledger:
+                try:
+                    _order_id = result.get("order_id", "")
+                    self.ledger.insert_order(
+                        order_link_id=_order_id,
+                        symbol=coin,
+                        side=side,
+                        order_type="limit" if not self.config.paper_mode else "paper",
+                        qty=qty,
+                        price=fill_price,
+                        purpose="entry",
+                    )
+                    self.ledger.insert_fill(
+                        order_link_id=_order_id,
+                        fill_price=fill_price,
+                        fill_qty=result.get("fill_qty", qty),
+                        fee=result.get("fee", 0),
+                    )
+                except Exception as e:
+                    self._log.debug(f"[{coin}] Ledger write failed: {e}")
+
             # Re-compute barriers from fill price using per-coin params
             sl_price, tp_price = self.compute_barriers(signal, atr, fill_price, extra=effective_extra)
 

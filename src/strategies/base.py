@@ -299,6 +299,28 @@ class StrategyBase(ABC):
 
             fill_price = result.get("fill_price", price)
 
+            # Record entry to OrderLedger
+            if self.ledger:
+                try:
+                    _order_id = result.get("order_id", "")
+                    self.ledger.insert_order(
+                        order_link_id=_order_id,
+                        symbol=coin,
+                        side=side,
+                        order_type="limit" if not self.config.paper_mode else "paper",
+                        qty=qty,
+                        price=fill_price,
+                        purpose="entry",
+                    )
+                    self.ledger.insert_fill(
+                        order_link_id=_order_id,
+                        fill_price=fill_price,
+                        fill_qty=result.get("fill_qty", qty),
+                        fee=result.get("fee", 0),
+                    )
+                except Exception as e:
+                    self._log.debug(f"[{coin}] Ledger write failed: {e}")
+
             # Recalculate barriers from fill price using per-coin params
             sl_price, tp_price = self.compute_barriers(signal, atr, fill_price, extra=effective_extra)
 

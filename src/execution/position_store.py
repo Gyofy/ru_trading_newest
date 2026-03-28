@@ -60,6 +60,8 @@ class OpenPosition:
             self.price_low = self.entry_price
         if self.remaining_qty == 0.0:
             self.remaining_qty = self.qty
+        if self.mfe_price == 0.0:
+            self.mfe_price = self.entry_price
 
     @property
     def current_qty(self) -> float:
