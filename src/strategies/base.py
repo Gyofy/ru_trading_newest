@@ -199,8 +199,8 @@ class StrategyBase(ABC):
 
         # Stop distance for sizing
         sl_dist = abs(price - sl_price)
-        # SL must be at least 1.5x round-trip cost to have any profit potential
-        min_sl_dist = price * ROUND_TRIP_FEE_RATE * 1.5
+        # SL must be at least 1.0x round-trip cost (was 1.5x — too strict for low-ATR testnet)
+        min_sl_dist = price * ROUND_TRIP_FEE_RATE * 1.0
         if sl_dist < min_sl_dist:
             self._log.warning(
                 f"[{coin}] SL too tight: {sl_dist:.6f} < fee_threshold {min_sl_dist:.6f} "

@@ -118,7 +118,9 @@ class SlTpMonitorV2:
                 await self._update_trailing_sl(pos, coin, price)
 
             # ── F4: Early exit if zero MFE after 5 bars (direction completely wrong) ──
-            if pos.bars_held == 5:
+            # One-time check: fires on first poll cycle where bars_held >= 5
+            if pos.bars_held >= 5 and not getattr(pos, '_zero_mfe_checked', False):
+                setattr(pos, '_zero_mfe_checked', True)
                 if pos.side == "BUY":
                     favorable = (pos.price_high - pos.entry_price) / pos.entry_price
                 else:
@@ -276,15 +278,19 @@ class SlTpMonitorV2:
     _MIN_SL_MOVE_PCT = 0.002  # 0.2% — ~2 API calls saved per position per minute
 
     # Phase thresholds
-    _BREAKEVEN_TRIGGER_PCT = 0.003  # 0.3% favorable move → move SL to breakeven
+    # _BREAKEVEN_TRIGGER_PCT is now computed dynamically per position (fee + trail_dist)
     _TRAIL_START_ATR_MULT = 1.5     # MFE > 1.5×trail_distance → start tightening
+
+    # Round-trip fee rate: taker×2 + slippage_entry + slippage_exit
+    # 0.00055*2 + 0.0003 + 0.0005 = 0.0019 (0.19%)
+    _ROUND_TRIP_FEE_RATE = 0.0019
 
     async def _update_trailing_sl(self, pos, coin: str, price: float) -> None:
         """3-phase trailing SL:
 
         Phase 1 (Initial): Keep original SL — survive initial noise.
-        Phase 2 (Breakeven): Once price moves favorably by _BREAKEVEN_TRIGGER_PCT,
-                             move SL to entry price (risk-free from here).
+        Phase 2 (Breakeven): Once price moves favorably by (fee + trail_dist),
+                             move SL to entry + fee so exit is net-zero, not net-negative.
         Phase 3 (Trail): Once MFE exceeds trail_distance * _TRAIL_START_ATR_MULT,
                          start trailing with tight distance.
         """
@@ -294,11 +300,16 @@ class SlTpMonitorV2:
 
         old_sl = pos.sl_price
 
+        # Dynamic breakeven trigger: price must move far enough that even if stopped
+        # at breakeven SL + one trail distance back, we've covered the round-trip fee.
+        trail_dist_pct = pos.trail_distance / entry if pos.trail_distance > 0 else 0.003
+        breakeven_trigger = max(self._ROUND_TRIP_FEE_RATE + trail_dist_pct, 0.002)
+
         if pos.side == "BUY":
             favorable_pct = (price - entry) / entry
-            # Phase 2: Breakeven
-            if favorable_pct >= self._BREAKEVEN_TRIGGER_PCT:
-                breakeven_sl = entry  # move SL to entry
+            # Phase 2: Breakeven — SL moves to entry + fee (true net-zero exit)
+            if favorable_pct >= breakeven_trigger:
+                breakeven_sl = entry * (1.0 + self._ROUND_TRIP_FEE_RATE)
                 if breakeven_sl > pos.sl_price:
                     pos.sl_price = breakeven_sl
 
@@ -311,9 +322,9 @@ class SlTpMonitorV2:
                         pos.sl_price = new_sl
         else:
             favorable_pct = (entry - price) / entry
-            # Phase 2: Breakeven
-            if favorable_pct >= self._BREAKEVEN_TRIGGER_PCT:
-                breakeven_sl = entry
+            # Phase 2: Breakeven — SL moves to entry - fee (true net-zero exit for short)
+            if favorable_pct >= breakeven_trigger:
+                breakeven_sl = entry * (1.0 - self._ROUND_TRIP_FEE_RATE)
                 if breakeven_sl < pos.sl_price:
                     pos.sl_price = breakeven_sl
 

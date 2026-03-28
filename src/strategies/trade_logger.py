@@ -492,6 +492,9 @@ class TradeLogger:
             ctx.sl_tighten_count = getattr(pos, "sl_tighten_count", 0)
             ctx.entry_to_mfe_bars = getattr(pos, 'mfe_bar', 0)
             ctx.mfe_to_exit_bars = ctx.bars_held - ctx.entry_to_mfe_bars
+            # aliases for backwards-compat field names
+            ctx.time_to_mfe_bars = ctx.entry_to_mfe_bars
+            ctx.bars_between_mfe_exit = ctx.mfe_to_exit_bars
 
             # mfe_to_trail_ratio: how close the trail was to capturing MFE
             # ratio > 1 means trail was tight enough (MFE > trail distance → should have captured)

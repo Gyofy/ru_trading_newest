@@ -1,10 +1,10 @@
-# Binance Futures Multi-Strategy Bot — v8.4
+# Binance Futures Multi-Strategy Bot — v8.5
 
-**바이낸스 선물 자동매매 시스템 | 4개 병렬 전략 | Demo/Paper/Live 모드 지원**
+**바이낸스 선물 자동매매 시스템 | 3개 활성 전략 | Demo/Paper/Live 모드 지원**
 
-> v8.4는 CVD/OFI 극단 반응, 청산 캐스케이드 역행, 모멘텀 돌파, 비대칭 저격 4개 전략을
-> asyncio.gather로 동적 코인 풀에 동시 평가한다. 레버리지 +1, 포지션 수량 2배, 수수료 반영 TP/SL,
-> exchange SL/TP 자동 재등록, 시장 종료 전 SL/TP 선취소 등 안전장치가 강화되었다.
+> v8.5는 v8.4 기반에서 수수료 기반 순수익 정확도를 높이고, 진입 조건 완화를 통해 데이터 수집 효율을 높였다.
+> CRITICAL 버그 2건(PnL 오기록, CancelledError ghost position) 수정, trailing SL 수수료 기반 breakeven 적용,
+> 신호 임계값 완화(Q97→Q92), ATR 레짐 필터 완화(P20→P10), 일일 수수료 cap 비활성화.
 
 ---
 
@@ -26,7 +26,7 @@
 
 | 항목 | 값 |
 |------|-----|
-| 버전 | v8.4 (multi-strategy demo trading) |
+| 버전 | v8.5 (multi-strategy demo trading) |
 | 기본 모드 | demo (Binance testnet 실주문) |
 | 초기 가상 자본 | $5,000 |
 | 전략 수 | 4개 (병렬 동시 실행) |
@@ -371,19 +371,29 @@ tail -n 10 data/reports/multi_strategy/trades.jsonl | python3 -m json.tool
 | v8.1 | Multi-Strategy 초기 | CVD/OFI/청산/모멘텀 프레임워크 구축 | 구버전 |
 | v8.2 | Multi-Strategy | asyncio 병렬 평가, funding 필터 우회, R:R 오버라이드 | 구버전 |
 | v8.3 | Multi-Strategy | 수수료 반영 TP/SL, SL 3회 실패 강제청산, trailing 축소, BTC macro 로그 | 구버전 |
-| **v8.4** | **Multi-Strategy 현재** | 레버리지 +1/수량 2배, SL/TP 자동재등록, naked position 보존, shutdown SL/TP 취소, APT/TAO 제외 | **현재** |
+| v8.4 | Multi-Strategy | 레버리지 +1/수량 2배, SL/TP 자동재등록, naked position 보존, shutdown SL/TP 취소, APT/TAO 제외 | 구버전 |
+| **v8.5** | **Multi-Strategy 현재** | CRITICAL 버그 수정, 수수료 기반 trailing SL, 신호 임계값 완화, 데이터 수집 모드 | **현재** |
 
-### v8.4 주요 변경점 (vs v8.3)
+### v8.5 주요 변경점 (vs v8.4)
 
-**포지션 크기 및 레버리지 상향**
-- 모든 전략 레버리지 +1: cvd_spike(5→6), liquidation_fade(4→5), momentum_breakout(5→6), asymmetric_sniper(7→8)
-- 모든 전략 allocation_usdt ×2: cvd_spike($4,500→$9,000), liq_fade($2,250→$4,500), mom_breakout($2,250→$4,500), sniper($4,500→$9,000)
-- asymmetric_sniper risk_per_trade_usdt ×2 ($100→$200)
+**CRITICAL 버그 수정**
+- `run_multi_strategy.py`: SL_HIT/TP_HIT 시 `ticker["last"]` 대신 `pos.sl_price`/`pos.tp_price` 사용 → PnL 정확도 향상 및 데일리 손실 한도 정확도 보장
+- `run_multi_strategy.py`: `market_close` await 중 `asyncio.CancelledError` 명시적 처리 → ghost position 방지
 
-**SL/TP 안전성 강화**
-- `SlTpMonitorV2._ensure_exchange_orders()`: 매 15초 폴링 시 exchange SL/TP 누락 자동 감지 → 재등록 (3사이클 throttle)
-- `shutdown()`: market_close 전에 exchange SL/TP 주문 먼저 취소 (잔류 조건부 주문 방지)
-- `base.py` / `asymmetric_sniper.py`: SL/TP 강제청산 실패 시 pos_manager에서 제거하지 않아 모니터 감시 유지 (naked position 방지)
+**수수료 기반 Trailing SL (`sl_tp_monitor_v2.py`)**
+- Breakeven trigger: 고정 0.3% → 동적 `(round-trip fee 0.19% + trail_dist%)` 계산
+- Breakeven SL: entry → `entry × (1 + 0.19%)` — 청산 시 수수료 보전 보장
+- `bars_held == 5` 버그 수정 → `>= 5` + `_zero_mfe_checked` 플래그 (1회만 발동)
+
+**신호 임계값 완화 (데이터 수집 효율화)**
+- CVD Spike: cvd/ofi quantile 0.97→0.92, volume_spike_mult 2.0→1.5, oi_decline_pct -0.5→-0.2, sl_atr_mult 3.0→5.0
+- Asymmetric Sniper: cvd_sigma_mult 1.8→1.5, cooldown_bars 10→5, max_daily_trades 12→20
+- ATR 레짐 필터: atr_min_percentile 20→10
+- SL 최소 거리 임계: 1.5× fee → 1.0× fee
+
+**PnL 수수료 반영 통일**
+- 세션 통계, Discord 알림, Ledger, 종료 요약 모두 `pnl_net_usdt` (수수료 차감 순수익) 기준으로 통일
+- 일일 수수료 cap 비활성화 (`fee_budget_pct: 100.0`) — 데이터 수집 모드에서 불필요한 차단 방지
 
 **기타**
 - `set_leverage()` → `set_leverage_async()`: 이벤트 루프 blocking 해소

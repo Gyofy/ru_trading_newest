@@ -65,15 +65,15 @@ strategies:
     leverage: 6                      # +1: 5→6
     cycle_seconds: 60
     max_positions: 10
-    sl_atr_mult: 3.0
+    sl_atr_mult: 5.0                 # 3.0→5.0: ATR 저변동성에서 SL too tight 방지
     extra:
-      cvd_quantile: 0.97
-      ofi_quantile: 0.97
+      cvd_quantile: 0.92             # 0.97→0.92: 신호 생성 빈도 증가
+      ofi_quantile: 0.92             # 0.97→0.92: 신호 생성 빈도 증가
       cvd_roll_window: 240
       trailing_atr_mult: 0.7          # 2.0→0.7: mfe/trail=0.37 실측 기반 축소
       tp_rr_ratio: 3.0
-      volume_spike_mult: 2.0          # volume must be 2x rolling average
-      oi_decline_pct: -0.5            # OI must decline by at least 0.5%
+      volume_spike_mult: 1.5         # 2.0→1.5: 볼륨 조건 완화
+      oi_decline_pct: -0.2           # -0.5→-0.2: OI 하락 조건 완화
 
   liquidation_fade:
     enabled: true
@@ -114,15 +114,15 @@ strategies:
     extra:
       risk_per_trade_usdt: 200.0     # ×2: 100→200
       rr_minimum: 3.0
-      cvd_quantile: 0.95
-      cvd_sigma_mult: 1.8
+      cvd_quantile: 0.92             # 0.95→0.92: 신호 빈도 증가
+      cvd_sigma_mult: 1.5            # 1.8→1.5: z-score 기준 완화
       cvd_roll_window: 240
       funding_threshold: 0.0001
       funding_filter_enabled: false
       funding_skip_on_null: false
       rr_check_enabled: false
-      cooldown_bars: 10
-      max_daily_trades: 12
+      cooldown_bars: 5               # 10→5: 쿨다운 단축 (데이터 수집 모드)
+      max_daily_trades: 20           # 12→20: 일일 거래 한도 증가
       trailing_atr_mult_initial: 0.8    # 2.0→0.8: mfe/trail=0.37 실측 기반 축소
       trailing_atr_mult_tight: 0.4      # 1.0→0.4: profit tighten 구간 강화
       profit_tighten_threshold_atr: 0.8  # 1.5→0.8: 더 일찍 tighten 시작
@@ -148,10 +148,9 @@ entry_filters:
   blacklist_sl_count: 2
   blacklist_window_sec: 86400
   atr_regime_enabled: true
-  atr_min_percentile: 20
+  atr_min_percentile: 10             # 20→10: ATR 레짐 필터 완화
 
 ev_guardian:
-  # F5: 일일 수수료 예산. 레버리지 고려 노션날 기준으로 충분히 설정.
-  # 잔고 $5000 × 6-8x 레버리지 → 노션날 ~$30,000 → 수수료 거래당 $20-40
-  # 0.5% ($25)는 너무 빡빡. 5% ($250) = 약 10회 거래 허용.
-  fee_budget_pct: 0.05
+  # F5: 일일 수수료 예산 — 데이터 수집 모드: 수익이 나면 cap 불필요.
+  # 잔고가 0원이 될때까지 진행하는 데이터 수집 목적이므로 사실상 무제한.
+  fee_budget_pct: 100.0  # 사실상 비활성화 ($5000 × 100 = $500,000/day cap)

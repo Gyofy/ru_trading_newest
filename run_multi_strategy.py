@@ -166,6 +166,8 @@ class MultiStrategyBot:
         self.mode = mode_override or self.cfg.get("mode", "paper")
         # Load persisted equity — restores balance across restarts
         self.initial_equity = self._load_equity_state()
+        # Load baseline cumulative counters (for _save_equity_state accumulation)
+        self._baseline_total_trades, self._baseline_total_pnl = self._load_baseline_counters()
         self._static_coins = self.cfg.get("coins", ["SOL", "XRP", "ADA", "DOT"])
         self.coins = list(self._static_coins)  # mutable, updated dynamically
         self._coin_metadata: list[dict] = []   # full metadata from selector
@@ -201,10 +203,11 @@ class MultiStrategyBot:
         self._coin_cooldowns: dict[str, float] = {}  # coin -> unix timestamp of last exit
         self._coin_cooldown_sec = 900  # 15 minutes
 
-        # Paper mode tracking — load historical trades for continuity
+        # Paper mode tracking — session trades start empty (current run only)
         self._paper_equity = self.initial_equity
-        self._session_trades: list[dict] = self._load_trades_history()
-        self._first_trade_notified = len(self._session_trades) > 0
+        self._session_trades: list[dict] = []  # current session only — NOT loaded from history
+        self._session_start_time: float = time.time()  # for filtering in briefings
+        self._first_trade_notified = False
 
         # Graceful update: --keep-positions prevents closing positions on shutdown
         self._keep_positions: bool = False
@@ -278,6 +281,12 @@ class MultiStrategyBot:
             fee_budget_pct=ev_cfg.get("fee_budget_pct", 0.005),
             report_path=STATE_DIR / "ev_report.json",
         )
+        # 시작 시 ev_reset.flag 파일 존재하면 EV 리셋 후 파일 삭제
+        _ev_reset_flag = STATE_DIR / "ev_reset.flag"
+        if _ev_reset_flag.exists():
+            self.ev_guardian.reset()
+            _ev_reset_flag.unlink()
+            log.info("[EVGuardian] ev_reset.flag detected — EV stats reset, fresh start")
         # 시작 시 기존 데이터로 즉시 1회 평가
         _ev_init = self.ev_guardian.evaluate()
         if _ev_init:
@@ -319,6 +328,23 @@ class MultiStrategyBot:
             initial_equity=self.initial_equity,
             strategy_allocations=strategy_allocations,
         )
+        # Restore daily state (strategy_pnl, day_start_equity) if same UTC day
+        try:
+            if EQUITY_STATE_FILE.exists():
+                with open(EQUITY_STATE_FILE, "r") as _f:
+                    _es = json.load(_f)
+                _ds = _es.get("daily_state", {})
+                _today = datetime.now(timezone.utc).date().isoformat()
+                if _ds.get("date") == _today:
+                    self.portfolio_risk._day_start_equity = float(_ds.get("day_start_equity", self.initial_equity))
+                    self.portfolio_risk._strategy_pnl = {k: float(v) for k, v in _ds.get("strategy_pnl", {}).items()}
+                    log.info(
+                        f"[PortRisk] Daily state restored: "
+                        f"day_start=${self.portfolio_risk._day_start_equity:.2f} "
+                        f"strategy_pnl={self.portfolio_risk._strategy_pnl}"
+                    )
+        except Exception as _e:
+            log.warning(f"[PortRisk] Daily state restore failed: {_e}")
 
         # Monitor
         mcfg = self.cfg.get("monitoring", {})
@@ -670,7 +696,7 @@ class MultiStrategyBot:
 
     async def _discord_hourly_briefing(self) -> None:
         """매 1시간마다 포지션 현황 + 잔고 브리핑."""
-        await asyncio.sleep(60)  # 시작 후 1분 뒤 첫 실행
+        await asyncio.sleep(3600)  # 시작 후 1시간 뒤 첫 실행
         while not self._shutdown_event.is_set():
             try:
                 status = self.portfolio_risk.status()
@@ -707,26 +733,34 @@ class MultiStrategyBot:
                     f"• {n}: `{v:+.4f} USDT`" for n, v in strat_pnl.items()
                 ) or "• 거래 없음"
 
-                # 오늘 세션 통계
+                # 오늘 세션 통계 (수수료 포함 순수익 기준)
                 total_trades = len(self._session_trades)
-                session_pnl = sum(t["pnl_usdt"] for t in self._session_trades)
-                wins = sum(1 for t in self._session_trades if t["pnl_usdt"] > 0)
+                session_pnl = sum(t.get("pnl_net_usdt", t["pnl_usdt"]) for t in self._session_trades)
+                wins = sum(1 for t in self._session_trades if t.get("pnl_net_usdt", t["pnl_usdt"]) > 0)
                 wr = f"{wins/total_trades*100:.1f}%" if total_trades > 0 else "N/A"
 
                 # 수수료 통계
                 session_fee = sum(t.get("fee_usdt", 0.0) for t in self._session_trades)
-                session_net = sum(t.get("pnl_net_usdt", t["pnl_usdt"]) for t in self._session_trades)
+                session_net = session_pnl  # already net
                 ev_text = self.ev_guardian.format_discord_summary() if self.ev_guardian else ""
+
+                # 세션 통계 섹션 — 거래 있을 때만 상세 표시
+                if total_trades > 0:
+                    session_stat_text = (
+                        f"**📈 세션 통계** (거래: {total_trades}건)\n"
+                        f"세션 PnL: `{session_pnl:+.4f} USDT` | 수수료: `{session_fee:.4f} USDT` | 순수익: `{session_net:+.4f} USDT`\n"
+                        f"승률: `{wr}`\n\n"
+                        f"**전략별 PnL:**\n{strat_lines}"
+                    )
+                else:
+                    session_stat_text = "**📈 세션 통계** — 아직 거래 없음"
 
                 discord_post(
                     f"**💰 잔고**\n"
                     f"자본: `${status['equity']:,.2f}` | 초기: `${self.initial_equity:,.2f}`\n"
                     f"일일 손익: `{status['daily_loss_pct']:+.2%}` | 노셔널: `${status['notional']:.2f}`\n\n"
                     f"**📊 오픈 포지션 ({len(positions)}개)**\n{pos_text}\n\n"
-                    f"**📈 세션 통계** (거래: {total_trades}건)\n"
-                    f"세션 PnL: `{session_pnl:+.4f} USDT` | 수수료: `{session_fee:.4f} USDT` | 순수익: `{session_net:+.4f} USDT`\n"
-                    f"승률: `{wr}`\n\n"
-                    f"**전략별 PnL:**\n{strat_lines}"
+                    + session_stat_text
                     + (f"\n\n**🔍 EV Guardian:**\n{ev_text}" if ev_text else ""),
                     title=f"🕐 1시간 브리핑 — {now.strftime('%H:%M UTC')}",
                 )
@@ -918,11 +952,18 @@ class MultiStrategyBot:
             )
             return
 
-        # Calculate PnL
+        # Calculate PnL — use barrier price for SL/TP (more accurate than ticker snapshot)
+        # When exchange SL fires, actual fill ≈ sl_price, not ticker["last"] at detection time.
+        _fill_price = price
+        if reason == "SL_HIT" and pos.sl_price > 0:
+            _fill_price = pos.sl_price
+        elif reason == "TP_HIT" and pos.tp_price > 0:
+            _fill_price = pos.tp_price
+
         if pos.side == "BUY":
-            pnl_pct = (price - pos.entry_price) / pos.entry_price
+            pnl_pct = (_fill_price - pos.entry_price) / pos.entry_price
         else:
-            pnl_pct = (pos.entry_price - price) / pos.entry_price
+            pnl_pct = (pos.entry_price - _fill_price) / pos.entry_price
 
         pnl_usdt = pnl_pct * pos.entry_price * pos.current_qty
 
@@ -935,6 +976,14 @@ class MultiStrategyBot:
                     coin, close_side, pos.current_qty,
                     order_link_id=self.exchange.make_order_id(coin, close_side, prefix="v8cl"),
                 )
+            except asyncio.CancelledError:
+                # Task was cancelled mid-close — position state on exchange is unknown.
+                # Keep position in tracker so monitor can detect and retry cleanup.
+                log.warning(
+                    f"[Close] {coin} CancelledError during market_close — "
+                    f"position preserved in tracker, monitor will handle cleanup"
+                )
+                raise
             except Exception as e:
                 err_str = str(e)
                 # Exchange SL/TP already closed the position — not an error, just a race condition
@@ -1045,7 +1094,8 @@ class MultiStrategyBot:
         _tp_dist_pct = abs(pos.tp_price - _ep) / _ep * 100 if (_ep > 0 and pos.tp_price > 0) else 0
         _trail_dist_pct = getattr(pos, 'trail_distance', 0) / _ep * 100 if _ep > 0 else 0
         # _fee_usdt and _pnl_net_usdt already computed above (lines ~949, ~1004)
-        _time_since_last = time.time() - self._coin_cooldowns.get(coin, 0) if hasattr(self, '_coin_cooldowns') else 0
+        _last_exit_ts = self._coin_cooldowns.get(coin, None) if hasattr(self, '_coin_cooldowns') else None
+        _time_since_last = round(time.time() - _last_exit_ts, 1) if _last_exit_ts else 0.0
         _concurrent = self.pos_manager.count()
         _max_dd = pos.mae_pct  # MAE is the max drawdown during trade
 
@@ -1107,29 +1157,30 @@ class MultiStrategyBot:
             self._session_trades = self._session_trades[-1000:]
         self._save_trade(trade)
 
-        # Record to OrderLedger (SQLite)
+        # Record to OrderLedger (SQLite) — net PnL (fee-included)
         if self.ledger:
             try:
                 self.ledger.record_pnl(
                     symbol=coin,
-                    realized_pnl=pnl_usdt,
+                    realized_pnl=_pnl_net_usdt,
                     fees=_fee_usdt,
                 )
             except Exception as e:
                 log.warning(f"[Ledger] record_pnl failed: {e}")
 
-        # Discord: 거래 완료 + 잔고 + 거래내역 요약
+        # Discord: 거래 완료 + 잔고 + 거래내역 요약 (수수료 포함 순수익 기준)
         total_trades = len(self._session_trades)
-        session_pnl = sum(t["pnl_usdt"] for t in self._session_trades)
-        wins = sum(1 for t in self._session_trades if t["pnl_usdt"] > 0)
+        session_pnl = sum(t.get("pnl_net_usdt", t["pnl_usdt"]) for t in self._session_trades)
+        wins = sum(1 for t in self._session_trades if t.get("pnl_net_usdt", t["pnl_usdt"]) > 0)
         wr = f"{wins/total_trades*100:.1f}%" if total_trades > 0 else "N/A"
 
         # 최근 5건 (현재 거래 포함)
         recent = self._session_trades[-5:]
         recent_lines = []
         for t in reversed(recent):
-            e = "✅" if t["pnl_usdt"] > 0 else "❌"
-            recent_lines.append(f"{e} **{t['coin']}** `{t['side']}` `{t['pnl_usdt']:+.4f}` ({t['pnl_pct']:+.2%}) `{t['reason']}`")
+            _net = t.get("pnl_net_usdt", t["pnl_usdt"])
+            e = "✅" if _net > 0 else "❌"
+            recent_lines.append(f"{e} **{t['coin']}** `{t['side']}` `{_net:+.4f}` ({t.get('pnl_net_pct', t['pnl_pct']):+.2%}) `{t['reason']}`")
         recent_text = "\n".join(recent_lines)
 
         emoji_trade = "✅" if pnl_usdt > 0 else "❌"
@@ -1150,7 +1201,7 @@ class MultiStrategyBot:
             f"사유: {reason_label} | 보유: `{pos.bars_held}봉`\n"
             f"MFE: `{pos.mfe_pct:.2%}` | MAE: `{pos.mae_pct:.2%}`\n\n"
             f"{portfolio_snap}\n\n"
-            f"**📋 세션** ({total_trades}건 | 승률 {wr} | PnL `{session_pnl:+.4f}`)\n"
+            f"**📋 세션** ({total_trades}건 | 승률 {wr} | 순PnL `{session_pnl:+.4f}`)\n"
             f"{recent_text}"
             + (f"\n\n**🔍 EVGuardian:**\n{_ev_summary}" if _ev_summary else ""),
             title=f"{'✅ 익절' if _pnl_net_usdt > 0 else '❌ 손절/청산'} — {coin} {reason_label}",
@@ -1199,9 +1250,9 @@ class MultiStrategyBot:
 
         pos_section = "\n".join(lines) if lines else "포지션 없음"
         total_sign = "🟢" if total_unrealized >= 0 else "🔴"
-        session_pnl = sum(t["pnl_usdt"] for t in self._session_trades)
+        session_pnl = sum(t.get("pnl_net_usdt", t["pnl_usdt"]) for t in self._session_trades)
         total_trades = len(self._session_trades)
-        wins = sum(1 for t in self._session_trades if t["pnl_usdt"] > 0)
+        wins = sum(1 for t in self._session_trades if t.get("pnl_net_usdt", t["pnl_usdt"]) > 0)
         wr = f"{wins/total_trades*100:.0f}%" if total_trades > 0 else "-"
 
         return (
@@ -1210,7 +1261,7 @@ class MultiStrategyBot:
             f"자본: `${status['equity']:,.2f}` | 노셔널: `${status['notional']:.2f}`\n"
             f"{total_sign} 미실현손익: `{total_unrealized:+.2f} USDT` | "
             f"일일: `{status['daily_loss_pct']:+.1%}`\n"
-            f"세션: `{total_trades}건` WR`{wr}` 실현PnL`{session_pnl:+.2f}`"
+            f"세션: `{total_trades}건` WR`{wr}` 순PnL`{session_pnl:+.2f}`"
         )
 
     @staticmethod
@@ -1242,18 +1293,46 @@ class MultiStrategyBot:
             if EQUITY_STATE_FILE.exists():
                 with open(EQUITY_STATE_FILE, "r") as f:
                     existing = json.load(f)
+            session_trades = len(self._session_trades)
+            session_pnl = round(sum(t.get("pnl_net_usdt", t.get("pnl_usdt", 0)) for t in self._session_trades), 6)
+            today = datetime.now(timezone.utc).date().isoformat()
+            # daily state for restart recovery (strategy_pnl, day_start_equity)
+            pr = self.portfolio_risk
+            daily_state = {
+                "date": today,
+                "day_start_equity": round(pr._day_start_equity, 6) if pr else round(current, 6),
+                "strategy_pnl": {k: round(v, 6) for k, v in pr._strategy_pnl.items()} if pr else {},
+            }
             existing.update({
                 "current_equity": round(current, 6),
                 "initial_equity": round(self.initial_equity, 6),
                 "restarts": existing.get("restarts", 0) + (1 if not existing else 0),
-                "total_trades": len(self._session_trades),
-                "total_pnl": round(sum(t.get("pnl_usdt", 0) for t in self._session_trades), 6),
+                # cumulative all-time counters (baseline + current session)
+                "total_trades": self._baseline_total_trades + session_trades,
+                "total_pnl": round(self._baseline_total_pnl + session_pnl, 6),
+                # current session counters for reference
+                "session_trades": session_trades,
+                "session_pnl": session_pnl,
+                # daily state for restart recovery
+                "daily_state": daily_state,
                 "last_updated": datetime.now(timezone.utc).isoformat(),
             })
             with open(EQUITY_STATE_FILE, "w") as f:
                 json.dump(existing, f, indent=2)
         except Exception as e:
             log.warning(f"[EquityState] Save failed: {e}")
+
+    @staticmethod
+    def _load_baseline_counters() -> tuple[int, float]:
+        """Load cumulative total_trades / total_pnl from disk (before this session)."""
+        try:
+            if EQUITY_STATE_FILE.exists():
+                with open(EQUITY_STATE_FILE, "r") as f:
+                    data = json.load(f)
+                return int(data.get("total_trades", 0)), float(data.get("total_pnl", 0.0))
+        except Exception:
+            pass
+        return 0, 0.0
 
     @staticmethod
     def _load_trades_history() -> list:
@@ -1422,23 +1501,24 @@ class MultiStrategyBot:
                 title="⏸ 봇 일시정지 — 포지션 유지",
             )
 
-        # Summary
+        # Summary (수수료 포함 순수익 기준)
         total_trades = len(self._session_trades)
-        total_pnl = sum(t["pnl_usdt"] for t in self._session_trades)
-        wins = sum(1 for t in self._session_trades if t["pnl_usdt"] > 0)
+        total_pnl = sum(t.get("pnl_net_usdt", t["pnl_usdt"]) for t in self._session_trades)
+        total_fee = sum(t.get("fee_usdt", 0.0) for t in self._session_trades)
+        wins = sum(1 for t in self._session_trades if t.get("pnl_net_usdt", t["pnl_usdt"]) > 0)
         wr = wins / total_trades * 100 if total_trades > 0 else 0
 
         log.info(f"{'='*60}")
-        log.info(f"Session summary:")
+        log.info(f"Session summary (net of fees):")
         log.info(f"  Trades: {total_trades}")
-        log.info(f"  PnL: ${total_pnl:+.4f}")
+        log.info(f"  Net PnL: ${total_pnl:+.4f} (fee: ${total_fee:.4f})")
         log.info(f"  Win rate: {wr:.1f}%")
         log.info(f"  Final equity: ${self.portfolio_risk.current_equity:.2f}")
 
         for name in self.strategies:
             strat_trades = [t for t in self._session_trades if t["strategy"] == name]
-            strat_pnl = sum(t["pnl_usdt"] for t in strat_trades)
-            log.info(f"  [{name}] trades={len(strat_trades)} pnl=${strat_pnl:+.4f}")
+            strat_pnl = sum(t.get("pnl_net_usdt", t["pnl_usdt"]) for t in strat_trades)
+            log.info(f"  [{name}] trades={len(strat_trades)} net_pnl=${strat_pnl:+.4f}")
         log.info(f"{'='*60}")
 
         # Shutdown executor

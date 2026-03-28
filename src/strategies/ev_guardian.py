@@ -52,6 +52,9 @@ class EVGuardian:
         # F1: per-strategy EV 통계 {name: {ev, suspended, n_trades, reason, ...}}
         self._ev_stats: dict[str, dict] = {}
         self._last_eval_ts: float = 0.0
+        # Reset timestamp — only trades closed AFTER this ts are evaluated
+        # Set to "" to use all history, set to ISO string to filter
+        self._eval_since_ts: str = ""
 
         # F5: 일일 수수료 누적 {strategy: usdt}
         self._fee_day: str = ""              # 현재 UTC 날짜 문자열
@@ -87,6 +90,11 @@ class EVGuardian:
                     strat = rec.get("strategy", "")
                     if not strat:
                         continue
+                    # Filter by reset timestamp if set
+                    if self._eval_since_ts:
+                        ts_exit = rec.get("ts_exit", "")
+                        if ts_exit and ts_exit < self._eval_since_ts:
+                            continue
                     buckets.setdefault(strat, []).append(rec)
         except Exception as e:
             logger.warning(f"[EVGuardian] jsonl read failed: {e}")
@@ -131,6 +139,7 @@ class EVGuardian:
                 sum(abs(t.get("pnl_pct", t.get("sl_distance_pct", 0.0) / 100)) for t in non_tp) / len(non_tp)
                 if non_tp else 0.0
             )
+            # fee_drag_pct is stored as percentage (e.g. 0.188 = 0.188%), divide by 100 → decimal
             avg_fee = (
                 sum(t.get("fee_drag_pct", 0.0) / 100 for t in closed) / n
             )
@@ -186,6 +195,12 @@ class EVGuardian:
         self._ev_stats = new_stats
         self._last_eval_ts = datetime.now(timezone.utc).timestamp()
         return new_stats
+
+    def reset(self) -> None:
+        """EV stats를 초기화하고, 이 시점 이후의 거래만 평가하도록 타임스탬프를 설정."""
+        self._ev_stats = {}
+        self._eval_since_ts = datetime.now(timezone.utc).isoformat()
+        logger.info(f"[EVGuardian] EV stats reset — evaluating trades after {self._eval_since_ts}")
 
     def is_strategy_suspended(self, strategy: str) -> tuple[bool, str]:
         """F1: 전략이 현재 차단 상태인지 확인.
