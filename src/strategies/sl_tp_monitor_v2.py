@@ -292,6 +292,8 @@ class SlTpMonitorV2:
         if entry <= 0:
             return
 
+        old_sl = pos.sl_price
+
         if pos.side == "BUY":
             favorable_pct = (price - entry) / entry
             # Phase 2: Breakeven
@@ -323,8 +325,9 @@ class SlTpMonitorV2:
                     if new_sl < pos.sl_price:
                         pos.sl_price = new_sl
 
-        # Track tighten count
-        pos.sl_tighten_count = getattr(pos, "sl_tighten_count", 0) + 1
+        # Track tighten count (only when SL actually moved)
+        if pos.sl_price != old_sl:
+            pos.sl_tighten_count = getattr(pos, "sl_tighten_count", 0) + 1
 
         # Exchange SL sync (live mode only, throttled)
         if not self.paper_mode and pos.entry_price > 0:
