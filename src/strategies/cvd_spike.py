@@ -37,6 +37,34 @@ class CVDSpikeReactor(StrategyBase):
             return None
 
         direction, strength, trigger_type, diag = result
+
+        # ── Additional confluence checks ──
+
+        # Confluence 1: Volume spike (current volume > 2x rolling mean)
+        vol = df["volume"].values
+        vol_mean = vol[-min(50, len(vol) - 1):-1].mean() if len(vol) > 2 else 0
+        vol_current = vol[-1]
+        if vol_mean > 0 and vol_current < vol_mean * cfg.get("volume_spike_mult", 2.0):
+            return None  # No volume confirmation
+
+        # Confluence 2: OI declining (structural forced selling/buying)
+        try:
+            oi = await self.data_hub.get_open_interest(coin)
+            if oi is not None:
+                # Store OI history on the strategy instance for trend detection
+                if not hasattr(self, '_oi_cache'):
+                    self._oi_cache = {}
+                prev_oi = self._oi_cache.get(coin, oi)
+                oi_change_pct = (oi - prev_oi) / prev_oi * 100 if prev_oi > 0 else 0
+                self._oi_cache[coin] = oi
+
+                # OI must be declining (negative change = positions closing = forced exits)
+                oi_threshold = cfg.get("oi_decline_pct", -0.5)  # -0.5% minimum decline
+                if oi_change_pct > oi_threshold:
+                    return None  # OI not declining enough
+        except Exception:
+            pass  # If OI fetch fails, skip this filter (don't block on data unavailability)
+
         self._log.info(
             f"[{coin}] CVD SPIKE → {direction} | "
             f"trigger={trigger_type} strength={strength:.3f} "

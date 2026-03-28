@@ -137,6 +137,8 @@ class TradeContext:
     sl_tighten_count: int = 0        # how many times trailing SL moved
     time_to_mfe_bars: int = 0        # bar number when MFE was reached (0 = unknown)
     bars_between_mfe_exit: int = 0   # bars from MFE to exit — reversal speed proxy
+    entry_to_mfe_bars: int = 0       # bar count from entry to MFE peak
+    mfe_to_exit_bars: int = 0        # bar count from MFE peak to exit
     atr_ratio_exit_entry: float = 0.0  # exit_atr / entry_atr — volatility expansion(>1) or contraction(<1)
 
     # ── Actual fee & net PnL (populated at close) ──
@@ -486,6 +488,8 @@ class TradeLogger:
             ctx.price_low = getattr(pos, "price_low", 0.0)
             ctx.trail_sl_final = getattr(pos, "sl_price", 0.0)
             ctx.sl_tighten_count = getattr(pos, "sl_tighten_count", 0)
+            ctx.entry_to_mfe_bars = getattr(pos, 'mfe_bar', 0)
+            ctx.mfe_to_exit_bars = ctx.bars_held - ctx.entry_to_mfe_bars
 
             # mfe_to_trail_ratio: how close the trail was to capturing MFE
             # ratio > 1 means trail was tight enough (MFE > trail distance → should have captured)

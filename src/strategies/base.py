@@ -66,6 +66,7 @@ class StrategyBase(ABC):
         trade_logger=None,
         coin_profiles=None,
         position_sizer=None,
+        entry_filters=None,
     ):
         self.config = config
         self.name = config.name
@@ -78,6 +79,7 @@ class StrategyBase(ABC):
         self.trade_logger = trade_logger      # TradeLogger instance (shared)
         self.coin_profiles = coin_profiles    # CoinProfileStore (shared)
         self.position_sizer = position_sizer  # PositionSizer (shared)
+        self.entry_filters = entry_filters    # EntryFilters (shared, optional)
         self._log = logging.getLogger(f"strategy.{self.name}")
         self._paused = False
         self._trade_count = 0
@@ -171,6 +173,22 @@ class StrategyBase(ABC):
             self._log.warning(f"[{coin}] ATR=0, skip")
             return None
 
+        # Entry filters (rule-based reject gates)
+        if self.entry_filters:
+            _vpin = self.data_hub.compute_vpin(df, window=24)
+            # ATR history for percentile check
+            _atr_vals = []
+            if df is not None and len(df) >= 100:
+                for i in range(14, min(100, len(df))):
+                    _atr_vals.append(self._compute_atr(df.iloc[:i + 1], period=14))
+
+            passed, reject_reason = self.entry_filters.check_all(
+                coin=coin, vpin=_vpin, atr=atr, price=price, atr_history=_atr_vals,
+            )
+            if not passed:
+                self._log.info(f"[{coin}] Filter rejected: {reject_reason}")
+                return None
+
         # Apply per-coin adaptive params — pass as argument, never mutate self.config.extra.
         effective_extra = (
             self.coin_profiles.get_params(coin, self.config.extra)
@@ -180,8 +198,8 @@ class StrategyBase(ABC):
 
         # Stop distance for sizing
         sl_dist = abs(price - sl_price)
-        # Minimum SL distance = round-trip fee cost (trade must cover fees to be viable)
-        min_sl_dist = price * ROUND_TRIP_FEE_RATE
+        # SL must be at least 1.5x round-trip cost to have any profit potential
+        min_sl_dist = price * ROUND_TRIP_FEE_RATE * 1.5
         if sl_dist < min_sl_dist:
             self._log.warning(
                 f"[{coin}] SL too tight: {sl_dist:.6f} < fee_threshold {min_sl_dist:.6f} "
@@ -246,6 +264,12 @@ class StrategyBase(ABC):
 
         # Portfolio-level approval (atomic with position add)
         async with self._portfolio_lock:
+            # Double-checked locking: re-verify coin not taken by another strategy
+            # (first check was in evaluate() before gather, but race condition exists)
+            if self.pos_manager.has_coin_any_strategy(coin):
+                self._log.info(f"[{coin}] rejected: coin taken during gather (race)")
+                return None
+
             approved, reason = self.portfolio_risk.approve_entry(
                 strategy_name=self.name,
                 coin=coin,

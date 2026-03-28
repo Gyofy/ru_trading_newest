@@ -86,6 +86,7 @@ from src.strategies.coin_profile import CoinProfileStore
 from src.strategies.position_sizer import PositionSizer
 from src.strategies.strategy_analyzer import StrategyAnalyzer
 from src.strategies.ev_guardian import EVGuardian
+from src.strategies.entry_filters import EntryFilters
 
 STRATEGY_MAP = {
     "cvd_spike": CVDSpikeReactor,
@@ -193,7 +194,12 @@ class MultiStrategyBot:
         self.coin_profiles: CoinProfileStore | None = None
         self.position_sizer: PositionSizer | None = None
         self.ev_guardian: EVGuardian | None = None
+        self.entry_filters: EntryFilters | None = None
         self.strategies: dict[str, object] = {}
+
+        # Per-coin cooldown after exit (prevent immediate re-entry)
+        self._coin_cooldowns: dict[str, float] = {}  # coin -> unix timestamp of last exit
+        self._coin_cooldown_sec = 900  # 15 minutes
 
         # Paper mode tracking — load historical trades for continuity
         self._paper_equity = self.initial_equity
@@ -205,9 +211,12 @@ class MultiStrategyBot:
 
         # Process pool for CPU-bound signal computation (50% of cores)
         mp_cfg = self.cfg.get("multiprocessing", {})
-        _workers = mp_cfg.get("workers", 8)
+        import os as _os
+        _cpu_count = _os.cpu_count() or 8
+        _default_workers = max(1, int(_cpu_count * 0.8))  # 80% of CPU cores
+        _workers = mp_cfg.get("workers", _default_workers)
         self._executor = concurrent.futures.ProcessPoolExecutor(max_workers=_workers)
-        log.info(f"ProcessPoolExecutor initialized: {_workers} workers")
+        log.info(f"ProcessPoolExecutor initialized: {_workers} workers ({_cpu_count} cores, 80% target)")
 
     async def start(self) -> None:
         """Initialize all components and start trading."""
@@ -281,6 +290,15 @@ class MultiStrategyBot:
         sizing_cfg = self.cfg.get("position_sizing", {})
         self.position_sizer = PositionSizer(sizing_cfg)
 
+        # Entry filters (rule-based reject gates)
+        ef_cfg = self.cfg.get("entry_filters", {})
+        self.entry_filters = EntryFilters(ef_cfg)
+        log.info(
+            f"[EntryFilters] vpin={ef_cfg.get('vpin_filter_enabled', True)} "
+            f"blacklist={ef_cfg.get('blacklist_enabled', True)} "
+            f"atr_regime={ef_cfg.get('atr_regime_enabled', True)}"
+        )
+
         # Portfolio risk
         strategy_allocations = {}
         for name, scfg in self.cfg.get("strategies", {}).items():
@@ -342,6 +360,7 @@ class MultiStrategyBot:
                 trade_logger=self.trade_logger,
                 coin_profiles=self.coin_profiles,
                 position_sizer=self.position_sizer,
+                entry_filters=self.entry_filters,
             )
             self.strategies[name] = strategy
             log.info(
@@ -472,8 +491,14 @@ class MultiStrategyBot:
                             break
                         continue
 
+                # Filter out coins in cooldown (15min after exit)
+                active_coins = [
+                    c for c in self.coins
+                    if time.time() - self._coin_cooldowns.get(c, 0) >= self._coin_cooldown_sec
+                ]
+
                 # Evaluate
-                results = await strategy.tick(self.coins)
+                results = await strategy.tick(active_coins)
                 # Per-scan diagnostics: cache stats + result summary
                 cache_info = self.data_hub.cache_stats()
                 log.info(
@@ -984,6 +1009,13 @@ class MultiStrategyBot:
         # Remove position
         self.pos_manager.remove_position(strategy, coin)
 
+        # Record SL hit for entry filter blacklist (only losing SL, not trailing wins)
+        if reason == "SL_HIT" and pnl_usdt < 0 and self.entry_filters:
+            self.entry_filters.record_sl_hit(coin)
+
+        # Record cooldown timestamp for this coin
+        self._coin_cooldowns[coin] = time.time()
+
         # 순수익 계산 (_fee_usdt는 위에서 이미 계산됨)
         _pnl_net_usdt = round(pnl_usdt - _fee_usdt, 4)
         _pnl_net_pct = round(_pnl_net_usdt / _entry_notional, 6) if _entry_notional > 0 else 0.0
@@ -1005,6 +1037,16 @@ class MultiStrategyBot:
         _ep = pos.entry_price
         _sl_pct = abs(pos.sl_price - _ep) / _ep if _ep > 0 else 0.0
         _tp_pct = abs(pos.tp_price - _ep) / _ep if (_ep > 0 and pos.tp_price > 0) else 0.0
+
+        # Compute additional fields for optimization
+        _sl_dist_pct = abs(_ep - pos.sl_price) / _ep * 100 if _ep > 0 else 0
+        _tp_dist_pct = abs(pos.tp_price - _ep) / _ep * 100 if (_ep > 0 and pos.tp_price > 0) else 0
+        _trail_dist_pct = getattr(pos, 'trail_distance', 0) / _ep * 100 if _ep > 0 else 0
+        # _fee_usdt and _pnl_net_usdt already computed above (lines ~949, ~1004)
+        _time_since_last = time.time() - self._coin_cooldowns.get(coin, 0) if hasattr(self, '_coin_cooldowns') else 0
+        _concurrent = self.pos_manager.count()
+        _max_dd = pos.mae_pct  # MAE is the max drawdown during trade
+
         # trade_context 레코드에서 최적화용 필드 추출
         _tc = _tc_record or {}
         trade = {
@@ -1046,6 +1088,13 @@ class MultiStrategyBot:
             "atr_ratio": _tc.get("atr_ratio_exit_entry", 0.0),
             "concurrent_pos": _tc.get("concurrent_positions", 0),
             "fee_drag_pct": _tc.get("fee_drag_pct", 0.0),
+            # ── v8.5 추가 필드 (ML 최적화용) ──
+            "sl_distance_pct": round(_sl_dist_pct, 4),
+            "tp_distance_pct": round(_tp_dist_pct, 4),
+            "trail_distance_pct": round(_trail_dist_pct, 4),
+            "concurrent_positions": _concurrent,
+            "time_since_last_trade_sec": round(_time_since_last, 1),
+            "max_drawdown_pct": round(_max_dd, 6),
         }
         self._session_trades.append(trade)
         # Cap in-memory list to prevent unbounded growth over long sessions

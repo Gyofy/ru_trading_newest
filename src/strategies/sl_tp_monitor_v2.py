@@ -96,6 +96,16 @@ class SlTpMonitorV2:
             # Track extremes
             pos.update_extremes(price)
 
+            # Track MFE timing (which bar the best price occurred)
+            if pos.side == "BUY":
+                if price >= getattr(pos, 'mfe_price', 0):
+                    pos.mfe_price = price
+                    pos.mfe_bar = pos.bars_held
+            else:
+                if pos.mfe_price == 0 or price <= pos.mfe_price:
+                    pos.mfe_price = price
+                    pos.mfe_bar = pos.bars_held
+
             # ── Ensure exchange SL/TP exist (register if missing) ─────────
             if not self.paper_mode:
                 await self._ensure_exchange_orders(pos, coin)
@@ -106,6 +116,26 @@ class SlTpMonitorV2:
             # ── Trailing stop update ──────────────────────
             if pos.trailing_sl and pos.trail_distance > 0:
                 await self._update_trailing_sl(pos, coin, price)
+
+            # ── F4: Early exit if zero MFE after 5 bars (direction completely wrong) ──
+            if pos.bars_held == 5:
+                if pos.side == "BUY":
+                    favorable = (pos.price_high - pos.entry_price) / pos.entry_price
+                else:
+                    favorable = (pos.entry_price - pos.price_low) / pos.entry_price
+                if favorable < 0.0005:  # less than 0.05% favorable move in 5 minutes
+                    logger.info(
+                        f"[MonitorV2] {coin} EARLY EXIT: zero MFE after {pos.bars_held} bars "
+                        f"(favorable={favorable:.4%})"
+                    )
+                    await self._cancel_exchange_order(
+                        pos, coin, "sl_exchange_id", "sl_order_id", "SL",
+                    )
+                    await self._cancel_exchange_order(
+                        pos, coin, "tp_exchange_id", "tp_order_id", "TP",
+                    )
+                    await self._close(strategy, coin, "EARLY_EXIT_NO_MFE", price)
+                    continue
 
             # ── SL check (close-based: uses 'last' price) ──
             sl_hit = (
@@ -127,8 +157,8 @@ class SlTpMonitorV2:
                 await self._close(strategy, coin, "SL_HIT", price)
                 continue
 
-            # ── TP check ──────────────────────────────────
-            if pos.tp_price > 0 and not pos.trailing_sl:
+            # ── TP check (applies to ALL strategies, including trailing) ──
+            if pos.tp_price > 0:
                 tp_hit = (
                     (pos.side == "BUY" and price >= pos.tp_price)
                     or (pos.side == "SELL" and price <= pos.tp_price)
@@ -245,42 +275,64 @@ class SlTpMonitorV2:
     # Prevents excessive API calls on tiny price fluctuations.
     _MIN_SL_MOVE_PCT = 0.002  # 0.2% — ~2 API calls saved per position per minute
 
+    # Phase thresholds
+    _BREAKEVEN_TRIGGER_PCT = 0.003  # 0.3% favorable move → move SL to breakeven
+    _TRAIL_START_ATR_MULT = 1.5     # MFE > 1.5×trail_distance → start tightening
+
     async def _update_trailing_sl(self, pos, coin: str, price: float) -> None:
-        """Move SL in favorable direction only. Updates exchange SL too.
+        """3-phase trailing SL:
 
-        Exchange SL sync is throttled: only fires when the accumulated
-        SL movement exceeds _MIN_SL_MOVE_PCT of entry price, preventing
-        excessive cancel+place API calls during small price oscillations.
+        Phase 1 (Initial): Keep original SL — survive initial noise.
+        Phase 2 (Breakeven): Once price moves favorably by _BREAKEVEN_TRIGGER_PCT,
+                             move SL to entry price (risk-free from here).
+        Phase 3 (Trail): Once MFE exceeds trail_distance * _TRAIL_START_ATR_MULT,
+                         start trailing with tight distance.
         """
-        moved = False
-        if pos.side == "BUY":
-            new_sl = price - pos.trail_distance
-            if new_sl > pos.sl_price:
-                pos.sl_price = new_sl
-                moved = True
-        else:
-            new_sl = price + pos.trail_distance
-            if new_sl < pos.sl_price:
-                pos.sl_price = new_sl
-                moved = True
-
-        if moved:
-            pos.sl_tighten_count = getattr(pos, "sl_tighten_count", 0) + 1
-
-        if not moved or self.paper_mode:
+        entry = pos.entry_price
+        if entry <= 0:
             return
 
-        # Throttle exchange SL sync: only update when SL moved significantly
-        last_synced = getattr(pos, "_last_exchange_sl", pos.entry_price)
-        sl_move_pct = abs(pos.sl_price - last_synced) / pos.entry_price if pos.entry_price > 0 else 0
+        if pos.side == "BUY":
+            favorable_pct = (price - entry) / entry
+            # Phase 2: Breakeven
+            if favorable_pct >= self._BREAKEVEN_TRIGGER_PCT:
+                breakeven_sl = entry  # move SL to entry
+                if breakeven_sl > pos.sl_price:
+                    pos.sl_price = breakeven_sl
 
-        if sl_move_pct >= self._MIN_SL_MOVE_PCT:
-            await self._update_exchange_sl(pos, coin, pos.sl_price)
-            pos._last_exchange_sl = pos.sl_price
-            logger.debug(
-                f"[Trail] {coin} exchange SL synced: {last_synced:.4f} → {pos.sl_price:.4f} "
-                f"(move={sl_move_pct:.3%})"
-            )
+            # Phase 3: Trailing (only after significant move)
+            if pos.trail_distance > 0:
+                mfe_dist = price - entry
+                if mfe_dist > pos.trail_distance * self._TRAIL_START_ATR_MULT:
+                    new_sl = price - pos.trail_distance
+                    if new_sl > pos.sl_price:
+                        pos.sl_price = new_sl
+        else:
+            favorable_pct = (entry - price) / entry
+            # Phase 2: Breakeven
+            if favorable_pct >= self._BREAKEVEN_TRIGGER_PCT:
+                breakeven_sl = entry
+                if breakeven_sl < pos.sl_price:
+                    pos.sl_price = breakeven_sl
+
+            # Phase 3: Trailing
+            if pos.trail_distance > 0:
+                mfe_dist = entry - price
+                if mfe_dist > pos.trail_distance * self._TRAIL_START_ATR_MULT:
+                    new_sl = price + pos.trail_distance
+                    if new_sl < pos.sl_price:
+                        pos.sl_price = new_sl
+
+        # Track tighten count
+        pos.sl_tighten_count = getattr(pos, "sl_tighten_count", 0) + 1
+
+        # Exchange SL sync (live mode only, throttled)
+        if not self.paper_mode and pos.entry_price > 0:
+            last_synced = getattr(pos, "_last_exchange_sl", pos.entry_price)
+            sl_move_pct = abs(pos.sl_price - last_synced) / pos.entry_price
+            if sl_move_pct >= self._MIN_SL_MOVE_PCT:
+                await self._update_exchange_sl(pos, coin, pos.sl_price)
+                pos._last_exchange_sl = pos.sl_price
 
     async def _update_exchange_sl(self, pos, coin: str, new_sl: float) -> None:
         """Cancel old exchange SL and place new one at updated trailing level."""

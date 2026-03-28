@@ -39,6 +39,8 @@ dynamic_coins:
   exclude_coins:                 # 동적 풀에서도 완전 제외
     - APT
     - TAO
+    - BTC
+    - LINK
 
 portfolio:
   total_exposure_pct: 5.0        # 공격적: 500% 허용 — 전략 합산 최대 notional 대응
@@ -65,11 +67,13 @@ strategies:
     max_positions: 10
     sl_atr_mult: 3.0
     extra:
-      cvd_quantile: 0.90
-      ofi_quantile: 0.90
+      cvd_quantile: 0.97
+      ofi_quantile: 0.97
       cvd_roll_window: 240
       trailing_atr_mult: 0.7          # 2.0→0.7: mfe/trail=0.37 실측 기반 축소
-      tp_rr_ratio: 2.0
+      tp_rr_ratio: 3.0
+      volume_spike_mult: 2.0          # volume must be 2x rolling average
+      oi_decline_pct: -0.5            # OI must decline by at least 0.5%
 
   liquidation_fade:
     enabled: true
@@ -82,10 +86,10 @@ strategies:
       oi_sigma_threshold: 1.2
       taker_spike_mult: 1.2
       swing_lookback: 24
-      tp_atr_mult: 3.75
+      tp_atr_mult: 7.5
 
   momentum_breakout:
-    enabled: true
+    enabled: false
     allocation_usdt: 4500.0          # ×2: 수량 2배 증가
     leverage: 6                      # +1: 5→6
     cycle_seconds: 60
@@ -95,7 +99,7 @@ strategies:
       volume_mult_threshold: 1.8
       range_lookback_hours: 12
       trailing_atr_mult: 0.7          # 2.0→0.7: mfe/trail=0.37 실측 기반 축소
-      tp_rr_ratio: 2.0
+      tp_rr_ratio: 3.0
       leverage_base: 6               # +1: 5→6
       leverage_confirmed: 6          # +1: 5→6
       min_move_pct: 0.003
@@ -134,8 +138,17 @@ exchange:
   slippage_exit: 0.0005
 
 multiprocessing:
-  workers: 6
+  workers: 10  # 80% of 12 cores (auto-detected at runtime, this is fallback)
 
+
+entry_filters:
+  vpin_filter_enabled: true
+  vpin_min: 0.3
+  blacklist_enabled: true
+  blacklist_sl_count: 2
+  blacklist_window_sec: 86400
+  atr_regime_enabled: true
+  atr_min_percentile: 20
 
 ev_guardian:
   # F5: 일일 수수료 예산. 레버리지 고려 노션날 기준으로 충분히 설정.

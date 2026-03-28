@@ -50,6 +50,8 @@ class OpenPosition:
     # Trade lifecycle diagnostics
     sl_tighten_count: int = 0    # how many times trailing SL moved (for MFE/trail analysis)
     leverage: int = 0            # leverage used for this position
+    mfe_bar: int = 0              # bar number when MFE was reached
+    mfe_price: float = 0.0        # price at MFE
 
     def __post_init__(self):
         if self.price_high == 0.0:
