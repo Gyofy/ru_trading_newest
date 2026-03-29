@@ -421,6 +421,7 @@ class MultiStrategyBot:
             close_callback=self._on_position_close,
             poll_seconds=mcfg.get("sl_tp_poll_seconds", 15),
             paper_mode=(self.mode == "paper"),
+            discord_notify=discord_post,
         )
 
         # Create strategies
@@ -1292,11 +1293,17 @@ class MultiStrategyBot:
         lines = []
 
         for p in positions:
+            stale = False
             try:
                 ticker = await self.data_hub.get_ticker(p.coin)
                 cur = ticker.get("last", p.entry_price)
-            except Exception:
+                if not cur or cur <= 0:
+                    cur = p.entry_price
+                    stale = True
+            except Exception as _te:
+                log.warning(f"[Discord] {p.coin} ticker 조회 실패, 진입가로 대체: {_te}")
                 cur = p.entry_price
+                stale = True
 
             if p.side == "BUY":
                 unreal_pct = (cur - p.entry_price) / p.entry_price if p.entry_price > 0 else 0
@@ -1310,11 +1317,13 @@ class MultiStrategyBot:
             mark = "👉 " if p.coin == event_coin else "  "
             sign = "🟢" if unreal_pct >= 0 else "🔴"
             arrow = "↑" if p.side == "BUY" else "↓"
+            stale_mark = " ⚠️stale" if stale else ""
+            tp_str = f"TP`{p.tp_price:.4f}`" if getattr(p, "tp_price", 0) else "TP`trailing`"
             lines.append(
-                f"{mark}{sign} `{p.coin}` {arrow}`{p.side}` [{p.strategy_tag}]\n"
+                f"{mark}{sign} `{p.coin}` {arrow}`{p.side}` [{p.strategy_tag}]{stale_mark}\n"
                 f"    진입`{p.entry_price:.4f}` → 현재`{cur:.4f}` | "
                 f"`{unreal_usdt:+.2f}` (`{unreal_pct:+.1%}`) | "
-                f"SL`{p.sl_price:.4f}`"
+                f"SL`{p.sl_price:.4f}` {tp_str}"
             )
 
         pos_section = "\n".join(lines) if lines else "포지션 없음"

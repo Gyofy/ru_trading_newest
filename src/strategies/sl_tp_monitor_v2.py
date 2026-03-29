@@ -28,6 +28,7 @@ class SlTpMonitorV2:
         close_callback,
         poll_seconds: float = 15.0,
         paper_mode: bool = True,
+        discord_notify=None,
     ):
         self.exchange = exchange
         self.pos_manager = pos_manager
@@ -36,6 +37,7 @@ class SlTpMonitorV2:
         self.paper_mode = paper_mode
         self._task: asyncio.Task | None = None
         self._running = False
+        self._discord_notify = discord_notify  # optional: callable(msg, title) for SL tighten alerts
 
     def start(self) -> None:
         if self._task is not None:
@@ -413,6 +415,20 @@ class SlTpMonitorV2:
         # 3. Update position tracking with new SL
         pos.sl_exchange_id = result.get("exchange_order_id", "")
         pos.sl_order_id = new_oid
+
+        # 4. Discord SL tighten notification
+        if self._discord_notify:
+            try:
+                _tighten_count = getattr(pos, "sl_tighten_count", 0)
+                _arrow = "↑" if pos.side == "BUY" else "↓"
+                self._discord_notify(
+                    f"🔒 **Trail SL 이동** — `{coin}` {_arrow}`{pos.side}`\n"
+                    f"SL: `{pos.sl_price:.4f}` → `{rounded_sl:.4f}` (#{_tighten_count}회차)\n"
+                    f"진입: `{pos.entry_price:.4f}` | [{pos.strategy_tag}]",
+                    title=f"🔒 Trail SL — {coin}",
+                )
+            except Exception:
+                pass
 
     async def _cancel_exchange_order(
         self, pos, coin: str,

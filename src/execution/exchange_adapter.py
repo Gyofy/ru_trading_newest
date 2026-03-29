@@ -97,6 +97,7 @@ class ExchangeAdapter:
                 "defaultType": "future",
                 "adjustForTimeDifference": True,
                 "fetchCurrencies": False,
+                "recvWindow": 10000,  # 10s — WSL2 clock drift 대응
             },
         }
 
@@ -307,24 +308,38 @@ class ExchangeAdapter:
 
         order_type, params = self._stop_loss_params(stop_price, side, order_link_id)
 
-        try:
-            order = await self._exchange.create_order(
-                symbol=ccxt_sym,
-                type=order_type,
-                side=side.lower(),
-                amount=0,   # closePosition=True: 수량 불필요 (포지션 전체 청산)
-                params=params,
-            )
-            return {
-                "success": True,
-                "order_id": order_link_id,
-                "exchange_order_id": order.get("id", ""),
-                "status": "conditional",
-                "raw": order,
-            }
-        except Exception as e:
-            logger.error(f"[SL] {symbol} {side} @ {stop_price} failed: {e}")
-            return {"success": False, "order_id": order_link_id, "error": str(e)}
+        last_err = None
+        for _attempt in range(3):
+            if _attempt > 0:
+                await asyncio.sleep(0.3)
+            try:
+                order = await self._exchange.create_order(
+                    symbol=ccxt_sym,
+                    type=order_type,
+                    side=side.lower(),
+                    amount=0,   # closePosition=True: 수량 불필요 (포지션 전체 청산)
+                    params=params,
+                )
+                return {
+                    "success": True,
+                    "order_id": order_link_id,
+                    "exchange_order_id": order.get("id", ""),
+                    "status": "conditional",
+                    "raw": order,
+                }
+            except Exception as e:
+                last_err = e
+                err_str = str(e)
+                if "-1021" in err_str or "ahead of the server" in err_str or "Timestamp" in err_str:
+                    logger.warning(f"[SL] {symbol} -1021 time drift, resyncing... (attempt {_attempt+1})")
+                    try:
+                        await self._exchange.load_time_difference()
+                    except Exception:
+                        pass
+                else:
+                    break  # 재시도해도 의미 없는 에러
+        logger.error(f"[SL] {symbol} {side} @ {stop_price} failed: {last_err}")
+        return {"success": False, "order_id": order_link_id, "error": str(last_err)}
 
     # ── Take Profit ──────────────────────────────────────────
 
