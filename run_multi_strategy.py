@@ -1392,7 +1392,7 @@ class MultiStrategyBot:
             recent_lines.append(f"{e} **{t['coin']}** `{t['side']}` `{_net:+.4f}` ({t.get('pnl_net_pct', t['pnl_pct']):+.2%}) `{t['reason']}`")
         recent_text = "\n".join(recent_lines)
 
-        emoji_trade = "✅" if pnl_usdt > 0 else "❌"
+        emoji_trade = "✅" if _pnl_net_usdt > 0 else "❌"
         reason_label = {"SL_HIT": "🛑 손절", "TP_HIT": "🎯 익절", "TTL_HIT": "⏰ 시간초과", "TIME_STOP": "⏰ 시간초과", "KILL_SWITCH": "🚨 킬스위치"}.get(reason, f"📌 {reason}")
 
         try:
@@ -1826,10 +1826,14 @@ def main():
 
     # ── 중복 실행 방지 (PID 파일 락) ──────────────────────────
     PID_FILE = STATE_DIR / "bot.pid"
-    import fcntl as _fcntl
+    try:
+        import fcntl as _fcntl
+    except ImportError:
+        _fcntl = None  # Windows: skip file lock (use PID check instead)
     _pid_fh = open(PID_FILE, "w")
     try:
-        _fcntl.flock(_pid_fh, _fcntl.LOCK_EX | _fcntl.LOCK_NB)
+        if _fcntl:
+            _fcntl.flock(_pid_fh, _fcntl.LOCK_EX | _fcntl.LOCK_NB)
     except OSError:
         try:
             _existing_pid = PID_FILE.read_text().strip()
@@ -1905,7 +1909,8 @@ def main():
 
     signal.signal(signal.SIGINT, handle_signal)
     signal.signal(signal.SIGTERM, handle_signal)
-    signal.signal(signal.SIGHUP, handle_sighup)
+    if hasattr(signal, "SIGHUP"):
+        signal.signal(signal.SIGHUP, handle_sighup)
 
     try:
         loop.run_until_complete(bot.start())

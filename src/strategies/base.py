@@ -199,7 +199,7 @@ class StrategyBase(ABC):
                 if self.trade_logger:
                     self.trade_logger.record_rejection(
                         strategy=self.name, coin=coin, reject_reason=reject_reason,
-                        signal_strength=signal.strength, signal_confidence=signal.confidence,
+                        signal_strength=signal.pred_return, signal_confidence=signal.confidence,
                         atr=atr, price=price, vpin=_vpin, trigger_type=signal.trigger_type if hasattr(signal, "trigger_type") else "",
                     )
                 return None
@@ -223,7 +223,7 @@ class StrategyBase(ABC):
                     strategy=self.name,
                     coin=coin,
                     reject_reason=f"spread_too_wide:{_entry_spread_bps:.1f}bps",
-                    signal_strength=signal.strength,
+                    signal_strength=signal.pred_return,
                     signal_confidence=signal.confidence,
                     atr=atr,
                     price=price,
@@ -253,7 +253,14 @@ class StrategyBase(ABC):
             )
             return None
         # Cap sl_dist at 8% of price — prevents testnet ATR spikes from collapsing notional
-        sl_dist = min(sl_dist, price * 0.08)
+        max_sl_dist = price * 0.08
+        if sl_dist > max_sl_dist:
+            sl_dist = max_sl_dist
+            # Recompute sl_price to match capped distance (prevent sizing/SL mismatch)
+            if side == "BUY":
+                sl_price = price - sl_dist
+            else:
+                sl_price = price + sl_dist
 
         # Dynamic position sizing — use effective_leverage from signal if provided
         effective_leverage = (
@@ -328,7 +335,7 @@ class StrategyBase(ABC):
                 if self.trade_logger:
                     self.trade_logger.record_rejection(
                         strategy=self.name, coin=coin, reject_reason=f"portfolio:{reason}",
-                        signal_strength=signal.strength, signal_confidence=signal.confidence,
+                        signal_strength=signal.pred_return, signal_confidence=signal.confidence,
                         atr=atr, price=price,
                     )
                 return None

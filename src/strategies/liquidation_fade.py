@@ -140,7 +140,7 @@ class LiquidationFade(StrategyBase):
         # Scale 1m ATR → 5m ATR equivalent (base._try_execute passes 1m ATR)
         atr_5m = atr * (5 ** 0.5)  # √5 ≈ 2.24
         sl_dist = max(atr_5m * sl_mult, price * 0.004)  # 0.40% floor
-        tp_dist = atr_5m * tp_mult
+        tp_dist = max(atr_5m * tp_mult, sl_dist * 1.5)  # TP >= 1.5× SL (R:R floor)
 
         if signal.action == Action.SHORT:
             sl_price = price + sl_dist

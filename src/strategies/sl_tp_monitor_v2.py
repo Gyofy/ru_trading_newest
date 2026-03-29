@@ -285,7 +285,7 @@ class SlTpMonitorV2:
     _TRAIL_START_ATR_MULT = 1.5     # MFE > 1.5×trail_distance → start tightening
 
     # Round-trip fee rate — base.py에서 가져옴 (단일 소스)
-    # Binance VIP 0: taker×2 + slip_entry + slip_exit = 0.0005×2+0.0003+0.0005 = 0.0018 (0.18%)
+    # Binance VIP 0: maker+taker + slip = 0.0002+0.0005+0.0003+0.0005 = 0.0015 (0.15%)
     _ROUND_TRIP_FEE_RATE = _BASE_ROUND_TRIP_FEE_RATE
 
     async def _update_trailing_sl(self, pos, coin: str, price: float) -> None:
