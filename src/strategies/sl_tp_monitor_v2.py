@@ -352,11 +352,39 @@ class SlTpMonitorV2:
                 pos._last_exchange_sl = pos.sl_price
 
     async def _update_exchange_sl(self, pos, coin: str, new_sl: float) -> None:
-        """Place new exchange SL first, then cancel old one only after success."""
-        sl_side = "SELL" if pos.side == "BUY" else "BUY"
+        """Trail SL 업데이트: OLD 취소 → NEW 설정 순서.
 
-        # 1. Place new exchange SL FIRST — retry up to 3 times
+        Binance closePosition=True SL은 방향당 1개만 허용(-4130).
+        OLD를 먼저 취소해야 NEW 설정이 가능.
+        취소~설정 사이 짧은 공백은 software SL(pos.sl_price)이 보호.
+        """
+        sl_side = "SELL" if pos.side == "BUY" else "BUY"
         rounded_sl = self.exchange.round_price(coin, new_sl)
+
+        old_exchange_id = getattr(pos, "sl_exchange_id", "")
+        old_order_id = getattr(pos, "sl_order_id", "")
+
+        # 1. OLD SL 취소 (존재하는 경우만)
+        if old_exchange_id:
+            try:
+                await self.exchange.cancel_order(
+                    coin,
+                    exchange_order_id=old_exchange_id,
+                    order_link_id=old_order_id if old_order_id else None,
+                )
+                pos.sl_exchange_id = ""
+                pos.sl_order_id = ""
+            except Exception as e:
+                err_str = str(e)
+                if "-2011" in err_str or "unknown order" in err_str.lower() or "not found" in err_str.lower():
+                    # 이미 체결/취소됨 — 무시하고 계속
+                    pos.sl_exchange_id = ""
+                    pos.sl_order_id = ""
+                else:
+                    logger.warning(f"[Trail] {coin} cancel old SL failed: {e} — aborting trail update")
+                    return  # 취소 실패 시 NEW 설정도 중단 (이중 SL 방지)
+
+        # 2. NEW SL 설정 — 최대 3회 시도
         result = {"success": False}
         new_oid = None
         for attempt in range(3):
@@ -372,47 +400,25 @@ class SlTpMonitorV2:
                 result = {"success": False, "error": str(e)}
             if result.get("success"):
                 logger.debug(
-                    f"[Trail] {coin} new exchange SL placed → {rounded_sl}"
+                    f"[Trail] {coin} SL updated → {rounded_sl}"
                     + (f" (retry {attempt})" if attempt > 0 else "")
                 )
                 break
 
         if not result.get("success"):
             err_msg = str(result.get("error", ""))
-            if "-4130" in err_msg or "GTE" in err_msg:
-                # Duplicate SL — old one still active, no action needed
-                logger.warning(
-                    f"[Trail] {coin} duplicate SL order (-4130), old SL still active — skipping update"
-                )
-            elif "-4509" in err_msg:
-                # Position doesn't exist on exchange — clear tracking
-                logger.warning(
-                    f"[Trail] {coin} position not on exchange (-4509), clearing SL tracking"
-                )
+            if "-4509" in err_msg:
                 pos.sl_exchange_id = ""
                 pos.sl_order_id = ""
+                logger.warning(f"[Trail] {coin} position not on exchange (-4509)")
             else:
                 logger.error(
                     f"[SL_FAIL] [Trail] {coin} new SL placement failed 3x: {err_msg} "
-                    f"— keeping OLD SL, software SL @ {new_sl:.4f}"
+                    f"— software SL @ {new_sl:.4f} 유지"
                 )
-            # Do NOT cancel old SL — position stays protected
             return
 
-        # 2. New SL confirmed — NOW cancel the old one
-        old_exchange_id = getattr(pos, "sl_exchange_id", "")
-        old_order_id = getattr(pos, "sl_order_id", "")
-        if old_exchange_id:
-            try:
-                await self.exchange.cancel_order(
-                    coin,
-                    exchange_order_id=old_exchange_id,
-                    order_link_id=old_order_id if old_order_id else None,
-                )
-            except Exception as e:
-                logger.warning(f"[Trail] {coin} cancel old SL failed (new SL already active): {e}")
-
-        # 3. Update position tracking with new SL
+        # 3. 추적 정보 업데이트
         pos.sl_exchange_id = result.get("exchange_order_id", "")
         pos.sl_order_id = new_oid
 

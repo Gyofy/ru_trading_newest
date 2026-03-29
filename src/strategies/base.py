@@ -444,6 +444,7 @@ class StrategyBase(ABC):
                     if sl_result.get("success"):
                         pos.sl_order_id = sl_oid
                         pos.sl_exchange_id = sl_result.get("exchange_order_id", "")
+                        pos._last_exchange_sl = sl_price  # 모니터 중복 시도 방지
                         self._log.info(
                             f"[{coin}] Exchange SL registered @ {sl_price:.4f}"
                             + (f" (retry {attempt})" if attempt > 0 else "")
