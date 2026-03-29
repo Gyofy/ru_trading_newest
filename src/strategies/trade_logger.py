@@ -510,11 +510,18 @@ class TradeLogger:
             ctx.pnl_pct = (ctx.entry_price - exit_price) / ctx.entry_price
         ctx.pnl_usdt = ctx.pnl_pct * ctx.entry_price * ctx.qty
 
-        # Actual fee: entry notional × rate + exit notional × rate
-
+        # Actual fee: entry notional × (maker + slip_in) + exit notional × (taker + slip_out)
+        # Entry is Post-Only maker; exit is SL/TP market (taker).
+        # FIXED: was `(entry+exit) * (ROUND_TRIP_FEE_RATE / 2)` which divides twice.
+        _maker     = 0.0002   # 0.0200% — Post-Only 진입
+        _taker     = 0.0005   # 0.0500% — SL/TP 시장가 청산
+        _slip_in   = 0.0003   # 0.030%  — 진입 슬리피지
+        _slip_out  = 0.0005   # 0.050%  — 청산 슬리피지
         entry_notional = ctx.entry_price * ctx.qty
         exit_notional = exit_price * ctx.qty
-        ctx.fee_actual_usdt = round((entry_notional + exit_notional) * (ROUND_TRIP_FEE_RATE / 2), 4)
+        ctx.fee_actual_usdt = round(
+            entry_notional * (_maker + _slip_in) + exit_notional * (_taker + _slip_out), 4
+        )
         ctx.pnl_net_usdt = round(ctx.pnl_usdt - ctx.fee_actual_usdt, 4)
         ctx.pnl_net_pct = round(ctx.pnl_net_usdt / entry_notional, 6) if entry_notional > 0 else 0.0
         ctx.fee_drag_pct = round(ctx.fee_actual_usdt / entry_notional * 100, 4) if entry_notional > 0 else 0.0

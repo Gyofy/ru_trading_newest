@@ -554,6 +554,30 @@ class ExchangeAdapter:
 
         logger.info(f"[WaitFill] {symbol} timeout ({ttl_sec}s), cancelling")
         await self.cancel_order(symbol, order_link_id=order_link_id)
+
+        # Partial fill 체크 — 취소 후에도 채결된 수량이 남아 있으면 반환 (SL/TP 설정용)
+        try:
+            _final = await self._fetch_order_by_link_id(symbol, order_link_id)
+            if _final:
+                _filled = float(_final.get("filled", 0) or 0)
+                if _filled > 0:
+                    _fill_price = float(_final.get("average", _final.get("price", 0)) or 0)
+                    _fee = _fill_price * _filled * 0.0002
+                    logger.warning(
+                        f"[WaitFill] {symbol} PARTIAL FILL {_filled} @ {_fill_price} "
+                        f"— returning partial so SL/TP can be set"
+                    )
+                    return {
+                        "filled": True,
+                        "fill_price": _fill_price,
+                        "fill_qty": _filled,
+                        "fee": _fee,
+                        "partial": True,
+                        "raw_response": _final,
+                    }
+        except Exception as _pe:
+            logger.warning(f"[WaitFill] {symbol} partial fill check failed: {_pe}")
+
         return None
 
     # ── Market Data ──────────────────────────────────────────

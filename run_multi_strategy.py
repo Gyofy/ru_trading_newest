@@ -93,6 +93,8 @@ from src.strategies.position_sizer import PositionSizer
 from src.strategies.strategy_analyzer import StrategyAnalyzer
 from src.strategies.ev_guardian import EVGuardian
 from src.strategies.entry_filters import EntryFilters
+from src.utils.bnb_keeper import BnbKeeper
+from src.utils.fee_scanner import FeeScanner
 
 STRATEGY_MAP = {
     "cvd_spike": CVDSpikeReactor,
@@ -203,6 +205,8 @@ class MultiStrategyBot:
         self.position_sizer: PositionSizer | None = None
         self.ev_guardian: EVGuardian | None = None
         self.entry_filters: EntryFilters | None = None
+        self.bnb_keeper: BnbKeeper | None = None
+        self.fee_scanner: FeeScanner | None = None
         self.strategies: dict[str, object] = {}
 
         # Per-coin cooldown after exit (prevent immediate re-entry)
@@ -480,6 +484,69 @@ class MultiStrategyBot:
             )
             log.info(f"[Recovery] Resuming monitoring for {len(recovered)} recovered positions")
 
+        # ── Fee Optimization: commission check + BnbKeeper + FeeScanner ──────────
+        fee_opt_cfg = self.cfg.get("fee_optimization", {})
+
+        # Commission rate check — 현재 계정의 실제 수수료율 조회 및 Discord 알림
+        if fee_opt_cfg.get("commission_check", {}).get("enabled", True):
+            try:
+                _comm = await self.exchange._exchange.fapiPrivateGetCommissionRate(
+                    {"symbol": "BTCUSDT"}
+                )
+                _maker_rate = float(_comm.get("makerCommissionRate", 0.0002))
+                _taker_rate = float(_comm.get("takerCommissionRate", 0.0005))
+                _discount = (_taker_rate < 0.0005)
+                log.info(
+                    f"[FeeCheck] maker={_maker_rate:.4%} taker={_taker_rate:.4%} "
+                    f"discount={'YES' if _discount else 'NO'}"
+                )
+                discord_post(
+                    f"**Maker:** `{_maker_rate:.4%}` | **Taker:** `{_taker_rate:.4%}`\n"
+                    f"**BNB 할인:** `{'적용 중' if _discount else '미적용 — BNB 잔고 확인 필요'}`",
+                    title="수수료 확인",
+                )
+            except Exception as _ce:
+                log.warning(f"[FeeCheck] commission rate check failed: {_ce}")
+
+        # BnbKeeper 초기화
+        bnb_cfg = fee_opt_cfg.get("bnb_keeper", {})
+        if bnb_cfg.get("enabled", True):
+            self.bnb_keeper = BnbKeeper(
+                exchange=self.exchange,
+                min_bnb_usdt=float(bnb_cfg.get("min_bnb_usdt", 10.0)),
+                check_interval=int(bnb_cfg.get("check_interval_sec", 3600)),
+            )
+            log.info(
+                f"[BnbKeeper] 초기화 완료 "
+                f"(min=${bnb_cfg.get('min_bnb_usdt', 10.0):.2f} USDT)"
+            )
+            # 즉시 1회 체크 (백그라운드 태스크 시작 전)
+            try:
+                _bnb_result = await self.bnb_keeper.check_and_buy()
+                log.info(
+                    f"[BnbKeeper] 초기 체크 완료: "
+                    f"{_bnb_result['bnb_qty']:.4f} BNB "
+                    f"(${_bnb_result['bnb_usdt_value']:.2f})"
+                )
+            except Exception as _be:
+                log.warning(f"[BnbKeeper] 초기 체크 실패: {_be}")
+
+        # FeeScanner 초기화
+        scanner_cfg = fee_opt_cfg.get("fee_scanner", {})
+        if scanner_cfg.get("enabled", True):
+            self.fee_scanner = FeeScanner(
+                exchange=self.exchange,
+                scan_interval=int(scanner_cfg.get("scan_interval_sec", 86400)),
+            )
+            log.info("[FeeScanner] 초기화 완료")
+            # 즉시 1회 스캔
+            try:
+                _zero_fee = await self.fee_scanner.scan()
+                if _zero_fee:
+                    log.info(f"[FeeScanner] ZERO-FEE 페어: {_zero_fee}")
+            except Exception as _se:
+                log.warning(f"[FeeScanner] 초기 스캔 실패: {_se}")
+
         # Discord: system ready notification
         strategy_summary = "\n".join(
             f"• {n}: ${scfg.get('allocation_usdt',0):.0f} / {scfg.get('leverage',2)}x / max {scfg.get('max_positions',1)} pos"
@@ -544,6 +611,18 @@ class MultiStrategyBot:
             self._ev_guardian_loop(), name="ev_guardian"
         ))
 
+        # BNB Keeper — BNB 잔고 자동 유지 (수수료 할인 10% 확보)
+        if self.bnb_keeper is not None:
+            tasks.append(asyncio.create_task(
+                self.bnb_keeper.start_background(), name="bnb_keeper"
+            ))
+
+        # Fee Scanner — 수수료 0원 페어 탐지 (24h 주기)
+        if self.fee_scanner is not None:
+            tasks.append(asyncio.create_task(
+                self.fee_scanner.start_background(), name="fee_scanner"
+            ))
+
         # Wait for shutdown
         tasks.append(asyncio.create_task(
             self._shutdown_event.wait(), name="shutdown_wait"
@@ -592,6 +671,16 @@ class MultiStrategyBot:
                     c for c in self.coins
                     if time.time() - self._coin_cooldowns.get(c, 0) >= self._coin_cooldown_sec
                 ]
+
+                # FeeScanner: zero-fee 페어 우선 로깅 (진입 거부는 하지 않음 — 정보성)
+                if self.fee_scanner is not None and self.fee_scanner.zero_fee_pairs:
+                    _zero_in_active = [
+                        c for c in active_coins if self.fee_scanner.is_zero_fee(c)
+                    ]
+                    if _zero_in_active:
+                        log.info(
+                            f"[{strategy.name}] ZERO-FEE 우선 대상: {_zero_in_active}"
+                        )
 
                 # Evaluate
                 results = await strategy.tick(active_coins)
@@ -1076,9 +1165,18 @@ class MultiStrategyBot:
                     return  # 청산 미확인 시 PnL 기록도 하지 않음
 
         # 수수료 계산 — 단 1회, EVGuardian + 로그 모두 이 값 사용
+        # Entry: Post-Only maker + slip_in  /  Exit: taker + slip_out
+        # FIXED: was `(entry+exit) * (ROUND_TRIP_FEE_RATE / 2)` which divides twice.
+        _fee_maker   = 0.0002   # 0.0200%
+        _fee_taker   = 0.0005   # 0.0500%
+        _fee_slip_in = 0.0003   # 0.030%
+        _fee_slip_out = 0.0005  # 0.050%
         _entry_notional = pos.entry_price * pos.current_qty
         _exit_notional = price * pos.current_qty
-        _fee_usdt = round((_entry_notional + _exit_notional) * (ROUND_TRIP_FEE_RATE / 2), 4)
+        _fee_usdt = round(
+            _entry_notional * (_fee_maker + _fee_slip_in)
+            + _exit_notional * (_fee_taker + _fee_slip_out), 4
+        )
 
         # Record net PnL (gross - fee) so current_equity reflects actual balance
         self.portfolio_risk.record_trade_pnl(strategy, pnl_usdt - _fee_usdt)

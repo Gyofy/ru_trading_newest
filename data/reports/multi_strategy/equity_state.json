@@ -1,18 +1,18 @@
 {
-  "current_equity": 4602.588035,
-  "initial_equity": 4969.37454,
+  "current_equity": 4605.420997,
+  "initial_equity": 4609.465026,
   "restarts": 0,
-  "total_trades": 153,
-  "total_pnl": -457.80868,
-  "last_updated": "2026-03-28T15:56:59.584203+00:00",
-  "session_trades": 20,
-  "session_pnl": -366.7865,
+  "total_trades": 169,
+  "total_pnl": -465.33538,
+  "last_updated": "2026-03-29T07:20:07.459111+00:00",
+  "session_trades": 1,
+  "session_pnl": -4.044,
   "daily_state": {
-    "date": "2026-03-28",
-    "day_start_equity": 5000.0,
+    "date": "2026-03-29",
+    "day_start_equity": 4590.163897,
     "strategy_pnl": {
-      "asymmetric_sniper": -284.363835,
-      "liquidation_fade": -113.04813
+      "liquidation_fade": 8.94142,
+      "asymmetric_sniper": -4.044029
     }
   }
 }

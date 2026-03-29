@@ -1,28 +1,47 @@
 {
-  "ts": "2026-03-28T15:27:26.184283+00:00",
-  "fee_budget_daily": 496937.454,
-  "daily_fee_total": 313.2364,
-  "daily_fee_pct_used": 0.06,
+  "ts": "2026-03-29T07:10:26.236257+00:00",
+  "fee_budget_daily": 460946.5026,
+  "daily_fee_total": 8.0966,
+  "daily_fee_pct_used": 0.0,
   "fee_budget_exceeded": false,
   "daily_fees_by_strategy": {
-    "asymmetric_sniper": 259.1689,
-    "liquidation_fade": 54.0675
+    "asymmetric_sniper": 8.0966
   },
   "strategies": {
-    "asymmetric_sniper": {
-      "ev": -0.001849,
-      "suspended": true,
-      "n_trades": 12,
+    "momentum_breakout": {
+      "ev": 0.0,
+      "suspended": false,
+      "n_trades": 7,
       "tp_hit_rate": 0.0,
       "avg_tp_pct": 0.0,
-      "avg_sl_pct": 0.000795,
-      "avg_fee_drag_pct": 0.0018,
-      "reason": "ev=-0.1849%_below_threshold"
+      "avg_sl_pct": 0.0,
+      "avg_fee_drag_pct": 0.0,
+      "reason": "insufficient_data"
+    },
+    "cvd_spike": {
+      "ev": 0.0,
+      "suspended": false,
+      "n_trades": 66,
+      "tp_hit_rate": 0.0,
+      "avg_tp_pct": 0.0,
+      "avg_sl_pct": 0.0,
+      "avg_fee_drag_pct": 0.0,
+      "reason": "insufficient_data"
+    },
+    "asymmetric_sniper": {
+      "ev": 0.0,
+      "suspended": false,
+      "n_trades": 33,
+      "tp_hit_rate": 0.0,
+      "avg_tp_pct": 0.0,
+      "avg_sl_pct": 0.0,
+      "avg_fee_drag_pct": 0.0,
+      "reason": "insufficient_data"
     },
     "liquidation_fade": {
       "ev": 0.0,
       "suspended": false,
-      "n_trades": 8,
+      "n_trades": 28,
       "tp_hit_rate": 0.0,
       "avg_tp_pct": 0.0,
       "avg_sl_pct": 0.0,

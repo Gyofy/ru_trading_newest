@@ -159,3 +159,16 @@ ev_guardian:
   # 기본값 -0.15% (EV_THRESHOLD) 대신 매우 낮은 값으로 설정해 전략이 차단되지 않게 함
   ev_threshold: -1.0    # -100% → F1_EV 차단 비활성화 (데이터 수집 모드)
   ev_min_sample: 9999   # 충분한 샘플 수 없으면 EV 판단 안 함
+
+fee_optimization:
+  bnb_keeper:
+    enabled: true
+    min_bnb_usdt: 10.0        # BNB 잔고 최소값 (USDT 기준) — 미만이면 시장가 매수
+    check_interval_sec: 3600  # 1시간마다 체크
+  fee_scanner:
+    enabled: true
+    scan_interval_sec: 86400  # 24시간마다 스캔 (Binance API rate limit 고려)
+  spread_filter:
+    max_entry_spread_bps: 8.0  # 진입 시 최대 허용 스프레드 (8bps = 0.08%)
+  commission_check:
+    enabled: true              # 시작 시 수수료율 확인 및 Discord 알림

@@ -202,6 +202,32 @@ class StrategyBase(ABC):
                     )
                 return None
 
+        # Spread filter: block entry when bid-ask spread is too wide.
+        # Wide spread means immediate adverse fill + higher effective taker cost.
+        # Threshold: 8bps — futures spreads should be well below this for liquid pairs.
+        # Note: testnet spreads are often 0 (bid/ask not provided) → only filter when > 0.
+        _MAX_ENTRY_SPREAD_BPS = 8.0  # 8bps = 0.08%
+        _entry_spread_bps = ticker.get("spread_bps", 0) if ticker else 0
+        if _entry_spread_bps is None:
+            _entry_spread_bps = 0
+        _entry_spread_bps = float(_entry_spread_bps)
+        if _entry_spread_bps > _MAX_ENTRY_SPREAD_BPS and _entry_spread_bps > 0:
+            self._log.warning(
+                f"[SpreadFilter] {coin} spread {_entry_spread_bps:.1f}bps "
+                f"> {_MAX_ENTRY_SPREAD_BPS}bps — 진입 거부"
+            )
+            if self.trade_logger:
+                self.trade_logger.record_rejection(
+                    strategy=self.name,
+                    coin=coin,
+                    reject_reason=f"spread_too_wide:{_entry_spread_bps:.1f}bps",
+                    signal_strength=signal.strength,
+                    signal_confidence=signal.confidence,
+                    atr=atr,
+                    price=price,
+                )
+            return None
+
         # Apply per-coin adaptive params — pass as argument, never mutate self.config.extra.
         effective_extra = (
             self.coin_profiles.get_params(coin, self.config.extra)
@@ -621,7 +647,15 @@ class StrategyBase(ABC):
             price=maker_price, order_link_id=order_id,
         )
         if not result.get("success"):
-            return {"success": False, "error": result.get("error", "post-only failed")}
+            _err = result.get("error", "post-only failed")
+            # -1021 time drift: resync and surface the error (will retry next cycle)
+            if "-1021" in str(_err) or "ahead of the server" in str(_err):
+                self._log.warning(f"[Entry] {coin} -1021 time drift on entry — resyncing clock")
+                try:
+                    await self.exchange._exchange.load_time_difference()
+                except Exception:
+                    pass
+            return {"success": False, "error": _err}
 
         fill = await self.exchange.wait_fill_or_cancel(
             symbol=coin, order_link_id=order_id,
@@ -629,6 +663,12 @@ class StrategyBase(ABC):
         )
         if not fill or not fill.get("filled"):
             return {"success": False, "error": "not filled within 20s"}
+
+        if fill.get("partial"):
+            self._log.warning(
+                f"[Entry] {coin} PARTIAL FILL {fill['fill_qty']} @ {fill['fill_price']} "
+                f"— SL/TP will be set for partial qty"
+            )
 
         return {
             "success": True,
