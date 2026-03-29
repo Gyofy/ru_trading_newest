@@ -98,6 +98,7 @@ from src.strategies.position_sizer import PositionSizer
 from src.strategies.strategy_analyzer import StrategyAnalyzer
 from src.strategies.ev_guardian import EVGuardian
 from src.strategies.entry_filters import EntryFilters
+from src.strategies.strategy_solver import StrategySolver
 from src.utils.bnb_keeper import BnbKeeper
 from src.utils.fee_scanner import FeeScanner
 
@@ -624,6 +625,11 @@ class MultiStrategyBot:
         # EV Guardian + Fee Budget evaluation (every 1h)
         tasks.append(asyncio.create_task(
             self._ev_guardian_loop(), name="ev_guardian"
+        ))
+
+        # Strategy Solver — 파라미터 자동 최적화 (every 3h)
+        tasks.append(asyncio.create_task(
+            self._solver_loop(), name="strategy_solver"
         ))
 
         # BNB Keeper — BNB 잔고 자동 유지 (수수료 할인 10% 확보)
@@ -1712,6 +1718,59 @@ class MultiStrategyBot:
 
             try:
                 await asyncio.sleep(3600)  # 1시간마다
+            except asyncio.CancelledError:
+                break
+
+    async def _solver_loop(self) -> None:
+        """3시간마다 전략별 파라미터 자동 최적화.
+
+        trade_context.jsonl의 완결 거래를 분석해서
+        수익 거래를 선택적으로 통과시키는 최적 필터 임계치를 찾고,
+        config.extra를 자동 조정한다. (bounds 내, 1회 1개 파라미터)
+        """
+        await asyncio.sleep(7200)  # 첫 2시간은 데이터 축적 대기
+        solver = StrategySolver(STATE_DIR / "trade_context.jsonl")
+
+        while not self._shutdown_event.is_set():
+            try:
+                changes = []
+                for name, strategy in self.strategies.items():
+                    if not strategy.config.enabled:
+                        continue
+                    try:
+                        loop = asyncio.get_running_loop()
+                        change = await loop.run_in_executor(
+                            None, solver.apply_best, name, strategy.config.extra
+                        )
+                        if change:
+                            changes.append(change)
+                    except Exception as e:
+                        log.warning(f"[Solver] {name} error: {e}")
+
+                if changes:
+                    lines = []
+                    for c in changes:
+                        lines.append(
+                            f"**{c['strategy']}**: `{c['config_key']}` "
+                            f"`{c['old_value']}` → `{c['new_value']}` "
+                            f"(WR +{c['expected_wr_improvement']:.1%}, "
+                            f"n={c['n_trades']})"
+                        )
+                    discord_post(
+                        "\n".join(lines),
+                        title="🔧 Solver — 파라미터 자동 조정",
+                    )
+                    log.info(f"[Solver] {len(changes)} parameter(s) adjusted")
+                else:
+                    log.info("[Solver] No improvements found (all strategies stable)")
+
+            except asyncio.CancelledError:
+                break
+            except Exception as e:
+                log.error(f"[Solver] loop error: {e}", exc_info=True)
+
+            try:
+                await asyncio.sleep(10800)  # 3시간마다
             except asyncio.CancelledError:
                 break
 
