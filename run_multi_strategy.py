@@ -264,6 +264,33 @@ class MultiStrategyBot:
                     secret=testnet_secret,
                 )
             await self.exchange.initialize()
+            # Demo 모드: 실제 거래소 잔고를 가져와 내부 equity와 동기화
+            # exchange_adapter.fetch_balance()는 {"total": X, "free": X, "used": X} 반환
+            try:
+                _real_bal = await self.exchange.fetch_balance()
+                _real_usdt = float(_real_bal.get("total", 0) or 0)
+                if _real_usdt > 0:
+                    _delta = abs(_real_usdt - self.initial_equity)
+                    if _delta > 10:  # $10 이상 차이 시 동기화
+                        log.warning(
+                            f"[BalanceSync] 내부equity=${self.initial_equity:.2f} vs 거래소USDT=${_real_usdt:.2f} "
+                            f"(차이=${_delta:.2f}) → 거래소 잔고로 동기화"
+                        )
+                        self.initial_equity = _real_usdt
+                    else:
+                        log.info(f"[BalanceSync] 잔고 일치 — equity=${_real_usdt:.2f}")
+            except Exception as _e:
+                log.warning(f"[BalanceSync] 잔고 동기화 실패: {_e}")
+            # Ghost 포지션은 pos_manager 초기화 후에 정리 (아래 _ghost_positions_raw에 저장)
+            _ghost_positions_raw = []
+            try:
+                _exch_positions = await self.exchange._exchange.fetch_positions()
+                _ghost_positions_raw = [
+                    p for p in _exch_positions
+                    if abs(float(p.get("contracts", 0) or 0)) > 0
+                ]
+            except Exception as _e:
+                log.warning(f"[GhostClean] ghost 포지션 사전 수집 실패: {_e}")
             log.info(f"Demo/testnet mode: virtual funds, real orders on testnet | equity=${self.initial_equity:.2f}")
         else:
             # Paper mode — use live exchange for market data only (no orders)
@@ -278,6 +305,38 @@ class MultiStrategyBot:
         # Shared infrastructure
         self.ledger = OrderLedger(STATE_DIR / "orders.db")
         self.pos_manager = MultiPositionManager(STATE_DIR / "positions.json")
+
+        # Ghost 포지션 정리: pos_manager 로드 후 교차 검증
+        if hasattr(self, "_ghost_positions_raw") and self._ghost_positions_raw:
+            _ghost = [
+                p for p in self._ghost_positions_raw
+                if not self.pos_manager.has_coin_any_strategy(p.get("symbol", "").split("/")[0])
+            ]
+            if _ghost:
+                log.warning(f"[GhostClean] ghost 포지션 {len(_ghost)}개 — 자동 청산")
+                _ghost_lines = []
+                for _gp in _ghost:
+                    _gsym = _gp["symbol"]
+                    _gside = _gp["side"]
+                    _gqty = abs(float(_gp.get("contracts", 0)))
+                    _gmargin = round(float(_gp.get("initialMargin", 0) or 0), 2)
+                    _gclose = "sell" if _gside == "long" else "buy"
+                    try:
+                        await self.exchange._exchange.create_order(
+                            _gsym, "market", _gclose, _gqty, params={"reduceOnly": True}
+                        )
+                        log.info(f"[GhostClean] {_gsym} {_gside} qty={_gqty} margin=${_gmargin} ✅")
+                        _ghost_lines.append(f"• `{_gsym}` {_gside} margin=`${_gmargin}` ✅")
+                    except Exception as _ge:
+                        log.error(f"[GhostClean] {_gsym} 청산 실패: {_ge}")
+                        _ghost_lines.append(f"• `{_gsym}` {_gside} ❌")
+                discord_post(
+                    f"**{len(_ghost)}개 ghost 포지션 자동 청산**\n" + "\n".join(_ghost_lines),
+                    title="🧹 Ghost 포지션 정리",
+                )
+            else:
+                log.info("[GhostClean] ghost 포지션 없음 — 거래소/로컬 일치")
+
         self.data_hub = DataHub(self.exchange, executor=self._executor)
         self.trade_logger = TradeLogger(STATE_DIR)
         ev_cfg = self.cfg.get("ev_guardian", {})
@@ -558,7 +617,8 @@ class MultiStrategyBot:
                             portfolio_snap = await self._build_portfolio_snapshot(
                                 event_coin=coin_r, event_side=side
                             )
-                        except Exception:
+                        except Exception as _snap_err:
+                            log.warning(f"[Discord] portfolio snapshot 실패: {_snap_err}", exc_info=True)
                             portfolio_snap = "(포트폴리오 조회 실패)"
                         tp_label = "trailing" if trail_r else f"`{tp_r:.4f}`"
                         discord_post(
