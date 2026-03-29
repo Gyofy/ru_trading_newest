@@ -162,8 +162,8 @@ ev_guardian:
 
 fee_optimization:
   bnb_keeper:
-    enabled: true
-    min_bnb_usdt: 10.0        # BNB 잔고 최소값 (USDT 기준) — 미만이면 시장가 매수
+    enabled: false            # 비활성화: Futures 계좌에서 매수 시 BNB 선물 포지션 생성됨
+    min_bnb_usdt: 10.0        # BNB 잔고 최소값 (USDT 기준) — Spot 지갑에서 수동 유지 필요
     check_interval_sec: 3600  # 1시간마다 체크
   fee_scanner:
     enabled: true

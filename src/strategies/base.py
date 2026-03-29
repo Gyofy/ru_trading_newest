@@ -430,6 +430,7 @@ class StrategyBase(ABC):
                 await asyncio.sleep(_sl_init_wait)
 
                 # ── SL: 5-retry with 1s delay ──
+                # -4130 (duplicate closePosition order) → 기존 같은 방향 SL 취소 후 재시도
                 sl_result = {"success": False}
                 for attempt in range(5):
                     if attempt > 0:
@@ -450,6 +451,28 @@ class StrategyBase(ABC):
                             + (f" (retry {attempt})" if attempt > 0 else "")
                         )
                         break
+                    # -4130: 기존 SL이 이미 있음 → 취소 후 재시도
+                    _err = str(sl_result.get("error", ""))
+                    if "-4130" in _err or "GTE" in _err:
+                        self._log.warning(
+                            f"[{coin}] SL -4130 (duplicate) — 기존 SL 주문 취소 후 재시도"
+                        )
+                        try:
+                            _ccxt_sym = self.exchange._ccxt_symbol(coin)
+                            _open_orders = await self.exchange._exchange.fetch_open_orders(_ccxt_sym)
+                            for _ord in _open_orders:
+                                _ord_type = (_ord.get("type") or "").lower()
+                                _ord_side = (_ord.get("side") or "").lower()
+                                if "stop" in _ord_type and _ord_side == sl_side.lower():
+                                    try:
+                                        await self.exchange._exchange.cancel_order(
+                                            _ord["id"], _ccxt_sym
+                                        )
+                                        self._log.info(f"[{coin}] 기존 SL 취소: {_ord['id']}")
+                                    except Exception:
+                                        pass
+                        except Exception as _ce:
+                            self._log.warning(f"[{coin}] 기존 SL 조회/취소 실패: {_ce}")
 
                 if not sl_result.get("success"):
                     # SL 등록 완전 실패 → 포지션 즉시 강제 청산 (SL 없는 포지션 금지)
