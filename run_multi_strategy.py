@@ -1722,14 +1722,21 @@ class MultiStrategyBot:
                 break
 
     async def _solver_loop(self) -> None:
-        """3시간마다 전략별 파라미터 자동 최적화.
+        """3시간마다 전략별 파라미터 자동 최적화 (v2).
 
-        trade_context.jsonl의 완결 거래를 분석해서
-        수익 거래를 선택적으로 통과시키는 최적 필터 임계치를 찾고,
-        config.extra를 자동 조정한다. (bounds 내, 1회 1개 파라미터)
+        trade_context.jsonl의 완결 거래를 temporal train/test split으로 분석해서
+        test-set에서도 양수 EV를 보이는 최적 필터 임계치를 찾고,
+        config.extra를 자동 조정한다. (tighter-only, ±15%, 1회 1파라미터)
         """
         await asyncio.sleep(7200)  # 첫 2시간은 데이터 축적 대기
-        solver = StrategySolver(STATE_DIR / "trade_context.jsonl")
+        solver = StrategySolver(
+            STATE_DIR / "trade_context.jsonl",
+            persist_path=STATE_DIR / "solver_state.json",
+        )
+        # Restore previous adjustments (재시작 시 YAML 기본값 → 솔버 조정값 복원)
+        n_restored = solver.restore_adjustments(self.strategies)
+        if n_restored:
+            log.info(f"[Solver] Restored {n_restored} parameter(s) from previous session")
 
         while not self._shutdown_event.is_set():
             try:
@@ -1737,6 +1744,12 @@ class MultiStrategyBot:
                 for name, strategy in self.strategies.items():
                     if not strategy.config.enabled:
                         continue
+                    # Skip EVGuardian-suspended strategies (v2: 충돌 방지)
+                    if self.ev_guardian:
+                        allowed, reason = self.ev_guardian.check_entry_allowed(name)
+                        if not allowed:
+                            log.debug(f"[Solver] {name} skipped — {reason}")
+                            continue
                     try:
                         loop = asyncio.get_running_loop()
                         change = await loop.run_in_executor(
@@ -1753,12 +1766,13 @@ class MultiStrategyBot:
                         lines.append(
                             f"**{c['strategy']}**: `{c['config_key']}` "
                             f"`{c['old_value']}` → `{c['new_value']}` "
-                            f"(WR +{c['expected_wr_improvement']:.1%}, "
-                            f"n={c['n_trades']})"
+                            f"(train WR +{c['expected_wr_improvement']:.1%}, "
+                            f"test EV {c.get('test_ev', 0):.4%}, "
+                            f"n={c['n_trades']} [{c.get('n_train', 0)}/{c.get('n_test', 0)}])"
                         )
                     discord_post(
                         "\n".join(lines),
-                        title="🔧 Solver — 파라미터 자동 조정",
+                        title="🔧 Solver v2 — 파라미터 자동 조정 (train/test validated)",
                     )
                     log.info(f"[Solver] {len(changes)} parameter(s) adjusted")
                 else:
