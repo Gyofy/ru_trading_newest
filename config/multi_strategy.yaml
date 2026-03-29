@@ -1,4 +1,4 @@
-version: "v8.7-demo"
+version: "v9.0-cvd-extreme"
 mode: "demo"  # paper | demo (testnet) | live
 initial_equity: 5000.0
 daily_loss_limit: 0.20  # -20%
@@ -6,13 +6,11 @@ daily_loss_limit: 0.20  # -20%
 coins:  # fallback list (used when dynamic_coins disabled or fetch fails)
   - XRP
   - SOL
-  - TAO
   - DOGE
   - ADA
   - DOT
   - AVAX
   - BNB
-  - LINK
 
 dynamic_coins:
   enabled: true
@@ -31,116 +29,183 @@ dynamic_coins:
     - BNB
     - DOT
     - AVAX
-    - LINK
     - OP
     - ARB
     - SUI
-    # TAO, APT 제외: testnet에서 유동성 부족으로 WaitFill timeout 반복 (실측)
   exclude_coins:                 # 동적 풀에서도 완전 제외
     - APT
     - TAO
     - BTC
-    - LINK
+    - LINK    # 10건 전패 (WR 0%, -$118) — 데이터 축적 후 재평가
 
 portfolio:
-  total_exposure_pct: 6.0        # 600% — 레버리지 감소분 보상: 더 많은 동시 포지션 허용
-  same_direction_max: 12         # 8→12: 동방향 포지션 한도 확대
-  daily_loss_pct: 0.20           # 일일 손실 한도 완화 (가상거래)
+  total_exposure_pct: 4.0        # 400% — 2전략 체제, 보수적
+  same_direction_max: 8          # 8개 동방향 한도
+  daily_loss_pct: 0.20           # 일일 손실 한도
   strategy_loss_pct: 0.40
   min_notional_usdt: 5.0
   max_funding_rate: 0.003
 
 position_sizing:
-  risk_pct_per_trade: 0.20       # 15%→20%: 레버리지 감소 보상 (5x×20% ≈ 8x×15%)
+  risk_pct_per_trade: 0.15       # 15% per trade
   vol_adjust_enabled: true
   spread_adjust_enabled: false   # testnet 스프레드 패널티 제거
   confidence_adjust_enabled: true
-  min_factor: 0.7                # 최소 포지션 크기
-  max_factor: 4.0                # 3.0→4.0: 고신뢰 신호 시 더 큰 포지션 허용
+  min_factor: 0.7
+  max_factor: 3.0
+
+  # ══════════════════════════════════════════════════════════════
+  # 수수료 기준: Binance USDM VIP 0
+  #   Entry(Post-Only maker): 0.02%  |  Exit(taker SL/TP): 0.05%
+  #   Slippage: entry 0.03% + exit 0.05%
+  #   왕복 = 0.02% + 0.05% + 0.03% + 0.05% = 0.15% of NOTIONAL
+  #   수수료는 NOTIONAL(=qty×price)에 부과, 마진이 아님!
+  #   → 레버리지가 높을수록 자본 대비 수수료 부담 증가
+  #      3x: 0.15%×3 = 0.45%/자본, 5x: 0.75%/자본
+  # 균등 배분: $1,500 × 6전략 = $9,000 (demo $5,000 대비 180%)
+  # ══════════════════════════════════════════════════════════════
 
 strategies:
-  cvd_spike:
+  # ── 1. CVD Extreme — CVD Q92+Z1.5σ 역추세 (빈도 2×) ──
+  # edge: 극단 orderflow 소진 후 되돌림. MFE>|MAE| 49% (neutral→필터 개선 필요)
+  # fee: SL 0.50%+, fee 0.15% = fee/SL=30%. R:R 2.5:1. break-even WR=36%
+  cvd_extreme:
     enabled: true
-    allocation_usdt: 9000.0          # ×2: 수량 2배 증가
-    leverage: 6                      # +1: 5→6
+    allocation_usdt: 1500.0
+    leverage: 3
     cycle_seconds: 60
-    max_positions: 15                # 10→15: 동시 포지션 한도 확대
-    sl_atr_mult: 5.0                 # 3.0→5.0: ATR 저변동성에서 SL too tight 방지
+    max_positions: 8
+    sl_atr_mult: 2.0
     extra:
-      cvd_quantile: 0.92             # 0.97→0.92: 신호 생성 빈도 증가
-      ofi_quantile: 0.92             # 0.97→0.92: 신호 생성 빈도 증가
+      cvd_quantile: 0.92           # Q95→Q92 (빈도 2×)
+      cvd_sigma_mult: 1.5          # Z2.0→Z1.5 (빈도 2×)
       cvd_roll_window: 240
-      trailing_atr_mult: 0.7          # 2.0→0.7: mfe/trail=0.37 실측 기반 축소
-      tp_rr_ratio: 3.0
-      volume_spike_mult: 1.5         # 2.0→1.5: 볼륨 조건 완화
-      oi_decline_pct: -0.2           # -0.5→-0.2: OI 하락 조건 완화
+      volume_spike_mult: 1.2       # 1.5→1.2 (빈도 확대)
+      tp_rr: 2.5
+      max_daily_trades: 30         # 10→30 (데이터 수집)
+      cooldown_sec: 120            # 3분→2분
 
+  # ── 2. Cascade Fade — OI급감 + 거래량 스파이크 반전 (빈도 2×) ──
+  # edge: 강제 청산 후 반등. WR 57%, PF 1.28 (35건). MFE>|MAE| 60% (최고)
+  # fee: SL 0.38%, fee 0.15% = fee/SL=39%. R:R~2:1. break-even WR=44%
   liquidation_fade:
     enabled: true
-    allocation_usdt: 4500.0          # ×2: 수량 2배 증가
-    leverage: 5                      # +1: 4→5
+    allocation_usdt: 1500.0
+    leverage: 3                    # 5x→3x (fee/capital 절감: 0.75%→0.45%)
     cycle_seconds: 60
-    max_positions: 10                # 6→10: 동시 포지션 한도 확대
-    sl_atr_mult: 3.5                 # 2.5→3.5: 수수료 극복 위해 SL 넓힘
+    max_positions: 8
+    sl_atr_mult: 2.5               # 3.5→2.5 (빈도 확대, SL floor 0.40%가 보호)
     extra:
-      oi_sigma_threshold: 1.2
-      taker_spike_mult: 1.2
+      oi_sigma_threshold: 0.8      # 1.2→0.8 (빈도 2×)
+      taker_spike_mult: 1.0        # 1.2→1.0 (빈도 2×)
       swing_lookback: 24
-      tp_atr_mult: 7.5
+      tp_atr_mult: 5.0             # 7.5→5.0 (TP 도달률 향상)
 
-  momentum_breakout:
-    enabled: false
-    allocation_usdt: 4500.0          # ×2: 수량 2배 증가
-    leverage: 6                      # +1: 5→6
+  # ── 3. VWAP Exhaustion — VWAP 이탈 + 거래량 감소 = 소진 복귀 ──
+  # edge: VWAP mean reversion + volume exhaustion 필터. TP=VWAP(물리적 타겟)
+  # fee: SL 0.50%, fee 0.15% = fee/SL=30%. R:R 2:1. break-even WR=41%
+  vwap_reversion:
+    enabled: true
+    allocation_usdt: 1500.0
+    leverage: 3
     cycle_seconds: 60
     max_positions: 6
     sl_atr_mult: 2.0
     extra:
-      volume_mult_threshold: 1.8
-      range_lookback_hours: 12
-      trailing_atr_mult: 0.7          # 2.0→0.7: mfe/trail=0.37 실측 기반 축소
-      tp_rr_ratio: 3.0
-      leverage_base: 6               # +1: 5→6
-      leverage_confirmed: 6          # +1: 5→6
-      min_move_pct: 0.003
+      vwap_window: 60
+      sigma_mult: 1.5              # 2.0→1.5 (빈도 2×)
+      vol_decay_threshold: 0.8     # 0.7→0.8 (완화, 빈도 2×)
+      tp_rr: 2.0
 
-  asymmetric_sniper:
+  # ── 4. MTF Momentum — 1m+15m+1h 추세 정렬 추종 (funding_arb 교체) ──
+  # edge: 다중 시간프레임 합의 = 가장 오래 검증된 추세 추종 edge
+  # fee: SL 0.50%, fee 0.15% = fee/SL=30%. R:R 3:1. break-even WR=30%
+  # note: 추세추종은 WR 낮지만 R:R로 보상. 크립토 momentum factor 학술 검증됨.
+  funding_arb:
     enabled: true
-    allocation_usdt: 9000.0          # ×2: 수량 2배 증가
-    leverage: 5                      # 8→5: 수수료 극복 위해 레버리지 축소
+    allocation_usdt: 1500.0
+    leverage: 3
     cycle_seconds: 60
-    max_positions: 10                # 6→10: 동시 포지션 한도 확대
-    sl_atr_mult: 2.5                 # 1.0→2.5: 수수료(0.18%) 극복 위해 SL 넓힘
+    max_positions: 6
+    sl_atr_mult: 2.0
     extra:
-      risk_per_trade_usdt: 300.0     # 200→300: 레버리지 감소 보상 (거래당 리스크 증가)
-      rr_minimum: 3.0
-      cvd_quantile: 0.90             # 0.92→0.90: 신호 빈도 소폭 증가
-      cvd_sigma_mult: 1.8            # 2.0→1.8: 품질 유지하면서 신호 빈도 균형
-      cvd_roll_window: 240
-      funding_threshold: 0.0001
-      funding_filter_enabled: false
-      funding_skip_on_null: false
-      rr_check_enabled: false
-      cooldown_bars: 3               # 5→3: 쿨다운 단축 (더 빠른 재진입)
-      max_daily_trades: 40           # 20→40: 일일 거래 한도 2배 증가
-      trailing_atr_mult_initial: 0.8    # 2.0→0.8: mfe/trail=0.37 실측 기반 축소
-      trailing_atr_mult_tight: 0.4      # 1.0→0.4: profit tighten 구간 강화
-      profit_tighten_threshold_atr: 0.8  # 1.5→0.8: 더 일찍 tighten 시작
+      fast_ema: 8
+      slow_ema: 21
+      min_body_pct: 0.001          # 0.1% 최소 봉 크기 (느슨)
+      tp_rr: 3.0
+
+  # ── 5. Volume Impulse — 거래량 3x 폭증 + 방향 추종 (빈도 2×) ──
+  # edge: 극단 거래량 = 큰 참여자 방향성. SL=impulse bar 반대쪽(자연 invalidation)
+  # fee: SL 0.50%, fee 0.15% = fee/SL=30%. R:R 3:1. break-even WR=30%
+  volume_impulse:
+    enabled: true
+    allocation_usdt: 1500.0
+    leverage: 3
+    cycle_seconds: 60
+    max_positions: 6
+    sl_atr_mult: 2.0
+    extra:
+      volume_mult: 3.0             # 5.0→3.0 (빈도 2×)
+      min_body_pct: 0.002          # 0.3%→0.2% (빈도 2×)
+      lookback: 50
+      tp_rr: 3.0
+
+  # ── 6. OI Divergence — 가격-OI 괴리 4패턴 (빈도 2×) ──
+  # edge: 구조적 포지션 불균형(숏커버/롱청산/신규유입). 물리적 시장 메커니즘.
+  # fee: SL 0.50%, fee 0.15% = fee/SL=30%. R:R 2.5:1. break-even WR=35%
+  # note: 4가지 trigger 패턴 분리 로깅 → 어떤 패턴이 양수 EV인지 비교
+  oi_divergence:
+    enabled: true
+    allocation_usdt: 1500.0
+    leverage: 3
+    cycle_seconds: 120             # 5분→2분 (빈도 2×, OI는 5분 업데이트지만 빠른 감지)
+    max_positions: 6
+    sl_atr_mult: 2.5
+    extra:
+      price_lookback: 12
+      min_price_move_pct: 0.002    # 0.3%→0.2% (빈도 2×)
+      oi_change_threshold: 0.003   # 0.5%→0.3% (빈도 2×)
+      tp_rr: 2.5
+
+  # ── 비활성 (v8.x 레거시) ──
+  momentum_breakout:
+    enabled: false
+    allocation_usdt: 0
+    leverage: 1
+    cycle_seconds: 60
+    max_positions: 0
+    sl_atr_mult: 2.0
+    extra: {}
+  cvd_spike:
+    enabled: false
+    allocation_usdt: 0
+    leverage: 1
+    cycle_seconds: 60
+    max_positions: 0
+    sl_atr_mult: 3.0
+    extra: {}
+  asymmetric_sniper:
+    enabled: false
+    allocation_usdt: 0
+    leverage: 1
+    cycle_seconds: 60
+    max_positions: 0
+    sl_atr_mult: 2.5
+    extra: {}
 
 monitoring:
   sl_tp_poll_seconds: 15
   heartbeat_seconds: 60
 
 exchange:
-  maker_fee: 0.0002      # 0.0200% — Binance USDM VIP 0 Maker (Post-Only)
-  taker_fee: 0.0005      # 0.0500% — Binance USDM VIP 0 Taker (수정: 0.00055→0.0005)
+  maker_fee: 0.0002      # 0.0200% — Binance USDM VIP 0 Maker
+  taker_fee: 0.0005      # 0.0500% — Binance USDM VIP 0 Taker
   slippage_entry: 0.0003
   slippage_exit: 0.0005
-  liquidation_fee: 0.005 # 0.5000% — 강제 청산 시 별도 부과 (일반 거래 수수료와 별개)
+  liquidation_fee: 0.005 # 0.5000% — 강제 청산 시
 
 multiprocessing:
-  workers: 10  # 80% of 12 cores (auto-detected at runtime, this is fallback)
-
+  workers: 10
 
 entry_filters:
   vpin_filter_enabled: true
@@ -149,16 +214,12 @@ entry_filters:
   blacklist_sl_count: 2
   blacklist_window_sec: 86400
   atr_regime_enabled: true
-  atr_min_percentile: 10             # 20→10: ATR 레짐 필터 완화
+  atr_min_percentile: 15          # 10→15: 저변동성 차단 강화
 
 ev_guardian:
-  # F5: 일일 수수료 예산 — 데이터 수집 모드: 수익이 나면 cap 불필요.
-  # 잔고가 0원이 될때까지 진행하는 데이터 수집 목적이므로 사실상 무제한.
-  fee_budget_pct: 100.0  # 사실상 비활성화 ($5000 × 100 = $500,000/day cap)
-  # F1: EV 차단 임계값 — 데이터 수집 모드: -100% 로 설정 (사실상 비활성화)
-  # 기본값 -0.15% (EV_THRESHOLD) 대신 매우 낮은 값으로 설정해 전략이 차단되지 않게 함
-  ev_threshold: -1.0    # -100% → F1_EV 차단 비활성화 (데이터 수집 모드)
-  ev_min_sample: 9999   # 충분한 샘플 수 없으면 EV 판단 안 함
+  fee_budget_pct: 100.0  # 수수료 예산: 사실상 무제한 (demo)
+  ev_threshold: -0.001   # EV < -0.10% → 전략 자동 차단 (v9.0: 활성화)
+  ev_min_sample: 30      # 30건 이상 데이터 있어야 EV 판단 (50건 checkpoint 전 선행 경고)
 
 fee_optimization:
   bnb_keeper:
@@ -167,8 +228,8 @@ fee_optimization:
     check_interval_sec: 3600  # 1시간마다 체크
   fee_scanner:
     enabled: true
-    scan_interval_sec: 86400  # 24시간마다 스캔 (Binance API rate limit 고려)
+    scan_interval_sec: 86400
   spread_filter:
-    max_entry_spread_bps: 8.0  # 진입 시 최대 허용 스프레드 (8bps = 0.08%)
+    max_entry_spread_bps: 8.0
   commission_check:
-    enabled: true              # 시작 시 수수료율 확인 및 Discord 알림
+    enabled: true

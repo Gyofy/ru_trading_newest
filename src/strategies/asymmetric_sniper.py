@@ -278,11 +278,13 @@ class AsymmetricSniper(StrategyBase):
         sl_price, tp_price = self.compute_barriers(signal, atr, price, extra=effective_extra)
         sl_dist = abs(price - sl_price)
 
-        min_sl_dist = price * ROUND_TRIP_FEE_RATE
+        # SL floor: consistent with base.py — max(2.5× fee, 0.40%)
+        SL_FLOOR_PCT = 0.004
+        SL_FEE_MULT = 2.5
+        min_sl_dist = max(price * ROUND_TRIP_FEE_RATE * SL_FEE_MULT, price * SL_FLOOR_PCT)
         if sl_dist < min_sl_dist:
             self._log.warning(
-                f"[{coin}] SL too tight: {sl_dist:.6f} < fee_threshold {min_sl_dist:.6f} "
-                f"({ROUND_TRIP_FEE_RATE:.3%}) — skip"
+                f"[{coin}] SL too tight: {sl_dist/price:.4%} < floor {min_sl_dist/price:.4%} — skip"
             )
             return None
 

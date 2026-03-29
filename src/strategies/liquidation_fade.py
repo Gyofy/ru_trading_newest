@@ -77,19 +77,14 @@ class LiquidationFade(StrategyBase):
 
         Returns (direction, oi_drop_sigma, taker_ratio) or None.
         """
-        # Get OHLCV for volume analysis
-        # Note: OI history requires paid API; cascade detection uses volume+price proxy instead.
         df = await self.data_hub.get_ohlcv(coin, "5m", limit=100)
         if df is None or len(df) < 50:
             return None
 
-        # OI change detection via price/volume proxy
-        # (Real OI history requires separate API call — use volume drop as proxy)
-        # When OI drops sharply, volume spikes with price moving in one direction
         vol = df["volume"].values
         close = df["close"].values
 
-        # Recent volume spike
+        # Volume spike check
         avg_vol = np.mean(vol[-50:-1])
         current_vol = vol[-1]
         taker_ratio = current_vol / avg_vol if avg_vol > 0 else 0
@@ -97,18 +92,32 @@ class LiquidationFade(StrategyBase):
         if taker_ratio < taker_mult:
             return None
 
-        # Price direction in last few bars (cascade direction)
+        # Price direction in last few bars
         recent_return = (close[-1] / close[-6] - 1) if close[-6] > 0 else 0
 
-        # Large volume + sharp price drop = long liquidation cascade → go LONG
-        # Large volume + sharp price rise = short liquidation cascade → go SHORT
-        min_move = self.config.extra.get("min_move_pct", 0.005)  # default 0.5%
-
+        min_move = self.config.extra.get("min_move_pct", 0.005)
         if abs(recent_return) < min_move:
             return None
 
-        # Estimate OI drop severity from volume spike
-        oi_drop_est = taker_ratio * abs(recent_return) * 100  # pseudo-sigma
+        # ── Real OI check (preferred) with volume×price proxy fallback ──
+        oi_drop_est = 0.0
+        try:
+            oi = await self.data_hub.get_open_interest(coin)
+            if oi is not None and oi > 0:
+                if not hasattr(self, '_oi_cache'):
+                    self._oi_cache = {}
+                prev_oi = self._oi_cache.get(coin, oi)
+                oi_change_pct = (oi - prev_oi) / prev_oi if prev_oi > 0 else 0
+                self._oi_cache[coin] = oi
+                # Real OI declining = actual forced exits
+                if oi_change_pct < -0.001:  # OI dropped at least 0.1%
+                    oi_drop_est = abs(oi_change_pct) * 100 * taker_ratio  # amplified by volume
+                else:
+                    oi_drop_est = taker_ratio * abs(recent_return) * 100  # proxy fallback
+            else:
+                oi_drop_est = taker_ratio * abs(recent_return) * 100  # proxy
+        except Exception:
+            oi_drop_est = taker_ratio * abs(recent_return) * 100  # proxy on error
 
         if oi_drop_est < oi_sigma:
             return None
@@ -123,13 +132,15 @@ class LiquidationFade(StrategyBase):
     def compute_barriers(
         self, signal: Signal, atr: float, price: float, extra: dict | None = None
     ) -> tuple[float, float]:
-        """SL = swing high/low (approximated as 2.5×ATR), TP = VWAP target."""
+        """SL/TP based on 5m ATR (scaled from 1m ATR passed by base._try_execute)."""
         cfg = extra if extra is not None else self.config.extra
         sl_mult = cfg.get("sl_atr_mult", 2.5)
         tp_mult = cfg.get("tp_atr_mult", 2.0)
 
-        sl_dist = atr * sl_mult
-        tp_dist = atr * tp_mult
+        # Scale 1m ATR → 5m ATR equivalent (base._try_execute passes 1m ATR)
+        atr_5m = atr * (5 ** 0.5)  # √5 ≈ 2.24
+        sl_dist = max(atr_5m * sl_mult, price * 0.004)  # 0.40% floor
+        tp_dist = atr_5m * tp_mult
 
         if signal.action == Action.SHORT:
             sl_price = price + sl_dist

@@ -83,6 +83,11 @@ from src.strategies.cvd_spike import CVDSpikeReactor
 from src.strategies.liquidation_fade import LiquidationFade
 from src.strategies.momentum_breakout import MomentumBreakout
 from src.strategies.asymmetric_sniper import AsymmetricSniper
+from src.strategies.cvd_extreme import CVDExtreme
+from src.strategies.vwap_reversion import VWAPReversion
+from src.strategies.funding_arb import FundingArb
+from src.strategies.volume_impulse import VolumeImpulse
+from src.strategies.oi_divergence import OIDivergence
 from src.strategies.multi_position_manager import MultiPositionManager
 from src.strategies.portfolio_risk import PortfolioRiskConfig, PortfolioRiskManager
 from src.strategies.data_hub import DataHub
@@ -101,6 +106,11 @@ STRATEGY_MAP = {
     "liquidation_fade": LiquidationFade,
     "momentum_breakout": MomentumBreakout,
     "asymmetric_sniper": AsymmetricSniper,
+    "cvd_extreme": CVDExtreme,
+    "vwap_reversion": VWAPReversion,
+    "funding_arb": FundingArb,
+    "volume_impulse": VolumeImpulse,
+    "oi_divergence": OIDivergence,
 }
 
 
@@ -212,6 +222,11 @@ class MultiStrategyBot:
         # Per-coin cooldown after exit (prevent immediate re-entry)
         self._coin_cooldowns: dict[str, float] = {}  # coin -> unix timestamp of last exit
         self._coin_cooldown_sec = 900  # 15 minutes
+
+        # Bot-wide daily trade cap (prevents overtrading across all strategies)
+        self._bot_daily_trade_count: int = 0
+        self._bot_daily_trade_date: str = ""
+        self._bot_max_daily_trades: int = 100  # demo: 6전략 × ~15건 = ~90건/일 여유
 
         # Paper mode tracking — session trades start empty (current run only)
         self._paper_equity = self.initial_equity
@@ -641,8 +656,12 @@ class MultiStrategyBot:
         cycle = strategy.config.cycle_seconds
         log.info(f"[{strategy.name}] loop started (every {cycle}s)")
 
-        # Initial delay to stagger strategies
-        delay = {"cvd_spike": 0, "liquidation_fade": 10, "momentum_breakout": 20, "asymmetric_sniper": 5}
+        # Initial delay to stagger strategies (prevent simultaneous API bursts)
+        delay = {
+            "cvd_extreme": 0, "liquidation_fade": 5, "vwap_reversion": 10,
+            "volume_impulse": 15, "oi_divergence": 20, "funding_arb": 25,
+            "cvd_spike": 0, "momentum_breakout": 0, "asymmetric_sniper": 0,
+        }
         await asyncio.sleep(delay.get(strategy.name, 0))
 
         while not self._shutdown_event.is_set():
@@ -682,6 +701,22 @@ class MultiStrategyBot:
                             f"[{strategy.name}] ZERO-FEE 우선 대상: {_zero_in_active}"
                         )
 
+                # Bot-wide daily trade cap
+                _today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+                if _today != self._bot_daily_trade_date:
+                    self._bot_daily_trade_count = 0
+                    self._bot_daily_trade_date = _today
+                if self._bot_daily_trade_count >= self._bot_max_daily_trades:
+                    log.info(
+                        f"[{strategy.name}] bot daily cap reached "
+                        f"({self._bot_daily_trade_count}/{self._bot_max_daily_trades})"
+                    )
+                    try:
+                        await asyncio.sleep(cycle)
+                    except asyncio.CancelledError:
+                        break
+                    continue
+
                 # Evaluate
                 results = await strategy.tick(active_coins)
                 # Per-scan diagnostics: cache stats + result summary
@@ -693,7 +728,8 @@ class MultiStrategyBot:
                     f"positions={self.pos_manager.count()}"
                 )
                 for r in results:
-                    log.info(f"[{strategy.name}] TRADE: {r}")
+                    self._bot_daily_trade_count += 1
+                    log.info(f"[{strategy.name}] TRADE: {r} (bot daily #{self._bot_daily_trade_count})")
                     # Discord: 진입 알림 (base.py는 "side" 키로 반환)
                     _r_side = r.get("side", r.get("action", "")) if isinstance(r, dict) else ""
                     if _r_side in ("BUY", "SELL", "LONG", "SHORT"):
@@ -1232,6 +1268,12 @@ class MultiStrategyBot:
         if reason == "SL_HIT" and pnl_usdt < 0 and self.entry_filters:
             self.entry_filters.record_sl_hit(coin)
 
+        # Record SL hit for CVD Extreme per-coin cooldown
+        if reason == "SL_HIT" and strategy in self.strategies:
+            strat_obj = self.strategies[strategy]
+            if hasattr(strat_obj, "record_sl_hit"):
+                strat_obj.record_sl_hit(coin)
+
         # Record cooldown timestamp for this coin
         self._coin_cooldowns[coin] = time.time()
 
@@ -1539,6 +1581,29 @@ class MultiStrategyBot:
             log.error(f"[SaveTrade] Write failed: {e}")
         self._save_equity_state()
 
+        # ── Auto checkpoint: 50/100건 도달 시 Discord 알림 + 분석 ──
+        total = self._baseline_total_trades + len(self._session_trades)
+        if total in (50, 100, 150, 200):
+            self._auto_checkpoint(total)
+
+    def _auto_checkpoint(self, total_trades: int) -> None:
+        """Triggered at 50/100/150/200 trades — run analysis and post to Discord."""
+        try:
+            analyzer = StrategyAnalyzer(STATE_DIR)
+            report = analyzer.run()
+            summary = analyzer.discord_summary(report) if report.total_trades > 0 else "(분석 불가)"
+            checkpoint_msg = (
+                f"**{total_trades}건 체크포인트 도달**\n\n{summary}\n\n"
+            )
+            if total_trades >= 100:
+                checkpoint_msg += (
+                    "⚠️ **Live 승급 검토 가능** — Net PnL > 0 + MDD < 30% 확인 필요"
+                )
+            discord_post(checkpoint_msg, title=f"🏁 {total_trades}건 체크포인트")
+            log.info(f"[Checkpoint] {total_trades} trades milestone — analysis posted")
+        except Exception as e:
+            log.error(f"[Checkpoint] Failed: {e}")
+
     async def _strategy_analysis_loop(self) -> None:
         """6시간마다 전략 성과 분석 + Discord 보고."""
         await asyncio.sleep(3600 * 2)  # 첫 분석: 2시간 후
@@ -1578,10 +1643,13 @@ class MultiStrategyBot:
                 ev_stats = await loop.run_in_executor(None, self.ev_guardian.evaluate)
                 self.ev_guardian.save_report()
 
-                # 상태 변화 감지 + Discord 알림
+                # 상태 변화 감지 + Discord 알림 + allocation fallback
                 suspended_now = [n for n, s in ev_stats.items() if s.get("suspended")]
+                active_strats = [
+                    n for n in self.strategies
+                    if n not in suspended_now and self.strategies[n].config.enabled
+                ]
                 if suspended_now:
-                    # 차단된 전략이 있으면 즉시 Discord 경고
                     lines = []
                     for name in suspended_now:
                         stat = ev_stats[name]
@@ -1592,6 +1660,29 @@ class MultiStrategyBot:
                             f"avg_sl=`{stat['avg_sl_pct']:.4%}` "
                             f"fee=`{stat['avg_fee_drag_pct']:.4%}`"
                         )
+
+                    # ── Allocation fallback: 차단된 전략의 자본을 남은 전략에 몰아줌 ──
+                    if active_strats:
+                        total_budget = sum(
+                            self.strategies[n].config.allocation_usdt
+                            for n in self.strategies
+                            if self.strategies[n].config.enabled
+                        )
+                        per_active = total_budget / len(active_strats)
+                        for name in active_strats:
+                            old_alloc = self.strategies[name].config.allocation_usdt
+                            self.strategies[name].config.allocation_usdt = per_active
+                            if abs(old_alloc - per_active) > 1:
+                                log.info(
+                                    f"[EVGuardian] {name} allocation: "
+                                    f"${old_alloc:.0f} → ${per_active:.0f} "
+                                    f"(fallback from suspended strategies)"
+                                )
+                        lines.append(
+                            f"\n💰 **Fallback**: 남은 전략에 자본 재배분 "
+                            f"→ {', '.join(f'`{n}` ${per_active:.0f}' for n in active_strats)}"
+                        )
+
                     discord_post(
                         "\n".join(lines),
                         title="⚠️ EVGuardian — 음수 EV 전략 차단",

@@ -25,15 +25,17 @@ logger = logging.getLogger("strategy")
 
 # ── Fee constants (Binance USDT-M Futures, VIP 0 기준) ───────────────────────
 # Binance USDM Futures VIP 0: Maker 0.0200%, Taker 0.0500%
-# BNB 결제 시 10% 추가 할인: Taker 0.0450%
-# Entry: market/IOC taker 0.0500%  |  Exit: STOP_MARKET / TP_MARKET taker 0.0500%
-# Slippage: entry 0.03% + exit 0.05% (중형 페어 기준, 변동성 낮을 때)
-# Total round-trip rate applied to notional (= qty × price)
+# BNB 결제 시 10% 추가 할인: Taker 0.0450%, Maker 0.0180%
+# 수수료 = Notional × Rate (레버리지 포함 금액에 부과, 마진이 아님!)
+#   예: $100 마진 × 5x = $500 notional → fee = $500 × rate
+# Entry: Post-Only maker 0.0200%  |  Exit: STOP_MARKET taker 0.0500%
+# Slippage: entry 0.03% + exit 0.05% (중형 페어 기준)
 _MAKER_FEE     = 0.0002    # 0.0200% — Post-Only 진입 시
 _TAKER_FEE     = 0.0005    # 0.0500% — 시장가/SL/TP 청산 시 (VIP 0 정확값)
 _SLIP_ENTRY    = 0.0003    # 0.030%  — 진입 슬리피지 추정
 _SLIP_EXIT     = 0.0005    # 0.050%  — 청산 슬리피지 추정
-ROUND_TRIP_FEE_RATE = _TAKER_FEE * 2 + _SLIP_ENTRY + _SLIP_EXIT  # = 0.0018 (0.18%)
+# Post-Only maker 진입 + taker 청산 기준 (taker×2가 아님!)
+ROUND_TRIP_FEE_RATE = _MAKER_FEE + _TAKER_FEE + _SLIP_ENTRY + _SLIP_EXIT  # = 0.0015 (0.15%)
 
 # 강제 청산 수수료 — 일반 거래 수수료와 별도, 포지션 노셔널의 0.5%
 LIQUIDATION_FEE_RATE = 0.005  # 0.50% — 강제 청산 시에만 적용
@@ -237,12 +239,17 @@ class StrategyBase(ABC):
 
         # Stop distance for sizing
         sl_dist = abs(price - sl_price)
-        # SL must be at least 1.0x round-trip cost (was 1.5x — too strict for low-ATR testnet)
-        min_sl_dist = price * ROUND_TRIP_FEE_RATE * 1.0
+
+        # ── SL floor: max(2.5× round-trip fee, 0.40% of price) ──
+        # 1분봉 ATR이 매우 작을 때 SL이 수수료보다 좁아지는 구조적 문제 방지
+        SL_FLOOR_PCT = 0.004  # 0.40% absolute minimum
+        SL_FEE_MULT = 2.5     # SL must be at least 2.5× round-trip cost
+        min_sl_dist = max(price * ROUND_TRIP_FEE_RATE * SL_FEE_MULT, price * SL_FLOOR_PCT)
         if sl_dist < min_sl_dist:
             self._log.warning(
-                f"[{coin}] SL too tight: {sl_dist:.6f} < fee_threshold {min_sl_dist:.6f} "
-                f"({ROUND_TRIP_FEE_RATE:.3%} of price) — skip"
+                f"[{coin}] SL too tight: {sl_dist/price:.4%} < floor {min_sl_dist/price:.4%} "
+                f"(fee×{SL_FEE_MULT}={ROUND_TRIP_FEE_RATE*SL_FEE_MULT:.3%}, "
+                f"abs_floor={SL_FLOOR_PCT:.2%}) — skip"
             )
             return None
         # Cap sl_dist at 8% of price — prevents testnet ATR spikes from collapsing notional
