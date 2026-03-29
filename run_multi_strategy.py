@@ -691,15 +691,14 @@ class MultiStrategyBot:
                     if time.time() - self._coin_cooldowns.get(c, 0) >= self._coin_cooldown_sec
                 ]
 
-                # FeeScanner: zero-fee 페어 우선 로깅 (진입 거부는 하지 않음 — 정보성)
+                # FeeScanner: zero-fee 페어를 리스트 앞으로 (evaluate에서 먼저 평가)
                 if self.fee_scanner is not None and self.fee_scanner.zero_fee_pairs:
-                    _zero_in_active = [
-                        c for c in active_coins if self.fee_scanner.is_zero_fee(c)
-                    ]
-                    if _zero_in_active:
-                        log.info(
-                            f"[{strategy.name}] ZERO-FEE 우선 대상: {_zero_in_active}"
-                        )
+                    _zero_set = set(self.fee_scanner.zero_fee_pairs)
+                    _zero_coins = [c for c in active_coins if c in _zero_set]
+                    _normal_coins = [c for c in active_coins if c not in _zero_set]
+                    active_coins = _zero_coins + _normal_coins
+                    if _zero_coins:
+                        log.info(f"[{strategy.name}] ZERO-FEE 우선: {_zero_coins}")
 
                 # Bot-wide daily trade cap
                 _today = datetime.now(timezone.utc).strftime("%Y-%m-%d")

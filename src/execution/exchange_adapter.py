@@ -529,11 +529,18 @@ class ExchangeAdapter:
                         else:
                             fee_rate = 0.0002  # maker (Post-Only 기본)
                             fee = fill_price * fill_qty * fee_rate
+                        # Extract isMaker from Binance raw response
+                        _raw_info = order.get("info", {})
+                        _is_maker = _raw_info.get("maker", None)
+                        if _is_maker is None:
+                            # Post-Only order that succeeded = maker
+                            _is_maker = True
                         return {
                             "filled": True,
                             "fill_price": fill_price,
                             "fill_qty": fill_qty,
                             "fee": fee,
+                            "is_maker": bool(_is_maker),
                             "raw_response": order,
                         }
                     if order.get("status") in ("canceled", "cancelled", "rejected"):

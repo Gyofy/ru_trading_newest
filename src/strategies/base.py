@@ -573,8 +573,13 @@ class StrategyBase(ABC):
                     )
                     _concurrent = len(self.pos_manager.positions)
                     _portfolio_notional = self.pos_manager.total_notional() if hasattr(self.pos_manager, "total_notional") else 0.0
-                    # Merge signal.confidence into extra so trade_logger captures it
-                    _signal_extra_with_conf = {**(signal.extra or {}), "confidence": signal.confidence}
+                    # Merge signal.confidence + is_maker into extra for trade_logger
+                    _is_maker = result.get("is_maker", True)
+                    _signal_extra_with_conf = {
+                        **(signal.extra or {}),
+                        "confidence": signal.confidence,
+                        "fill_taker": not _is_maker,  # trade_logger uses this field
+                    }
                     await self.trade_logger.capture_entry_context(
                         data_hub=self.data_hub,
                         coin=coin,
@@ -706,6 +711,8 @@ class StrategyBase(ABC):
             "fill_price": float(fill["fill_price"]),
             "fill_qty": float(fill.get("fill_qty", qty)),
             "order_id": order_id,
+            "is_maker": fill.get("is_maker", True),
+            "fee": fill.get("fee", 0),
         }
 
     # ── Utilities ─────────────────────────────────────────
