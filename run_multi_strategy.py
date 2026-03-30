@@ -99,6 +99,10 @@ from src.strategies.strategy_analyzer import StrategyAnalyzer
 from src.strategies.ev_guardian import EVGuardian
 from src.strategies.entry_filters import EntryFilters
 from src.strategies.strategy_solver import StrategySolver
+from src.strategies.cluster_tracker import ClusterTracker
+from src.meta.drawdown_throttle import DrawdownThrottle
+from src.meta.fee_ev_gate import FeeEVGate
+from src.meta.dsr import DSREvaluator
 from src.utils.bnb_keeper import BnbKeeper
 from src.utils.fee_scanner import FeeScanner
 
@@ -395,6 +399,17 @@ class MultiStrategyBot:
             f"atr_regime={ef_cfg.get('atr_regime_enabled', True)}"
         )
 
+        # ── v10.0 Meta Modules ──
+        self.cluster_tracker = ClusterTracker(window_sec=300.0)
+        self.drawdown_throttle = DrawdownThrottle()
+        self.fee_ev_gate = FeeEVGate(
+            trade_context_path=STATE_DIR / "trade_context.jsonl",
+            round_trip_fee_rate=ROUND_TRIP_FEE_RATE,
+        )
+        self.fee_ev_gate.refresh()
+        self.dsr_evaluator = DSREvaluator(significance_level=0.95)
+        log.info("[v10.0] ClusterTracker + DrawdownThrottle + FeeEVGate + DSR initialized")
+
         # Portfolio risk
         strategy_allocations = {}
         for name, scfg in self.cfg.get("strategies", {}).items():
@@ -477,6 +492,10 @@ class MultiStrategyBot:
                 position_sizer=self.position_sizer,
                 entry_filters=self.entry_filters,
             )
+            # v10.0: Inject meta modules into strategy
+            strategy.cluster_tracker = self.cluster_tracker
+            strategy.drawdown_throttle = self.drawdown_throttle
+            strategy.fee_ev_gate = self.fee_ev_gate
             self.strategies[name] = strategy
             log.info(
                 f"[{name}] loaded | ${config.allocation_usdt} | "
@@ -679,6 +698,15 @@ class MultiStrategyBot:
 
                 # Daily reset
                 self.portfolio_risk.maybe_reset_daily()
+
+                # ── v10.0: DrawdownThrottle gate ──────────────
+                if self.drawdown_throttle.is_paused(strategy.name):
+                    log.info(f"[{strategy.name}] PAUSED by DrawdownThrottle (5+ consecutive losses)")
+                    try:
+                        await asyncio.sleep(cycle)
+                    except asyncio.CancelledError:
+                        break
+                    continue
 
                 # ── F1 + F5: EV/Fee budget gate ──────────────
                 if self.ev_guardian:
@@ -1218,7 +1246,11 @@ class MultiStrategyBot:
         )
 
         # Record net PnL (gross - fee) so current_equity reflects actual balance
-        self.portfolio_risk.record_trade_pnl(strategy, pnl_usdt - _fee_usdt)
+        _net_pnl = pnl_usdt - _fee_usdt
+        self.portfolio_risk.record_trade_pnl(strategy, _net_pnl)
+
+        # v10.0: DrawdownThrottle — 연속 손실 추적
+        self.drawdown_throttle.record_trade(strategy, _net_pnl)
 
         # F5: 실수수료 기록 (EVGuardian 일일 예산 누적)
         if self.ev_guardian:

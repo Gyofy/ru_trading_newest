@@ -232,6 +232,22 @@ class StrategyBase(ABC):
                 )
             return None
 
+        # ── v10.0: ClusterTracker — 시그널 발생 기록 ──
+        if hasattr(self, "cluster_tracker") and self.cluster_tracker:
+            _strength = abs(signal.pred_return) if signal.pred_return else signal.confidence
+            self.cluster_tracker.publish(
+                strategy=self.name, coin=coin, side=side,
+                strength=min(_strength, 1.0),
+            )
+
+        # ── v10.0: DrawdownThrottle — 사이즈 배율 ──
+        _dd_factor = 1.0
+        if hasattr(self, "drawdown_throttle") and self.drawdown_throttle:
+            _dd_factor = self.drawdown_throttle.get_size_factor(self.name)
+            if _dd_factor <= 0:
+                self._log.info(f"[{coin}] DrawdownThrottle PAUSED — skip")
+                return None
+
         # Apply per-coin adaptive params — pass as argument, never mutate self.config.extra.
         effective_extra = (
             self.coin_profiles.get_params(coin, self.config.extra)
@@ -310,9 +326,29 @@ class StrategyBase(ABC):
             notional = per_pos_cap
             qty_raw = notional / price
 
+        # ── v10.0: DrawdownThrottle size factor 적용 ──
+        if _dd_factor < 1.0:
+            notional *= _dd_factor
+            qty_raw = notional / price
+            self._log.info(f"[{coin}] DrawdownThrottle: size ×{_dd_factor:.1f}")
+
         if notional < 5.0:  # Binance minimum
             self._log.info(f"[{coin}] notional {notional:.2f} < $5, skip")
             return None
+
+        # ── v10.0: FeeEVGate — 수수료 포함 기대값 검증 ──
+        if hasattr(self, "fee_ev_gate") and self.fee_ev_gate:
+            _sl_pct = sl_dist / price if price > 0 else 0
+            _tp_pct = abs(tp_price - price) / price if (price > 0 and tp_price > 0) else _sl_pct * 2.0
+            _ev_ok, _ev_val, _ev_reason = self.fee_ev_gate.check(
+                strategy=self.name,
+                sl_dist_pct=_sl_pct,
+                tp_dist_pct=_tp_pct,
+                notional=notional,
+            )
+            if not _ev_ok:
+                self._log.info(f"[{coin}] FeeEV REJECTED: {_ev_reason}")
+                return None
 
         # Fetch funding rate for gate check
         try:
@@ -589,10 +625,15 @@ class StrategyBase(ABC):
                     _portfolio_notional = self.pos_manager.total_notional() if hasattr(self.pos_manager, "total_notional") else 0.0
                     # Merge signal.confidence + is_maker into extra for trade_logger
                     _is_maker = result.get("is_maker", False)  # v9.1: 시장가 = taker
+                    # v10.0: 클러스터 피처 주입
+                    _cluster_features = {}
+                    if hasattr(self, "cluster_tracker") and self.cluster_tracker:
+                        _cluster_features = self.cluster_tracker.get_trade_context_features(coin, side)
                     _signal_extra_with_conf = {
                         **(signal.extra or {}),
                         "confidence": signal.confidence,
-                        "fill_taker": not _is_maker,  # trade_logger uses this field
+                        "fill_taker": not _is_maker,
+                        **_cluster_features,  # v10.0: cluster signal data
                     }
                     await self.trade_logger.capture_entry_context(
                         data_hub=self.data_hub,

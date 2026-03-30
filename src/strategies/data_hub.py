@@ -442,6 +442,51 @@ class DataHub:
 
         return passed
 
+    # ── G2: Taker Buy Ratio (v10.0) ─────────────────────
+
+    @staticmethod
+    def compute_taker_buy_ratio(df: pd.DataFrame) -> pd.Series:
+        """Taker buy volume / total volume → 0~1 비율.
+
+        ccxt klines에 'taker_buy_base_vol' 컬럼이 있으면 사용,
+        없으면 BVC(close-low)/(high-low) 근사.
+
+        Returns:
+            pd.Series: 0=전량 sell, 0.5=균형, 1=전량 buy
+        """
+        if "taker_buy_base_vol" in df.columns:
+            vol = df["volume"].replace(0, np.nan)
+            ratio = df["taker_buy_base_vol"] / vol
+            return ratio.clip(0, 1).fillna(0.5)
+
+        # Fallback: BVC approximation
+        hl_range = (df["high"] - df["low"]).replace(0, np.nan)
+        buy_frac = (df["close"] - df["low"]) / hl_range
+        return buy_frac.clip(0, 1).fillna(0.5)
+
+    # ── G7: Realized Volatility (v10.0) ──────────────────
+
+    @staticmethod
+    def compute_realized_vol(df: pd.DataFrame, window: int = 20) -> float:
+        """Rolling standard deviation of log returns.
+
+        Regime Sizing의 전제조건: 현재 시장이 저/중/고 변동성인지 판단.
+
+        Args:
+            df: OHLCV DataFrame (close 컬럼 필요)
+            window: rolling window (bars)
+
+        Returns:
+            float: 최근 bar의 realized volatility (decimal, e.g. 0.02 = 2%)
+        """
+        if len(df) < window + 1:
+            return 0.0
+        log_ret = np.log(df["close"] / df["close"].shift(1)).dropna()
+        if len(log_ret) < window:
+            return 0.0
+        rvol = float(log_ret.rolling(window).std().iloc[-1])
+        return rvol if not np.isnan(rvol) else 0.0
+
     # ── Cache management ──────────────────────────────────
 
     def invalidate(self, coin: str = None) -> None:
