@@ -28,14 +28,16 @@ logger = logging.getLogger("strategy")
 # BNB 결제 시 10% 추가 할인: Taker 0.0450%, Maker 0.0180%
 # 수수료 = Notional × Rate (레버리지 포함 금액에 부과, 마진이 아님!)
 #   예: $100 마진 × 5x = $500 notional → fee = $500 × rate
-# Entry: Post-Only maker 0.0200%  |  Exit: STOP_MARKET taker 0.0500%
-# Slippage: entry 0.03% + exit 0.05% (중형 페어 기준)
-_MAKER_FEE     = 0.0002    # 0.0200% — Post-Only 진입 시
-_TAKER_FEE     = 0.0005    # 0.0500% — 시장가/SL/TP 청산 시 (VIP 0 정확값)
-_SLIP_ENTRY    = 0.0003    # 0.030%  — 진입 슬리피지 추정
+# v9.1 Data-Gathering Mode: 전면 시장가(Taker) 진입
+#   → 시그널 즉시 체결, 놓치는 알파 방지, MFE/MAE 정확한 타점 로깅
+# Entry: Market taker 0.0500%  |  Exit: STOP_MARKET taker 0.0500%
+# Slippage: entry 0.05% + exit 0.05% (시장가 양방향 동일)
+_ENTRY_FEE     = 0.0005    # 0.0500% — 시장가 진입 (Taker)
+_EXIT_FEE      = 0.0005    # 0.0500% — 시장가/SL/TP 청산 (Taker)
+_SLIP_ENTRY    = 0.0005    # 0.050%  — 시장가 진입 슬리피지
 _SLIP_EXIT     = 0.0005    # 0.050%  — 청산 슬리피지 추정
-# Post-Only maker 진입 + taker 청산 기준 (taker×2가 아님!)
-ROUND_TRIP_FEE_RATE = _MAKER_FEE + _TAKER_FEE + _SLIP_ENTRY + _SLIP_EXIT  # = 0.0015 (0.15%)
+# 양방향 taker 기준 왕복 수수료
+ROUND_TRIP_FEE_RATE = _ENTRY_FEE + _EXIT_FEE + _SLIP_ENTRY + _SLIP_EXIT  # = 0.0020 (0.20%)
 
 # 강제 청산 수수료 — 일반 거래 수수료와 별도, 포지션 노셔널의 0.5%
 LIQUIDATION_FEE_RATE = 0.005  # 0.50% — 강제 청산 시에만 적용
@@ -240,20 +242,25 @@ class StrategyBase(ABC):
         # Stop distance for sizing
         sl_dist = abs(price - sl_price)
 
-        # ── SL floor: max(2.5× round-trip fee, 0.40% of price) ──
-        # 1분봉 ATR이 매우 작을 때 SL이 수수료보다 좁아지는 구조적 문제 방지
-        SL_FLOOR_PCT = 0.004  # 0.40% absolute minimum
+        # ── SL floor: Data-Gathering Mode (v9.1) ──
+        # 데모에서는 SL을 넉넉하게 열어 MAE/MFE 한계치까지 데이터 수집
+        # 실전 복귀 시: SL_FLOOR_PCT = 0.004, SL_FEE_MULT = 2.5 로 되돌릴 것
+        SL_FLOOR_PCT = 0.015  # 1.50% absolute minimum (데이터 수집용)
         SL_FEE_MULT = 2.5     # SL must be at least 2.5× round-trip cost
         min_sl_dist = max(price * ROUND_TRIP_FEE_RATE * SL_FEE_MULT, price * SL_FLOOR_PCT)
         if sl_dist < min_sl_dist:
-            self._log.warning(
-                f"[{coin}] SL too tight: {sl_dist/price:.4%} < floor {min_sl_dist/price:.4%} "
-                f"(fee×{SL_FEE_MULT}={ROUND_TRIP_FEE_RATE*SL_FEE_MULT:.3%}, "
-                f"abs_floor={SL_FLOOR_PCT:.2%}) — skip"
+            # 데이터 수집 모드: SL을 floor까지 확장 (거부 대신 조정)
+            self._log.info(
+                f"[{coin}] SL widened for data gathering: "
+                f"{sl_dist/price:.4%} → {min_sl_dist/price:.4%}"
             )
-            return None
-        # Cap sl_dist at 8% of price — prevents testnet ATR spikes from collapsing notional
-        max_sl_dist = price * 0.08
+            sl_dist = min_sl_dist
+            if side == "BUY":
+                sl_price = price - sl_dist
+            else:
+                sl_price = price + sl_dist
+        # Cap sl_dist at 15% of price (데이터 수집 모드: 확장)
+        max_sl_dist = price * 0.15
         if sl_dist > max_sl_dist:
             sl_dist = max_sl_dist
             # Recompute sl_price to match capped distance (prevent sizing/SL mismatch)
@@ -581,7 +588,7 @@ class StrategyBase(ABC):
                     _concurrent = len(self.pos_manager.positions)
                     _portfolio_notional = self.pos_manager.total_notional() if hasattr(self.pos_manager, "total_notional") else 0.0
                     # Merge signal.confidence + is_maker into extra for trade_logger
-                    _is_maker = result.get("is_maker", True)
+                    _is_maker = result.get("is_maker", False)  # v9.1: 시장가 = taker
                     _signal_extra_with_conf = {
                         **(signal.extra or {}),
                         "confidence": signal.confidence,
@@ -644,33 +651,39 @@ class StrategyBase(ABC):
     async def _place_entry(
         self, coin: str, side: str, qty: float, price: float
     ) -> dict:
-        """Post-Only maker entry with fill-or-cancel.
+        """Market (taker) entry — 즉시 체결.
 
-        Paper mode: simulate instant fill at maker price (no real orders).
+        v9.1 Data-Gathering Mode: 시장가로 즉시 체결하여
+        시그널 발생 시점의 정확한 가격 궤적(MFE/MAE)을 로깅.
+        Post-Only로 놓치는 "가장 완벽했던 타점" 데이터를 수집.
+
+        실전 복귀 시: place_post_only_entry()로 되돌릴 것.
         """
-        # Paper mode: simulate fill at current bid/ask price (via cached ticker)
+        # Paper mode: simulate instant fill at last price
         if self.config.paper_mode:
             ticker = await self.data_hub.get_ticker(coin)
-            maker_price = ticker["bid"] if side.upper() == "BUY" else ticker["ask"]
-            if maker_price <= 0:
-                maker_price = ticker["last"]
-            if maker_price <= 0:
+            # 시장가 시뮬레이션: BUY→ask(worst), SELL→bid(worst) for realistic fill
+            fill_price = ticker["ask"] if side.upper() == "BUY" else ticker["bid"]
+            if fill_price <= 0:
+                fill_price = ticker["last"]
+            if fill_price <= 0:
                 self._log.warning(
                     f"[{coin}] Paper fill skipped — ticker all zeros (exchange unavailable?)"
                 )
                 return {"success": False, "error": "ticker_unavailable"}
             order_id = self.exchange.make_order_id(
-                coin, side, self._trade_count + 1, prefix="v8p",
+                coin, side, self._trade_count + 1, prefix="v91p",
             )
-            self._log.info(f"[{coin}] PAPER fill {side} @ {maker_price:.4f} qty={qty}")
+            self._log.info(f"[{coin}] PAPER MARKET fill {side} @ {fill_price:.4f} qty={qty}")
             return {
                 "success": True,
-                "fill_price": float(maker_price),
+                "fill_price": float(fill_price),
                 "fill_qty": float(qty),
                 "order_id": order_id,
+                "is_maker": False,  # 시장가 = taker
             }
 
-        # Live mode: real Post-Only maker entry
+        # Live/Demo mode: Market order — 즉시 체결
         try:
             await self.exchange.set_leverage_async(coin, self.config.leverage)
             self._leverage_initialized.add(coin)
@@ -680,46 +693,55 @@ class StrategyBase(ABC):
                 f"— proceeding with current exchange leverage"
             )
 
-        maker_price = await self.exchange.get_maker_entry_price(coin, side)
         order_id = self.exchange.make_order_id(
-            coin, side, self._trade_count + 1, prefix="v8",
+            coin, side, self._trade_count + 1, prefix="v91",
         )
+        ccxt_sym = self.exchange._ccxt_symbol(coin)
+        rounded_qty = self.exchange.round_qty(coin, qty)
 
-        result = await self.exchange.place_post_only_entry(
-            symbol=coin, side=side, qty=qty,
-            price=maker_price, order_link_id=order_id,
-        )
-        if not result.get("success"):
-            _err = result.get("error", "post-only failed")
-            # -1021 time drift: resync and surface the error (will retry next cycle)
-            if "-1021" in str(_err) or "ahead of the server" in str(_err):
-                self._log.warning(f"[Entry] {coin} -1021 time drift on entry — resyncing clock")
+        try:
+            order = await self.exchange._exchange.create_order(
+                symbol=ccxt_sym,
+                type="market",
+                side=side.lower(),
+                amount=rounded_qty,
+                params={self.exchange._client_id_key(): order_id},
+            )
+        except Exception as e:
+            _err = str(e)
+            if "-1021" in _err or "ahead of the server" in _err:
+                self._log.warning(f"[Entry] {coin} -1021 time drift — resyncing clock")
                 try:
                     await self.exchange._exchange.load_time_difference()
                 except Exception:
                     pass
             return {"success": False, "error": _err}
 
-        fill = await self.exchange.wait_fill_or_cancel(
-            symbol=coin, order_link_id=order_id,
-            ttl_sec=20.0, poll_interval=2.0,
-        )
-        if not fill or not fill.get("filled"):
-            return {"success": False, "error": "not filled within 20s"}
+        fill_price = float(order.get("average", order.get("price", 0)))
+        fill_qty = float(order.get("filled", rounded_qty))
+        status = order.get("status", "")
 
-        if fill.get("partial"):
+        if status != "closed" or fill_price <= 0:
             self._log.warning(
-                f"[Entry] {coin} PARTIAL FILL {fill['fill_qty']} @ {fill['fill_price']} "
-                f"— SL/TP will be set for partial qty"
+                f"[Entry] {coin} Market order status={status} price={fill_price} — unexpected"
             )
+            return {"success": False, "error": f"market_order_status_{status}"}
 
+        # Fee extraction from exchange response
+        api_fee = (order.get("fee") or {}).get("cost")
+        fee = float(api_fee) if api_fee else fill_price * fill_qty * 0.0005  # taker fallback
+
+        self._log.info(
+            f"[Entry] {coin} MARKET {side} @ {fill_price:.4f} qty={fill_qty} "
+            f"fee=${fee:.4f}"
+        )
         return {
             "success": True,
-            "fill_price": float(fill["fill_price"]),
-            "fill_qty": float(fill.get("fill_qty", qty)),
+            "fill_price": fill_price,
+            "fill_qty": fill_qty,
             "order_id": order_id,
-            "is_maker": fill.get("is_maker", True),
-            "fee": fill.get("fee", 0),
+            "is_maker": False,  # 시장가 = taker
+            "fee": fee,
         }
 
     # ── Utilities ─────────────────────────────────────────

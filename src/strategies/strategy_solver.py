@@ -398,7 +398,7 @@ class StrategySolver:
             return None
 
         avg_sl_dec = statistics.mean(train_sl) / 100  # pct → decimal
-        fee_dec = 0.0015  # round-trip fee (decimal) — matches ROUND_TRIP_FEE_RATE
+        fee_dec = 0.0020  # round-trip fee (decimal) — v9.1: 양방향 taker 0.20%
 
         mfe_sorted = sorted(train_mfe)
         best: Optional[dict] = None

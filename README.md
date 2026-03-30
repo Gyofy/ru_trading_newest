@@ -1,8 +1,8 @@
 # Binance Futures Multi-Strategy Bot — v9.1
 
-**바이낸스 선물 자동매매 시스템 | 6개 전략 | StrategySolver v2 자동 최적화 | Demo/Paper/Live 모드**
+**바이낸스 선물 자동매매 시스템 | 6개 전략 | Data-Gathering Mode | StrategySolver v2**
 
-> **현재 상태**: Demo 트레이딩 (Binance Testnet) — 6전략 edge 탐색 + StrategySolver v2 파라미터 자동 최적화
+> **현재 상태**: Demo Data-Gathering Mode — 전면 시장가, 넓은 SL, 중첩 허용 → MFE/MAE 한계치 데이터 수집
 
 ---
 
@@ -10,14 +10,16 @@
 
 | 항목 | 값 |
 |------|-----|
-| 버전 | **v9.1** (2026-03-29) |
-| 모드 | demo (Binance testnet 실주문) |
+| 버전 | **v9.1-data** (2026-03-30) |
+| 모드 | demo (Binance Testnet) — **Data-Gathering Mode** |
 | 거래소 | Binance USDM Futures (Testnet) |
 | 활성 전략 | 6개 (아래 참조) |
 | 초기 자본 | $5,000 USDT (demo) |
 | 레버리지 | 3x 통일 |
-| 왕복 수수료 | **0.15%** (Post-Only maker 0.02% + taker exit 0.05% + slippage 0.08%) |
-| SL Floor | **max(fee x 2.5, 0.40%) = 0.45%** |
+| 진입 방식 | **시장가(Taker)** — 즉시 체결, 놓치는 알파 방지 |
+| 왕복 수수료 | **0.20%** (Taker 양방향 0.05% + slippage 양방향 0.05%) |
+| SL Floor | **1.50%** (데이터 수집용 — MAE 한계치 관찰) |
+| Max Positions | **15/전략** (중첩 클러스터 시그널 수집) |
 | 자동 최적화 | **StrategySolver v2** (3시간 주기, train/test 검증) |
 | Discord | 실시간 알림 (진입/청산/1시간 브리핑/EVGuardian/Solver) |
 
@@ -36,17 +38,19 @@
 
 *BE WR = Break-Even Win Rate (수수료 0.15% 포함)*
 
-### 수수료 구조 (Binance USDM Futures VIP 0)
+### 수수료 구조 (v9.1 Data-Gathering Mode)
 
 ```
 수수료 = Notional x Rate (마진이 아닌 레버리지 포함 금액에 부과!)
 
-Entry (Post-Only Maker):  0.02% + 0.03% slippage = 0.05%
-Exit (Taker SL/TP):       0.05% + 0.05% slippage = 0.10%
-왕복 합계:                0.15% of notional
+Entry (Market Taker):   0.05% + 0.05% slippage = 0.10%
+Exit (Taker SL/TP):     0.05% + 0.05% slippage = 0.10%
+왕복 합계:              0.20% of notional
 
-3x 레버리지 시 자본 대비: 0.15% x 3 = 0.45%/건
+3x 레버리지 시 자본 대비: 0.20% x 3 = 0.60%/건
 ```
+
+> 실전 복귀 시: Post-Only maker 진입 → 왕복 0.15% (0.45%/자본) 으로 환원
 
 ---
 
@@ -194,7 +198,15 @@ nohup python3 run_multi_strategy.py --config config/multi_strategy.yaml >> logs/
 
 ## 버전 이력
 
-### v9.1 (2026-03-29) — 현재
+### v9.1-data (2026-03-30) — 현재
+- **Data-Gathering Mode**: 전면 시장가(Taker) 진입, SL 1.5%, 15포지션/전략, 중첩 허용
+  - Post-Only 폐기 → 시장가 즉시 체결 (놓치는 알파 = 최고의 타점 데이터 손실 방지)
+  - SL 0.40% → 1.50% (MAE 한계치까지 데이터 수집 → 실전용 SL 수학적 세팅)
+  - max_positions 6~8 → 15 (전략 중첩 클러스터 시그널 가치 극대화)
+  - 진입 필터 완화: cvd_sigma 1.2, taker_spike 0.8, volume_mult 2.5 등
+  - EVGuardian: EV < -5% / 100건 (조기 차단 방지, 데이터 수집 우선)
+
+### v9.1 (2026-03-29)
 - **StrategySolver v2**: 거래 데이터 기반 파라미터 자동 최적화
   - Temporal train/test split (70/30) — in-sample overfitting 방지
   - Tighter-only 제약 — 진입 필터 엄격화 방향만 허용

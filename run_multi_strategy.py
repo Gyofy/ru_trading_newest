@@ -1206,17 +1206,15 @@ class MultiStrategyBot:
                     return  # 청산 미확인 시 PnL 기록도 하지 않음
 
         # 수수료 계산 — 단 1회, EVGuardian + 로그 모두 이 값 사용
-        # Entry: Post-Only maker + slip_in  /  Exit: taker + slip_out
-        # FIXED: was `(entry+exit) * (ROUND_TRIP_FEE_RATE / 2)` which divides twice.
-        _fee_maker   = 0.0002   # 0.0200%
-        _fee_taker   = 0.0005   # 0.0500%
-        _fee_slip_in = 0.0003   # 0.030%
-        _fee_slip_out = 0.0005  # 0.050%
+        # v9.1 Data-Gathering Mode: 양방향 시장가(Taker)
+        # Entry: Market taker + slip  /  Exit: Market taker + slip
+        _fee_taker   = 0.0005   # 0.0500% — Taker (양방향)
+        _fee_slip    = 0.0005   # 0.050%  — 슬리피지 (양방향)
         _entry_notional = pos.entry_price * pos.current_qty
         _exit_notional = price * pos.current_qty
         _fee_usdt = round(
-            _entry_notional * (_fee_maker + _fee_slip_in)
-            + _exit_notional * (_fee_taker + _fee_slip_out), 4
+            _entry_notional * (_fee_taker + _fee_slip)
+            + _exit_notional * (_fee_taker + _fee_slip), 4
         )
 
         # Record net PnL (gross - fee) so current_equity reflects actual balance

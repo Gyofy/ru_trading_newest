@@ -39,12 +39,12 @@ dynamic_coins:
     - LINK    # 10건 전패 (WR 0%, -$118) — 데이터 축적 후 재평가
 
 portfolio:
-  total_exposure_pct: 4.0        # 400% — 2전략 체제, 보수적
-  same_direction_max: 8          # 8개 동방향 한도
-  daily_loss_pct: 0.20           # 일일 손실 한도
-  strategy_loss_pct: 0.40
+  total_exposure_pct: 10.0       # 1000% — 데이터 수집 모드 (중첩 최대화)
+  same_direction_max: 30         # 30개 동방향 허용 (중첩 클러스터 관찰)
+  daily_loss_pct: 0.50           # 일일 손실 50% (데모: 데이터>자본)
+  strategy_loss_pct: 0.80        # 전략별 80% (데모)
   min_notional_usdt: 5.0
-  max_funding_rate: 0.003
+  max_funding_rate: 0.01         # 1% (데모: 펀딩 무시)
 
 position_sizing:
   risk_pct_per_trade: 0.15       # 15% per trade
@@ -55,117 +55,108 @@ position_sizing:
   max_factor: 3.0
 
   # ══════════════════════════════════════════════════════════════
-  # 수수료 기준: Binance USDM VIP 0
-  #   Entry(Post-Only maker): 0.02%  |  Exit(taker SL/TP): 0.05%
-  #   Slippage: entry 0.03% + exit 0.05%
-  #   왕복 = 0.02% + 0.05% + 0.03% + 0.05% = 0.15% of NOTIONAL
+  # v9.1 Data-Gathering Mode: 전면 시장가(Taker) 진입
+  #   Entry(Market taker): 0.05%  |  Exit(taker SL/TP): 0.05%
+  #   Slippage: entry 0.05% + exit 0.05%
+  #   왕복 = 0.05% + 0.05% + 0.05% + 0.05% = 0.20% of NOTIONAL
   #   수수료는 NOTIONAL(=qty×price)에 부과, 마진이 아님!
-  #   → 레버리지가 높을수록 자본 대비 수수료 부담 증가
-  #      3x: 0.15%×3 = 0.45%/자본, 5x: 0.75%/자본
-  # 균등 배분: $1,500 × 6전략 = $9,000 (demo $5,000 대비 180%)
+  #   → 3x: 0.20%×3 = 0.60%/자본
+  # 데이터 수집 최우선: 모든 시그널 체결, SL 넉넉, 중첩 허용
   # ══════════════════════════════════════════════════════════════
 
 strategies:
-  # ── 1. CVD Extreme — CVD Q92+Z1.5σ 역추세 (빈도 2×) ──
-  # edge: 극단 orderflow 소진 후 되돌림. MFE>|MAE| 49% (neutral→필터 개선 필요)
-  # fee: SL 0.50%+, fee 0.15% = fee/SL=30%. R:R 2.5:1. break-even WR=36%
+  # ════════════════════════════════════════════════════════════════
+  # v9.1 DATA-GATHERING MODE
+  # 목표: 최대한 많은 시그널 체결, 넓은 SL, 중첩 허용
+  # → MFE/MAE 한계치 데이터 수집 → 실전용 SL/TP 수학적 세팅
+  # ════════════════════════════════════════════════════════════════
+
+  # ── 1. CVD Extreme — CVD Q92+Z1.5σ 역추세 ──
   cvd_extreme:
     enabled: true
-    allocation_usdt: 1500.0
+    allocation_usdt: 2000.0        # $1,500→$2,000 (데이터 수집용 확대)
     leverage: 3
-    cycle_seconds: 60
-    max_positions: 8
-    sl_atr_mult: 2.0
+    cycle_seconds: 45              # 60→45s (빠른 스캔)
+    max_positions: 15              # 8→15 (중첩 최대화)
+    sl_atr_mult: 4.0               # 2.0→4.0 (SL 넉넉하게, MAE 데이터 수집)
     extra:
-      cvd_quantile: 0.92           # Q95→Q92 (빈도 2×)
-      cvd_sigma_mult: 1.5          # Z2.0→Z1.5 (빈도 2×)
+      cvd_quantile: 0.90           # Q92→Q90 (빈도 확대)
+      cvd_sigma_mult: 1.2          # Z1.5→Z1.2 (빈도 확대)
       cvd_roll_window: 240
-      volume_spike_mult: 1.2       # 1.5→1.2 (빈도 확대)
-      tp_rr: 2.5
-      max_daily_trades: 30         # 10→30 (데이터 수집)
-      cooldown_sec: 120            # 3분→2분
+      volume_spike_mult: 1.0       # 1.2→1.0 (최소 필터)
+      tp_rr: 3.0                   # 2.5→3.0 (MFE 한계 관찰)
+      max_daily_trades: 100        # 30→100 (데이터 수집)
+      cooldown_sec: 60             # 2분→1분
 
-  # ── 2. Cascade Fade — OI급감 + 거래량 스파이크 반전 (빈도 2×) ──
-  # edge: 강제 청산 후 반등. WR 57%, PF 1.28 (35건). MFE>|MAE| 60% (최고)
-  # fee: SL 0.38%, fee 0.15% = fee/SL=39%. R:R~2:1. break-even WR=44%
+  # ── 2. Cascade Fade — OI급감 + 거래량 스파이크 반전 ──
   liquidation_fade:
     enabled: true
-    allocation_usdt: 1500.0
-    leverage: 3                    # 5x→3x (fee/capital 절감: 0.75%→0.45%)
-    cycle_seconds: 60
-    max_positions: 8
-    sl_atr_mult: 2.5               # 3.5→2.5 (빈도 확대, SL floor 0.40%가 보호)
+    allocation_usdt: 2000.0
+    leverage: 3
+    cycle_seconds: 45
+    max_positions: 15
+    sl_atr_mult: 5.0               # 2.5→5.0 (SL 넉넉하게)
     extra:
-      oi_sigma_threshold: 0.8      # 1.2→0.8 (빈도 2×)
-      taker_spike_mult: 1.0        # 1.2→1.0 (빈도 2×)
+      oi_sigma_threshold: 0.5      # 0.8→0.5 (빈도 확대)
+      taker_spike_mult: 0.8        # 1.0→0.8 (빈도 확대)
       swing_lookback: 24
-      tp_atr_mult: 5.0             # 7.5→5.0 (TP 도달률 향상)
+      tp_atr_mult: 7.0             # 5.0→7.0 (MFE 한계 관찰)
 
   # ── 3. VWAP Exhaustion — VWAP 이탈 + 거래량 감소 = 소진 복귀 ──
-  # edge: VWAP mean reversion + volume exhaustion 필터. TP=VWAP(물리적 타겟)
-  # fee: SL 0.50%, fee 0.15% = fee/SL=30%. R:R 2:1. break-even WR=41%
   vwap_reversion:
     enabled: true
-    allocation_usdt: 1500.0
+    allocation_usdt: 2000.0
     leverage: 3
-    cycle_seconds: 60
-    max_positions: 6
-    sl_atr_mult: 2.0
+    cycle_seconds: 45
+    max_positions: 15
+    sl_atr_mult: 4.0               # 2.0→4.0
     extra:
       vwap_window: 60
-      sigma_mult: 1.5              # 2.0→1.5 (빈도 2×)
-      vol_decay_threshold: 0.8     # 0.7→0.8 (완화, 빈도 2×)
-      tp_rr: 2.0
+      sigma_mult: 1.2              # 1.5→1.2 (빈도 확대)
+      vol_decay_threshold: 0.85    # 0.8→0.85 (완화)
+      tp_rr: 2.5                   # 2.0→2.5
 
-  # ── 4. MTF Momentum — 1m+15m+1h 추세 정렬 추종 (funding_arb 교체) ──
-  # edge: 다중 시간프레임 합의 = 가장 오래 검증된 추세 추종 edge
-  # fee: SL 0.50%, fee 0.15% = fee/SL=30%. R:R 3:1. break-even WR=30%
-  # note: 추세추종은 WR 낮지만 R:R로 보상. 크립토 momentum factor 학술 검증됨.
+  # ── 4. MTF Momentum — 1m+15m+1h 추세 정렬 추종 ──
   funding_arb:
     enabled: true
-    allocation_usdt: 1500.0
+    allocation_usdt: 2000.0
     leverage: 3
-    cycle_seconds: 60
-    max_positions: 6
-    sl_atr_mult: 2.0
+    cycle_seconds: 45
+    max_positions: 15
+    sl_atr_mult: 4.0               # 2.0→4.0
     extra:
       fast_ema: 8
       slow_ema: 21
-      min_body_pct: 0.001          # 0.1% 최소 봉 크기 (느슨)
-      tp_rr: 3.0
+      min_body_pct: 0.0005         # 0.001→0.0005 (빈도 확대)
+      tp_rr: 4.0                   # 3.0→4.0
 
-  # ── 5. Volume Impulse — 거래량 3x 폭증 + 방향 추종 (빈도 2×) ──
-  # edge: 극단 거래량 = 큰 참여자 방향성. SL=impulse bar 반대쪽(자연 invalidation)
-  # fee: SL 0.50%, fee 0.15% = fee/SL=30%. R:R 3:1. break-even WR=30%
+  # ── 5. Volume Impulse — 거래량 3x 폭증 + 방향 추종 ──
   volume_impulse:
     enabled: true
-    allocation_usdt: 1500.0
+    allocation_usdt: 2000.0
     leverage: 3
-    cycle_seconds: 60
-    max_positions: 6
-    sl_atr_mult: 2.0
+    cycle_seconds: 45
+    max_positions: 15
+    sl_atr_mult: 4.0               # 2.0→4.0
     extra:
-      volume_mult: 3.0             # 5.0→3.0 (빈도 2×)
-      min_body_pct: 0.002          # 0.3%→0.2% (빈도 2×)
+      volume_mult: 2.5             # 3.0→2.5 (빈도 확대)
+      min_body_pct: 0.001          # 0.002→0.001 (빈도 확대)
       lookback: 50
-      tp_rr: 3.0
+      tp_rr: 4.0                   # 3.0→4.0
 
-  # ── 6. OI Divergence — 가격-OI 괴리 4패턴 (빈도 2×) ──
-  # edge: 구조적 포지션 불균형(숏커버/롱청산/신규유입). 물리적 시장 메커니즘.
-  # fee: SL 0.50%, fee 0.15% = fee/SL=30%. R:R 2.5:1. break-even WR=35%
-  # note: 4가지 trigger 패턴 분리 로깅 → 어떤 패턴이 양수 EV인지 비교
+  # ── 6. OI Divergence — 가격-OI 괴리 4패턴 ──
   oi_divergence:
     enabled: true
-    allocation_usdt: 1500.0
+    allocation_usdt: 2000.0
     leverage: 3
-    cycle_seconds: 120             # 5분→2분 (빈도 2×, OI는 5분 업데이트지만 빠른 감지)
-    max_positions: 6
-    sl_atr_mult: 2.5
+    cycle_seconds: 90              # 120→90s (빈도 확대)
+    max_positions: 15
+    sl_atr_mult: 5.0               # 2.5→5.0
     extra:
       price_lookback: 12
-      min_price_move_pct: 0.002    # 0.3%→0.2% (빈도 2×)
-      oi_change_threshold: 0.003   # 0.5%→0.3% (빈도 2×)
-      tp_rr: 2.5
+      min_price_move_pct: 0.001    # 0.002→0.001 (빈도 확대)
+      oi_change_threshold: 0.002   # 0.003→0.002 (빈도 확대)
+      tp_rr: 3.0                   # 2.5→3.0
 
   # ── 비활성 (v8.x 레거시) ──
   momentum_breakout:
@@ -198,9 +189,9 @@ monitoring:
   heartbeat_seconds: 60
 
 exchange:
-  maker_fee: 0.0002      # 0.0200% — Binance USDM VIP 0 Maker
+  maker_fee: 0.0005      # v9.1: 시장가 Taker 진입 (Post-Only 폐기)
   taker_fee: 0.0005      # 0.0500% — Binance USDM VIP 0 Taker
-  slippage_entry: 0.0003
+  slippage_entry: 0.0005  # 시장가 슬리피지
   slippage_exit: 0.0005
   liquidation_fee: 0.005 # 0.5000% — 강제 청산 시
 
@@ -218,8 +209,8 @@ entry_filters:
 
 ev_guardian:
   fee_budget_pct: 100.0  # 수수료 예산: 사실상 무제한 (demo)
-  ev_threshold: -0.001   # EV < -0.10% → 전략 자동 차단 (v9.0: 활성화)
-  ev_min_sample: 30      # 30건 이상 데이터 있어야 EV 판단 (50건 checkpoint 전 선행 경고)
+  ev_threshold: -0.05    # EV < -5.0% → 매우 느슨 (데이터 수집 우선, 조기 차단 방지)
+  ev_min_sample: 100     # 100건 이상 (데이터 수집: 최대한 늦게 판단)
 
 fee_optimization:
   bnb_keeper:
