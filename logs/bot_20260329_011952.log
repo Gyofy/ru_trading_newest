@@ -1,0 +1,103 @@
+2026-03-29 01:19:57,234 [INFO] [EquityState] Restored equity=$4602.59 (restarts=1)
+2026-03-29 01:19:57,435 [INFO] ProcessPoolExecutor initialized: 10 workers (16 cores, 80% target)
+2026-03-29 01:19:57,435 [INFO] ============================================================
+2026-03-29 01:19:57,435 [INFO] Multi-Strategy Bot v8.5 | mode=demo
+2026-03-29 01:19:57,435 [INFO] equity=$4602.588035 | coins=['XRP', 'SOL', 'TAO', 'DOGE', 'ADA', 'DOT', 'AVAX', 'BNB', 'LINK']
+2026-03-29 01:19:57,435 [INFO] ============================================================
+2026-03-29 01:19:57,989 [INFO] Exchange initialized (binance/sandbox): 704 markets loaded
+2026-03-29 01:19:57,989 [INFO] Demo/testnet mode: virtual funds, real orders on testnet | equity=$4602.59
+2026-03-29 01:19:58,014 [INFO] [MultiPos] Recovered 3 positions
+2026-03-29 01:19:58,039 [INFO] [EVGuardian] Initial evaluation: ['momentum_breakout', 'cvd_spike', 'asymmetric_sniper', 'liquidation_fade']
+2026-03-29 01:19:58,083 [INFO] Loaded 15 coin profiles from data/reports/multi_strategy/coin_profiles.json
+2026-03-29 01:19:58,083 [INFO] [EntryFilters] vpin=True blacklist=True atr_regime=True
+2026-03-29 01:19:58,083 [INFO] [PortRisk] Daily state restored: day_start=$5000.00 strategy_pnl={'asymmetric_sniper': -284.363835, 'liquidation_fade': -113.04813}
+2026-03-29 01:19:58,083 [INFO] [cvd_spike] loaded | $9000.0 | 6x | cycle=60s | max_pos=15
+2026-03-29 01:19:58,083 [INFO] [liquidation_fade] loaded | $4500.0 | 5x | cycle=60s | max_pos=10
+2026-03-29 01:19:58,083 [INFO] [asymmetric_sniper] loaded | $9000.0 | 5x | cycle=60s | max_pos=10
+2026-03-29 01:19:58,084 [INFO] [MonitorV2] Started (poll every 15s)
+2026-03-29 01:19:58,084 [INFO] [Recovery] Resuming monitoring for 3 recovered positions
+2026-03-29 01:19:58,085 [INFO] [Discord] System ready notification sent
+2026-03-29 01:19:58,085 [INFO] [cvd_spike] loop started (every 60s)
+2026-03-29 01:19:58,085 [INFO] [liquidation_fade] loop started (every 60s)
+2026-03-29 01:19:58,085 [INFO] [asymmetric_sniper] loop started (every 60s)
+2026-03-29 01:19:58,311 [INFO] [CoinSelect] Volatility top 30 → 3 passed safety filter | rejected: 0
+2026-03-29 01:19:58,311 [INFO]   ✓ SOL    vol%= 0.00% vol=$      0M spread= 0.0bps $0.0000
+2026-03-29 01:19:58,311 [INFO]   ✓ AVAX   vol%= 0.00% vol=$      0M spread= 0.0bps $0.0000
+2026-03-29 01:19:58,311 [INFO]   ✓ ARB    vol%= 0.00% vol=$      0M spread= 0.0bps $0.0000
+2026-03-29 01:19:58,311 [INFO] [CoinRefresh] 11 coins active (base=13 + selective=0) | +{'SUI', 'OP', 'ARB', 'ETH'} -{'LINK', 'TAO'}
+2026-03-29 01:20:00,940 [INFO] [Scan:cvd_spike] trades=0 | cache hits=0 miss=7 err=0 | positions=3
+2026-03-29 01:20:03,908 [INFO] [Scan:asymmetric_sniper] trades=0 | cache hits=5 miss=3 err=0 | positions=3
+2026-03-29 01:20:08,893 [INFO] [Scan:liquidation_fade] trades=0 | cache hits=0 miss=8 err=0 | positions=3
+2026-03-29 01:20:54,941 [INFO] [Heartbeat] equity=$4602.59 | daily=7.95% | pos=3 | notional=$11243.28 | kill=False
+2026-03-29 01:20:55,086 [INFO] [CoinSelect] Volatility top 30 → 0 passed safety filter | rejected: 0
+2026-03-29 01:20:58,104 [INFO] [Scan:cvd_spike] trades=0 | cache hits=8 miss=3 err=0 | positions=3
+2026-03-29 01:21:00,799 [INFO] [SignalScan] 11 coins | 11 candidates
+2026-03-29 01:21:01,713 [INFO] [Scan:asymmetric_sniper] trades=0 | cache hits=3 miss=13 err=0 | positions=3
+2026-03-29 01:21:05,750 [INFO] [Scan:liquidation_fade] trades=0 | cache hits=8 miss=0 err=0 | positions=3
+2026-03-29 01:21:51,902 [INFO] [Heartbeat] equity=$4602.59 | daily=7.95% | pos=3 | notional=$11243.28 | kill=False
+2026-03-29 01:21:55,414 [INFO] [Scan:cvd_spike] trades=0 | cache hits=5 miss=3 err=0 | positions=3
+2026-03-29 01:21:59,197 [INFO] [Scan:asymmetric_sniper] trades=0 | cache hits=8 miss=0 err=0 | positions=3
+2026-03-29 01:22:03,526 [INFO] [Scan:liquidation_fade] trades=0 | cache hits=0 miss=8 err=0 | positions=3
+2026-03-29 01:22:50,369 [INFO] [Heartbeat] equity=$4602.59 | daily=7.95% | pos=3 | notional=$11243.28 | kill=False
+2026-03-29 01:22:52,754 [INFO] [Scan:cvd_spike] trades=0 | cache hits=3 miss=5 err=0 | positions=3
+2026-03-29 01:22:56,857 [INFO] [Scan:asymmetric_sniper] trades=0 | cache hits=5 miss=3 err=0 | positions=3
+2026-03-29 01:23:00,364 [INFO] [Scan:liquidation_fade] trades=0 | cache hits=8 miss=0 err=0 | positions=3
+2026-03-29 01:23:47,238 [INFO] [Heartbeat] equity=$4602.59 | daily=7.95% | pos=3 | notional=$11243.28 | kill=False
+2026-03-29 01:23:51,745 [INFO] [Scan:cvd_spike] trades=0 | cache hits=3 miss=5 err=0 | positions=3
+2026-03-29 01:23:54,403 [INFO] [Scan:asymmetric_sniper] trades=0 | cache hits=8 miss=0 err=0 | positions=3
+2026-03-29 01:23:58,100 [INFO] [Scan:liquidation_fade] trades=0 | cache hits=0 miss=8 err=0 | positions=3
+2026-03-29 01:24:44,148 [INFO] [Heartbeat] equity=$4602.59 | daily=7.95% | pos=3 | notional=$11243.28 | kill=False
+2026-03-29 01:24:49,066 [INFO] [Scan:cvd_spike] trades=0 | cache hits=5 miss=3 err=0 | positions=3
+2026-03-29 01:24:53,266 [INFO] [ETH] ASYMMETRIC SNIPER -> SHORT | z=2.82 strength=-0.670
+2026-03-29 01:24:54,466 [INFO] [Leverage] ETH set to 5x (isolated)
+2026-03-29 01:24:55,007 [INFO] [Scan:liquidation_fade] trades=0 | cache hits=11 miss=6 err=0 | positions=3
+2026-03-29 01:25:00,663 [INFO] [MultiPos] Added asymmetric_sniper:ETH: SELL ETH @ 2026.52
+2026-03-29 01:25:00,663 [INFO] [ETH] 신규 종목 — SL/TP 등록 전 3.0s 대기 (margin mode 전파 대기)
+2026-03-29 01:25:03,991 [INFO] [ETH] Exchange SL registered @ 2040.0301
+2026-03-29 01:25:04,138 [INFO] [ETH] Exchange TP registered @ 1982.3419
+2026-03-29 01:25:04,138 [INFO] [TradeLog] Entry skeleton saved: asymmetric_sniper_ETH_0328_162504_0001
+2026-03-29 01:25:04,765 [INFO] [TradeLog] Entry enriched: asymmetric_sniper_ETH_0328_162504_0001
+2026-03-29 01:25:04,765 [INFO] [ETH] ENTRY SELL @ 2026.5200 | qty=2.22 | SL=2040.0301(-0.67%) | TP=1982.3419(+2.18%) | risk=$29.99 | notional=$4500.00 | fee≈$8.100(0.180%) | trade #1 today
+2026-03-29 01:25:04,766 [INFO] [Scan:asymmetric_sniper] trades=1 | cache hits=0 miss=3 err=0 | positions=4
+2026-03-29 01:25:04,766 [INFO] [asymmetric_sniper] TRADE: {'strategy': 'asymmetric_sniper', 'coin': 'ETH', 'side': 'SELL', 'price': 2026.52, 'qty': 2.22, 'sl': 2040.0301333333334, 'tp': 1982.3418639999998, 'trailing': True, 'risk_usdt': 29.992496000000244, 'rr_estimate': 0.0628945891760983}
+2026-03-29 01:25:08,342 [ERROR] [SL] ETH BUY @ 2040.03 failed: binanceusdm {"code":-4130,"msg":"An open stop or take profit order with GTE and closePosition in the direction is existing."}
+2026-03-29 01:25:08,981 [ERROR] [SL] ETH BUY @ 2040.03 failed: binanceusdm {"code":-4130,"msg":"An open stop or take profit order with GTE and closePosition in the direction is existing."}
+2026-03-29 01:25:09,591 [ERROR] [SL] ETH BUY @ 2040.03 failed: binanceusdm {"code":-4130,"msg":"An open stop or take profit order with GTE and closePosition in the direction is existing."}
+2026-03-29 01:25:09,592 [WARNING] [Trail] ETH duplicate SL order (-4130), old SL still active — skipping update
+2026-03-29 01:25:41,037 [INFO] [Heartbeat] equity=$4602.59 | daily=7.95% | pos=4 | notional=$15742.16 | kill=False
+2026-03-29 01:25:46,068 [INFO] [Scan:cvd_spike] trades=0 | cache hits=7 miss=0 err=0 | positions=4
+2026-03-29 01:25:54,220 [INFO] [Scan:liquidation_fade] trades=0 | cache hits=0 miss=7 err=0 | positions=4
+2026-03-29 01:26:02,064 [INFO] [Scan:asymmetric_sniper] trades=0 | cache hits=0 miss=0 err=0 | positions=4
+2026-03-29 01:26:23,222 [INFO] Signal 15 received, shutting down...
+2026-03-29 01:26:23,222 [INFO] Shutting down...
+2026-03-29 01:26:23,223 [INFO] [MonitorV2] Stopped
+2026-03-29 01:26:23,551 [INFO] [Cancel] SOL order already gone
+2026-03-29 01:26:23,551 [INFO] [Shutdown] SOL exchange SL cancelled
+2026-03-29 01:26:23,877 [INFO] [Cancel] SOL order already gone
+2026-03-29 01:26:23,877 [INFO] [Shutdown] SOL exchange TP cancelled
+2026-03-29 01:26:23,976 [ERROR] [MKT_CLOSE] SOL BUY failed: binanceusdm {"code":-2022,"msg":"ReduceOnly Order is rejected."}
+2026-03-29 01:26:24,433 [INFO] [Cancel] AVAX order already gone
+2026-03-29 01:26:24,433 [INFO] [Shutdown] AVAX exchange SL cancelled
+2026-03-29 01:26:24,745 [INFO] [Cancel] AVAX order already gone
+2026-03-29 01:26:24,746 [INFO] [Shutdown] AVAX exchange TP cancelled
+2026-03-29 01:26:24,842 [ERROR] [MKT_CLOSE] AVAX BUY failed: binanceusdm {"code":-2022,"msg":"ReduceOnly Order is rejected."}
+2026-03-29 01:26:25,394 [INFO] [Cancel] ARB order already gone
+2026-03-29 01:26:25,394 [INFO] [Shutdown] ARB exchange SL cancelled
+2026-03-29 01:26:25,796 [INFO] [Cancel] ARB order already gone
+2026-03-29 01:26:25,796 [INFO] [Shutdown] ARB exchange TP cancelled
+2026-03-29 01:26:25,892 [ERROR] [MKT_CLOSE] ARB BUY failed: binanceusdm {"code":-2022,"msg":"ReduceOnly Order is rejected."}
+2026-03-29 01:26:26,383 [INFO] [Cancel] ETH algo order cancelled: 1000000036413148
+2026-03-29 01:26:26,383 [INFO] [Shutdown] ETH exchange SL cancelled
+2026-03-29 01:26:26,706 [INFO] [Cancel] ETH algo order cancelled: 1000000036413149
+2026-03-29 01:26:26,706 [INFO] [Shutdown] ETH exchange TP cancelled
+2026-03-29 01:26:26,809 [INFO] ============================================================
+2026-03-29 01:26:26,809 [INFO] Session summary (net of fees):
+2026-03-29 01:26:26,809 [INFO]   Trades: 0
+2026-03-29 01:26:26,809 [INFO]   Net PnL: $+0.0000 (fee: $0.0000)
+2026-03-29 01:26:26,809 [INFO]   Win rate: 0.0%
+2026-03-29 01:26:26,809 [INFO]   Final equity: $4602.59
+2026-03-29 01:26:26,809 [INFO]   [cvd_spike] trades=0 net_pnl=$+0.0000
+2026-03-29 01:26:26,809 [INFO]   [liquidation_fade] trades=0 net_pnl=$+0.0000
+2026-03-29 01:26:26,809 [INFO]   [asymmetric_sniper] trades=0 net_pnl=$+0.0000
+2026-03-29 01:26:26,809 [INFO] ============================================================
+[OK] Discord 연동 확인 완료

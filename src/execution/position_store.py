@@ -52,6 +52,7 @@ class OpenPosition:
     leverage: int = 0            # leverage used for this position
     mfe_bar: int = 0              # bar number when MFE was reached
     mfe_price: float = 0.0        # price at MFE
+    _last_exchange_sl: float = 0.0  # last SL price synced to exchange (crash-safe trailing SL)
 
     def __post_init__(self):
         if self.price_high == 0.0:
@@ -62,6 +63,8 @@ class OpenPosition:
             self.remaining_qty = self.qty
         if self.mfe_price == 0.0:
             self.mfe_price = self.entry_price
+        if self._last_exchange_sl == 0.0:
+            self._last_exchange_sl = self.sl_price
 
     @property
     def current_qty(self) -> float:

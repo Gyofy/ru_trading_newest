@@ -24,7 +24,7 @@ class DrawdownThrottle:
         3: 0.5,   # 3연패: 50%
         4: 0.3,   # 4연패: 30%
     }
-    PAUSE_THRESHOLD = 5   # 5연패 → 일시 정지
+    PAUSE_THRESHOLD = 10  # 5→10: 데모 데이터 수집 모드 (정지 기준 완화)
     RESUME_WINS = 2       # 2연승 시 복귀
 
     def __init__(self) -> None:

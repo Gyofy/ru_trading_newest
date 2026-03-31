@@ -1,0 +1,69 @@
+2026-03-29 01:17:10,746 [INFO] [EquityState] Restored equity=$4602.59 (restarts=1)
+2026-03-29 01:17:10,791 [INFO] ProcessPoolExecutor initialized: 10 workers (16 cores, 80% target)
+2026-03-29 01:17:10,792 [INFO] ============================================================
+2026-03-29 01:17:10,792 [INFO] Multi-Strategy Bot v8.5 | mode=demo
+2026-03-29 01:17:10,792 [INFO] equity=$4602.588035 | coins=['XRP', 'SOL', 'TAO', 'DOGE', 'ADA', 'DOT', 'AVAX', 'BNB', 'LINK']
+2026-03-29 01:17:10,792 [INFO] ============================================================
+2026-03-29 01:17:11,286 [INFO] Exchange initialized (binance/sandbox): 704 markets loaded
+2026-03-29 01:17:11,286 [INFO] Demo/testnet mode: virtual funds, real orders on testnet | equity=$4602.59
+2026-03-29 01:17:11,309 [INFO] [MultiPos] Recovered 3 positions
+2026-03-29 01:17:11,334 [INFO] [EVGuardian] Initial evaluation: ['momentum_breakout', 'cvd_spike', 'asymmetric_sniper', 'liquidation_fade']
+2026-03-29 01:17:11,413 [INFO] Loaded 15 coin profiles from data/reports/multi_strategy/coin_profiles.json
+2026-03-29 01:17:11,413 [INFO] [EntryFilters] vpin=True blacklist=True atr_regime=True
+2026-03-29 01:17:11,413 [INFO] [PortRisk] Daily state restored: day_start=$5000.00 strategy_pnl={'asymmetric_sniper': -284.363835, 'liquidation_fade': -113.04813}
+2026-03-29 01:17:11,413 [INFO] [cvd_spike] loaded | $9000.0 | 6x | cycle=60s | max_pos=10
+2026-03-29 01:17:11,413 [INFO] [liquidation_fade] loaded | $4500.0 | 5x | cycle=60s | max_pos=6
+2026-03-29 01:17:11,413 [INFO] [asymmetric_sniper] loaded | $9000.0 | 5x | cycle=60s | max_pos=6
+2026-03-29 01:17:11,413 [INFO] [MonitorV2] Started (poll every 15s)
+2026-03-29 01:17:11,414 [INFO] [Recovery] Resuming monitoring for 3 recovered positions
+2026-03-29 01:17:11,414 [INFO] [Discord] System ready notification sent
+2026-03-29 01:17:11,414 [INFO] [cvd_spike] loop started (every 60s)
+2026-03-29 01:17:11,414 [INFO] [liquidation_fade] loop started (every 60s)
+2026-03-29 01:17:11,415 [INFO] [asymmetric_sniper] loop started (every 60s)
+2026-03-29 01:17:11,616 [INFO] [CoinSelect] Volatility top 30 → 3 passed safety filter | rejected: 0
+2026-03-29 01:17:11,616 [INFO]   ✓ SOL    vol%= 0.00% vol=$      0M spread= 0.0bps $0.0000
+2026-03-29 01:17:11,616 [INFO]   ✓ AVAX   vol%= 0.00% vol=$      0M spread= 0.0bps $0.0000
+2026-03-29 01:17:11,616 [INFO]   ✓ ARB    vol%= 0.00% vol=$      0M spread= 0.0bps $0.0000
+2026-03-29 01:17:11,616 [INFO] [CoinRefresh] 11 coins active (base=13 + selective=0) | +{'ARB', 'OP', 'ETH', 'SUI'} -{'TAO', 'LINK'}
+2026-03-29 01:17:14,272 [INFO] [Scan:cvd_spike] trades=0 | cache hits=0 miss=7 err=0 | positions=3
+2026-03-29 01:17:17,234 [INFO] [Scan:asymmetric_sniper] trades=0 | cache hits=5 miss=3 err=0 | positions=3
+2026-03-29 01:17:22,227 [INFO] [Scan:liquidation_fade] trades=0 | cache hits=0 miss=8 err=0 | positions=3
+2026-03-29 01:18:09,897 [INFO] [Heartbeat] equity=$4602.59 | daily=7.95% | pos=3 | notional=$11243.28 | kill=False
+2026-03-29 01:18:10,064 [INFO] [CoinSelect] Volatility top 30 → 0 passed safety filter | rejected: 0
+2026-03-29 01:18:13,472 [INFO] [Scan:cvd_spike] trades=0 | cache hits=3 miss=8 err=0 | positions=3
+2026-03-29 01:18:14,852 [INFO] [Scan:asymmetric_sniper] trades=0 | cache hits=8 miss=3 err=0 | positions=3
+2026-03-29 01:18:19,150 [INFO] [Scan:liquidation_fade] trades=0 | cache hits=8 miss=4 err=0 | positions=3
+2026-03-29 01:18:19,895 [INFO] [SignalScan] 11 coins | 11 candidates
+2026-03-29 01:19:06,802 [INFO] [Heartbeat] equity=$4602.59 | daily=7.95% | pos=3 | notional=$11243.28 | kill=False
+2026-03-29 01:19:12,902 [INFO] [Scan:cvd_spike] trades=0 | cache hits=0 miss=9 err=0 | positions=3
+2026-03-29 01:19:13,787 [INFO] [Scan:asymmetric_sniper] trades=0 | cache hits=8 miss=0 err=0 | positions=3
+2026-03-29 01:19:16,888 [INFO] [Scan:liquidation_fade] trades=0 | cache hits=0 miss=8 err=0 | positions=3
+2026-03-29 01:19:43,073 [INFO] Signal 15 received, shutting down...
+2026-03-29 01:19:43,074 [INFO] Shutting down...
+2026-03-29 01:19:43,096 [INFO] [MonitorV2] Stopped
+2026-03-29 01:19:43,406 [ERROR] [Cancel] SOL algo cancel failed: binanceusdm {"code":-1021,"msg":"Timestamp for this request was 1000ms ahead of the server's time."}
+2026-03-29 01:19:43,406 [INFO] [Shutdown] SOL exchange SL cancelled
+2026-03-29 01:19:43,698 [ERROR] [Cancel] SOL algo cancel failed: binanceusdm {"code":-1021,"msg":"Timestamp for this request was 1000ms ahead of the server's time."}
+2026-03-29 01:19:43,698 [INFO] [Shutdown] SOL exchange TP cancelled
+2026-03-29 01:19:43,791 [ERROR] [MKT_CLOSE] SOL BUY failed: binanceusdm {"code":-1021,"msg":"Timestamp for this request was 1000ms ahead of the server's time."}
+2026-03-29 01:19:44,227 [ERROR] [Cancel] AVAX algo cancel failed: binanceusdm {"code":-1021,"msg":"Timestamp for this request was 1000ms ahead of the server's time."}
+2026-03-29 01:19:44,227 [INFO] [Shutdown] AVAX exchange SL cancelled
+2026-03-29 01:19:44,519 [ERROR] [Cancel] AVAX algo cancel failed: binanceusdm {"code":-1021,"msg":"Timestamp for this request was 1000ms ahead of the server's time."}
+2026-03-29 01:19:44,519 [INFO] [Shutdown] AVAX exchange TP cancelled
+2026-03-29 01:19:44,613 [ERROR] [MKT_CLOSE] AVAX BUY failed: binanceusdm {"code":-1021,"msg":"Timestamp for this request was 1000ms ahead of the server's time."}
+2026-03-29 01:19:45,197 [ERROR] [Cancel] ARB algo cancel failed: binanceusdm {"code":-1021,"msg":"Timestamp for this request was 1000ms ahead of the server's time."}
+2026-03-29 01:19:45,197 [INFO] [Shutdown] ARB exchange SL cancelled
+2026-03-29 01:19:45,483 [ERROR] [Cancel] ARB algo cancel failed: binanceusdm {"code":-1021,"msg":"Timestamp for this request was 1000ms ahead of the server's time."}
+2026-03-29 01:19:45,484 [INFO] [Shutdown] ARB exchange TP cancelled
+2026-03-29 01:19:45,579 [ERROR] [MKT_CLOSE] ARB BUY failed: binanceusdm {"code":-1021,"msg":"Timestamp for this request was 1000ms ahead of the server's time."}
+2026-03-29 01:19:45,579 [INFO] ============================================================
+2026-03-29 01:19:45,579 [INFO] Session summary (net of fees):
+2026-03-29 01:19:45,579 [INFO]   Trades: 0
+2026-03-29 01:19:45,579 [INFO]   Net PnL: $+0.0000 (fee: $0.0000)
+2026-03-29 01:19:45,580 [INFO]   Win rate: 0.0%
+2026-03-29 01:19:45,580 [INFO]   Final equity: $4602.59
+2026-03-29 01:19:45,580 [INFO]   [cvd_spike] trades=0 net_pnl=$+0.0000
+2026-03-29 01:19:45,580 [INFO]   [liquidation_fade] trades=0 net_pnl=$+0.0000
+2026-03-29 01:19:45,580 [INFO]   [asymmetric_sniper] trades=0 net_pnl=$+0.0000
+2026-03-29 01:19:45,580 [INFO] ============================================================
+[OK] Discord 연동 확인 완료

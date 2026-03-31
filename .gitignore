@@ -21,19 +21,49 @@ data/*.log
 data/models/
 data/ledger.db
 
-# Reports: block large CSVs, keep trade logs
+# Reports: 대용량 바이너리·로그 제외, 거래 데이터는 포함
 data/reports/*.csv
 data/reports/*/nohup.log
 data/reports/*/bot.log
+data/reports/*/bot.log.*
+data/reports/*/bot_v10.log
 data/reports/*/bot.lock
+data/reports/*/orders.db
+data/reports/*/orders.db-shm
+data/reports/*/orders.db-wal
+data/logs/
 
-# 트레이딩 로그 (push 대상 — 나중에 내려받기 위해)
-!data/reports/tsmom_paper/trades.jsonl
-!data/reports/tsmom_paper/state.json
-!data/reports/tsmom_paper/signal_log.jsonl
-!data/reports/tsmom_paper/trade_analysis.jsonl
-!data/reports/tsmom_paper/trajectories.jsonl
-!trading_result/
+# 백테스트 1분봉 캐시 (용량 큼, 재다운로드 가능)
+data/backtest_cache/
+
+# triple_eval 백업 파일
+data/reports/*/trade_context_backup_*.jsonl
+
+# 트레이딩 로그 — 포함 대상 (3중 검증 데이터)
+!data/reports/multi_strategy/trade_context.jsonl
+!data/reports/multi_strategy/trades.jsonl
+!data/reports/multi_strategy/equity_state.json
+!data/reports/multi_strategy/coin_profiles.json
+!data/reports/multi_strategy/ev_report.json
+!data/reports/multi_strategy/rejection_context.jsonl
+!data/reports/multi_strategy/strategy_analysis.json
+!data/reports/multi_strategy/strategy_analysis.md
+!data/reports/multi_strategy/positions.json
+!data/reports/triple_backtest/trade_context.jsonl
+!data/reports/triple_backtest/trades.jsonl
+!data/reports/triple_backtest/equity_state.json
+!data/reports/triple_backtest/coin_profiles.json
+!data/reports/triple_backtest/strategy_analysis.json
+!data/reports/triple_backtest/rejection_context.jsonl
+!data/reports/triple_paper/trade_context.jsonl
+!data/reports/triple_paper/trades.jsonl
+!data/reports/triple_paper/equity_state.json
+!data/reports/triple_demo/trade_context.jsonl
+!data/reports/triple_demo/trades.jsonl
+!data/reports/triple_demo/equity_state.json
+
+# 15m/1h 역사 데이터 — 포함 대상
+!data/historical/
 
 # ML artifacts
 *.pt

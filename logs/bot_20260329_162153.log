@@ -1,0 +1,539 @@
+2026-03-29 16:21:55,437 [INFO] [EquityState] Restored equity=$4605.42 (restarts=1)
+2026-03-29 16:21:55,440 [INFO] ProcessPoolExecutor initialized: 10 workers (16 cores, 80% target)
+2026-03-29 16:21:55,440 [INFO] ============================================================
+2026-03-29 16:21:55,440 [INFO] Multi-Strategy Bot v8.5 | mode=demo
+2026-03-29 16:21:55,440 [INFO] equity=$4605.420997 | coins=['XRP', 'SOL', 'TAO', 'DOGE', 'ADA', 'DOT', 'AVAX', 'BNB', 'LINK']
+2026-03-29 16:21:55,440 [INFO] ============================================================
+2026-03-29 16:21:56,133 [INFO] Exchange initialized (binance/sandbox): 704 markets loaded
+2026-03-29 16:21:56,237 [WARNING] [BalanceSync] 내부equity=$4605.42 vs 거래소USDT=$4595.04 (차이=$10.38) → 거래소 잔고로 동기화
+2026-03-29 16:21:56,483 [INFO] Demo/testnet mode: virtual funds, real orders on testnet | equity=$4595.04
+2026-03-29 16:21:56,486 [INFO] [MultiPos] Recovered 0 positions
+2026-03-29 16:21:56,489 [INFO] [EVGuardian] Initial evaluation: ['momentum_breakout', 'cvd_spike', 'asymmetric_sniper', 'liquidation_fade']
+2026-03-29 16:21:56,489 [INFO] Loaded 15 coin profiles from data/reports/multi_strategy/coin_profiles.json
+2026-03-29 16:21:56,489 [INFO] [EntryFilters] vpin=True blacklist=True atr_regime=True
+2026-03-29 16:21:56,490 [INFO] [PortRisk] Daily state restored: day_start=$4590.16 strategy_pnl={'liquidation_fade': 8.94142, 'asymmetric_sniper': -4.044029}
+2026-03-29 16:21:56,490 [INFO] [cvd_spike] loaded | $9000.0 | 6x | cycle=60s | max_pos=15
+2026-03-29 16:21:56,490 [INFO] [liquidation_fade] loaded | $4500.0 | 5x | cycle=60s | max_pos=10
+2026-03-29 16:21:56,490 [INFO] [asymmetric_sniper] loaded | $9000.0 | 5x | cycle=60s | max_pos=10
+2026-03-29 16:21:56,490 [INFO] [MonitorV2] Started (poll every 15s)
+2026-03-29 16:21:56,609 [INFO] [FeeCheck] maker=0.0200% taker=0.0400% discount=YES
+2026-03-29 16:21:56,610 [INFO] [BnbKeeper] 초기화 완료 (min=$10.00 USDT)
+2026-03-29 16:21:57,763 [INFO] [BnbKeeper] BNB 잔고: 0.0000 BNB (≈$0.00 USDT) @ $613.04
+2026-03-29 16:21:57,763 [INFO] [BnbKeeper] BNB 부족 — $15.00 상당 (0.02 BNB) 시장가 매수 시도
+2026-03-29 16:21:57,868 [INFO] [BnbKeeper] BNB 매수 완료: 0.0200 BNB ($12.26 USDT)
+2026-03-29 16:21:57,868 [INFO] [BnbKeeper] 초기 체크 완료: 0.0000 BNB ($0.00)
+2026-03-29 16:21:57,868 [INFO] [FeeScanner] 초기화 완료
+2026-03-29 16:21:57,868 [INFO] [FeeScanner] 수수료율 스캔 시작...
+2026-03-29 16:21:58,123 [INFO] [FeeScanner] 스캔 완료 — ZERO-FEE 페어 없음 (총 653개 심볼 조회)
+2026-03-29 16:21:58,124 [INFO] [Discord] System ready notification sent
+2026-03-29 16:21:58,124 [INFO] [cvd_spike] loop started (every 60s)
+2026-03-29 16:21:58,124 [INFO] [liquidation_fade] loop started (every 60s)
+2026-03-29 16:21:58,124 [INFO] [asymmetric_sniper] loop started (every 60s)
+2026-03-29 16:21:58,124 [INFO] [BnbKeeper] 백그라운드 시작 (min=$10.00 USDT, interval=3600s)
+2026-03-29 16:21:58,125 [INFO] [FeeScanner] 백그라운드 시작 (interval=86400s)
+2026-03-29 16:21:58,125 [INFO] [FeeScanner] 수수료율 스캔 시작...
+2026-03-29 16:21:58,479 [INFO] [CoinSelect] Volatility top 30 → 0 passed safety filter | rejected: 0
+2026-03-29 16:21:58,480 [INFO] [CoinRefresh] 11 coins active (base=13 + selective=0) | +{'ARB', 'SUI', 'OP', 'ETH'} -{'LINK', 'TAO'}
+2026-03-29 16:22:00,485 [INFO] [FeeScanner] 스캔 완료 — ZERO-FEE 페어 없음 (총 653개 심볼 조회)
+2026-03-29 16:22:00,921 [INFO] [BnbKeeper] BNB 잔고: 0.0000 BNB (≈$0.00 USDT) @ $613.04
+2026-03-29 16:22:00,922 [INFO] [BnbKeeper] 매수 쿨다운 중 (300s) — 스킵
+2026-03-29 16:22:01,585 [INFO] [Scan:cvd_spike] trades=0 | cache hits=0 miss=9 err=0 | positions=0
+2026-03-29 16:22:04,393 [INFO] [Scan:asymmetric_sniper] trades=0 | cache hits=7 miss=4 err=0 | positions=0
+2026-03-29 16:22:09,276 [INFO] [Scan:liquidation_fade] trades=0 | cache hits=0 miss=11 err=0 | positions=0
+2026-03-29 16:22:56,234 [INFO] [Heartbeat] equity=$4595.04 | daily=0.00% | pos=0 | notional=$0.00 | kill=False
+2026-03-29 16:22:56,456 [INFO] [CoinSelect] Volatility top 30 → 0 passed safety filter | rejected: 0
+2026-03-29 16:22:57,777 [INFO] [Scan:cvd_spike] trades=0 | cache hits=11 miss=0 err=0 | positions=0
+2026-03-29 16:22:59,761 [ERROR] [DataHub] OHLCV fetch failed ETH/1m: binanceusdm 429 Too Many Requests {"code":-1003,"msg":"Too many requests; current limit of IP(15.158.3.5) is 6000 requests per minute. Please use the websocket for live updates to avoid polling the API."}
+2026-03-29 16:23:02,577 [INFO] [Scan:asymmetric_sniper] trades=0 | cache hits=4 miss=15 err=1 | positions=0
+2026-03-29 16:23:03,057 [INFO] [SignalScan] 10 coins | 10 candidates
+2026-03-29 16:23:05,466 [INFO] [Scan:liquidation_fade] trades=0 | cache hits=11 miss=2 err=0 | positions=0
+2026-03-29 16:23:52,402 [INFO] [Heartbeat] equity=$4595.04 | daily=0.00% | pos=0 | notional=$0.00 | kill=False
+2026-03-29 16:23:56,564 [INFO] [Scan:cvd_spike] trades=0 | cache hits=7 miss=4 err=0 | positions=0
+2026-03-29 16:23:59,448 [INFO] [Scan:asymmetric_sniper] trades=0 | cache hits=11 miss=0 err=0 | positions=0
+2026-03-29 16:24:02,871 [INFO] [Scan:liquidation_fade] trades=0 | cache hits=0 miss=11 err=0 | positions=0
+2026-03-29 16:24:48,673 [INFO] [Heartbeat] equity=$4595.04 | daily=0.00% | pos=0 | notional=$0.00 | kill=False
+2026-03-29 16:24:53,129 [ERROR] [DataHub] OHLCV fetch failed SOL/1m: binanceusdm 429 Too Many Requests {"code":-1003,"msg":"Too many requests; current limit of IP(15.158.3.5) is 6000 requests per minute. Please use the websocket for live updates to avoid polling the API."}
+2026-03-29 16:24:53,617 [ERROR] [DataHub] OHLCV fetch failed AVAX/1m: binanceusdm 429 Too Many Requests {"code":-1003,"msg":"Too many requests; current limit of IP(15.158.3.5) is 6000 requests per minute. Please use the websocket for live updates to avoid polling the API."}
+2026-03-29 16:24:53,619 [INFO] [Scan:cvd_spike] trades=0 | cache hits=4 miss=5 err=2 | positions=0
+2026-03-29 16:24:58,860 [INFO] [Scan:asymmetric_sniper] trades=0 | cache hits=5 miss=6 err=0 | positions=0
+2026-03-29 16:24:59,102 [INFO] [Scan:liquidation_fade] trades=0 | cache hits=11 miss=0 err=0 | positions=0
+2026-03-29 16:25:44,919 [INFO] [Heartbeat] equity=$4595.04 | daily=0.00% | pos=0 | notional=$0.00 | kill=False
+2026-03-29 16:25:49,933 [INFO] [Scan:cvd_spike] trades=0 | cache hits=11 miss=0 err=0 | positions=0
+2026-03-29 16:25:56,297 [INFO] [Scan:asymmetric_sniper] trades=0 | cache hits=6 miss=5 err=0 | positions=0
+2026-03-29 16:25:58,374 [INFO] [Scan:liquidation_fade] trades=0 | cache hits=0 miss=11 err=0 | positions=0
+2026-03-29 16:26:41,123 [INFO] [Heartbeat] equity=$4595.04 | daily=0.00% | pos=0 | notional=$0.00 | kill=False
+2026-03-29 16:26:46,797 [INFO] [Scan:cvd_spike] trades=0 | cache hits=5 miss=6 err=0 | positions=0
+2026-03-29 16:26:53,219 [INFO] [Scan:asymmetric_sniper] trades=0 | cache hits=11 miss=0 err=0 | positions=0
+2026-03-29 16:26:54,581 [INFO] [Scan:liquidation_fade] trades=0 | cache hits=11 miss=0 err=0 | positions=0
+2026-03-29 16:27:37,250 [INFO] [Heartbeat] equity=$4595.04 | daily=0.00% | pos=0 | notional=$0.00 | kill=False
+2026-03-29 16:27:43,494 [INFO] [Scan:cvd_spike] trades=0 | cache hits=6 miss=5 err=0 | positions=0
+2026-03-29 16:27:50,654 [INFO] [Scan:asymmetric_sniper] trades=0 | cache hits=5 miss=6 err=0 | positions=0
+2026-03-29 16:27:51,830 [INFO] [Scan:liquidation_fade] trades=0 | cache hits=0 miss=11 err=0 | positions=0
+2026-03-29 16:28:33,405 [INFO] [Heartbeat] equity=$4595.04 | daily=0.00% | pos=0 | notional=$0.00 | kill=False
+2026-03-29 16:28:39,945 [INFO] [Scan:cvd_spike] trades=0 | cache hits=11 miss=0 err=0 | positions=0
+2026-03-29 16:28:47,950 [INFO] [DOT] ASYMMETRIC SNIPER -> LONG | z=-1.97 strength=349.341
+2026-03-29 16:28:47,985 [INFO] [Scan:liquidation_fade] trades=0 | cache hits=17 miss=5 err=0 | positions=0
+2026-03-29 16:28:48,785 [INFO] [Leverage] DOT set to 5x (isolated)
+2026-03-29 16:28:48,986 [WARNING] [Entry] DOT Post-Only FAILED, fallback to limit: binanceusdm {"code":-5022,"msg":"Due to the order could not be executed as maker, the Post Only order will be rejected. The order will not be recorded in the order history"}
+2026-03-29 16:28:50,405 [INFO] [MultiPos] Added asymmetric_sniper:DOT: BUY DOT @ 1.267
+2026-03-29 16:28:50,405 [INFO] [DOT] 신규 종목 — SL/TP 등록 전 3.0s 대기 (margin mode 전파 대기)
+2026-03-29 16:28:53,782 [WARNING] [SL] DOT -1021 time drift, resyncing... (attempt 1)
+2026-03-29 16:28:54,332 [INFO] [DOT] Exchange SL registered @ 1.2586
+2026-03-29 16:28:54,451 [INFO] [DOT] Exchange TP registered @ 1.2946
+2026-03-29 16:28:54,452 [INFO] [TradeLog] Entry skeleton saved: asymmetric_sniper_DOT_0329_072854_0001
+2026-03-29 16:28:54,935 [INFO] [TradeLog] Entry enriched: asymmetric_sniper_DOT_0329_072854_0001
+2026-03-29 16:28:54,936 [INFO] [DOT] ENTRY BUY @ 1.2670 | qty=3551.6 | SL=1.2586(-0.67%) | TP=1.2946(+2.18%) | risk=$30.00 | notional=$4500.00 | fee≈$8.100(0.180%) | trade #1 today
+2026-03-29 16:28:54,936 [INFO] [Scan:asymmetric_sniper] trades=1 | cache hits=0 miss=4 err=0 | positions=1
+2026-03-29 16:28:54,936 [INFO] [asymmetric_sniper] TRADE: {'strategy': 'asymmetric_sniper', 'coin': 'DOT', 'side': 'BUY', 'price': 1.267, 'qty': 3551.6, 'sl': 1.2585533333333332, 'tp': 1.2946206, 'trailing': True, 'risk_usdt': 29.9991813333335, 'rr_estimate': 0.1014770549103547}
+2026-03-29 16:29:02,537 [ERROR] [SL] DOT SELL @ 1.259 failed: binanceusdm {"code":-4130,"msg":"An open stop or take profit order with GTE and closePosition in the direction is existing."}
+2026-03-29 16:29:03,176 [ERROR] [SL] DOT SELL @ 1.259 failed: binanceusdm {"code":-4130,"msg":"An open stop or take profit order with GTE and closePosition in the direction is existing."}
+2026-03-29 16:29:03,838 [ERROR] [SL] DOT SELL @ 1.259 failed: binanceusdm {"code":-4130,"msg":"An open stop or take profit order with GTE and closePosition in the direction is existing."}
+2026-03-29 16:29:03,838 [WARNING] [Trail] DOT duplicate SL order (-4130), old SL still active — skipping update
+2026-03-29 16:29:31,475 [INFO] [Heartbeat] equity=$4595.04 | daily=0.00% | pos=1 | notional=$4499.88 | kill=False
+2026-03-29 16:29:36,499 [ERROR] [DataHub] OHLCV fetch failed AVAX/1m: binanceusdm 429 Too Many Requests {"code":-1003,"msg":"Too many requests; current limit of IP(15.158.3.21) is 6000 requests per minute. Please use the websocket for live updates to avoid polling the API."}
+2026-03-29 16:29:36,931 [INFO] [Scan:cvd_spike] trades=0 | cache hits=4 miss=5 err=1 | positions=1
+2026-03-29 16:29:45,213 [INFO] [Scan:liquidation_fade] trades=0 | cache hits=0 miss=10 err=0 | positions=1
+2026-03-29 16:29:51,091 [INFO] [Scan:asymmetric_sniper] trades=0 | cache hits=0 miss=0 err=0 | positions=1
+2026-03-29 16:30:27,628 [INFO] [Heartbeat] equity=$4595.04 | daily=0.00% | pos=1 | notional=$4499.88 | kill=False
+2026-03-29 16:30:36,008 [INFO] [Scan:cvd_spike] trades=0 | cache hits=0 miss=10 err=0 | positions=1
+2026-03-29 16:30:41,358 [INFO] [Scan:liquidation_fade] trades=0 | cache hits=10 miss=0 err=0 | positions=1
+2026-03-29 16:30:47,229 [INFO] [Scan:asymmetric_sniper] trades=0 | cache hits=0 miss=0 err=0 | positions=1
+2026-03-29 16:31:23,795 [INFO] [Heartbeat] equity=$4595.04 | daily=0.00% | pos=1 | notional=$4499.88 | kill=False
+2026-03-29 16:31:35,193 [INFO] [Scan:cvd_spike] trades=0 | cache hits=0 miss=10 err=0 | positions=1
+2026-03-29 16:31:38,481 [INFO] [Scan:liquidation_fade] trades=0 | cache hits=0 miss=10 err=0 | positions=1
+2026-03-29 16:31:43,362 [INFO] [Scan:asymmetric_sniper] trades=0 | cache hits=0 miss=0 err=0 | positions=1
+2026-03-29 16:32:19,918 [INFO] [Heartbeat] equity=$4595.04 | daily=0.00% | pos=1 | notional=$4499.88 | kill=False
+2026-03-29 16:32:31,436 [INFO] [Scan:cvd_spike] trades=0 | cache hits=10 miss=0 err=0 | positions=1
+2026-03-29 16:32:37,562 [INFO] [Scan:liquidation_fade] trades=0 | cache hits=0 miss=10 err=0 | positions=1
+2026-03-29 16:32:40,872 [INFO] [ADA] ASYMMETRIC SNIPER -> SHORT | z=3.12 strength=-1.191
+2026-03-29 16:32:41,662 [INFO] [Leverage] ADA set to 5x (isolated)
+2026-03-29 16:33:02,543 [INFO] [WaitFill] ADA timeout (20.0s), cancelling
+2026-03-29 16:33:02,962 [INFO] [Scan:asymmetric_sniper] trades=0 | cache hits=0 miss=11 err=0 | positions=1
+2026-03-29 16:33:16,054 [INFO] [Heartbeat] equity=$4595.04 | daily=0.00% | pos=1 | notional=$4499.88 | kill=False
+2026-03-29 16:33:27,799 [INFO] [Scan:cvd_spike] trades=0 | cache hits=10 miss=0 err=0 | positions=1
+2026-03-29 16:33:33,711 [INFO] [Scan:liquidation_fade] trades=0 | cache hits=10 miss=0 err=0 | positions=1
+2026-03-29 16:34:00,722 [INFO] [Scan:asymmetric_sniper] trades=0 | cache hits=0 miss=10 err=0 | positions=1
+2026-03-29 16:34:12,204 [INFO] [Heartbeat] equity=$4595.04 | daily=0.00% | pos=1 | notional=$4499.88 | kill=False
+2026-03-29 16:34:24,034 [INFO] [Scan:cvd_spike] trades=0 | cache hits=10 miss=0 err=0 | positions=1
+2026-03-29 16:34:30,885 [INFO] [Scan:liquidation_fade] trades=0 | cache hits=0 miss=10 err=0 | positions=1
+2026-03-29 16:34:57,534 [INFO] [Scan:asymmetric_sniper] trades=0 | cache hits=10 miss=0 err=0 | positions=1
+2026-03-29 16:35:10,284 [INFO] [Heartbeat] equity=$4595.04 | daily=0.00% | pos=1 | notional=$4499.88 | kill=False
+2026-03-29 16:35:21,247 [INFO] [Scan:cvd_spike] trades=0 | cache hits=0 miss=10 err=0 | positions=1
+2026-03-29 16:35:27,051 [INFO] [Scan:liquidation_fade] trades=0 | cache hits=10 miss=0 err=0 | positions=1
+2026-03-29 16:35:54,329 [INFO] [Scan:asymmetric_sniper] trades=0 | cache hits=10 miss=0 err=0 | positions=1
+2026-03-29 16:36:06,566 [INFO] [Heartbeat] equity=$4595.04 | daily=0.00% | pos=1 | notional=$4499.88 | kill=False
+2026-03-29 16:36:06,711 [INFO] [CoinSelect] Volatility top 30 → 1 passed safety filter | rejected: 0
+2026-03-29 16:36:06,711 [INFO]   ✓ DOT    vol%= 0.00% vol=$      0M spread= 0.0bps $0.0000
+2026-03-29 16:36:06,712 [INFO] [CoinRefresh] 11 coins active (base=13 + selective=0) | +{} -{}
+2026-03-29 16:36:17,421 [INFO] [Scan:cvd_spike] trades=0 | cache hits=10 miss=0 err=0 | positions=1
+2026-03-29 16:36:24,229 [INFO] [Scan:liquidation_fade] trades=0 | cache hits=0 miss=10 err=0 | positions=1
+2026-03-29 16:36:52,185 [INFO] [Scan:asymmetric_sniper] trades=0 | cache hits=0 miss=10 err=0 | positions=1
+2026-03-29 16:37:02,772 [INFO] [Heartbeat] equity=$4595.04 | daily=0.00% | pos=1 | notional=$4499.88 | kill=False
+2026-03-29 16:37:11,256 [INFO] [CoinSelect] Volatility top 30 → 0 passed safety filter | rejected: 0
+2026-03-29 16:37:13,570 [INFO] [Scan:cvd_spike] trades=0 | cache hits=10 miss=1 err=0 | positions=1
+2026-03-29 16:37:16,868 [INFO] [SignalScan] 11 coins | 11 candidates
+2026-03-29 16:37:20,376 [INFO] [Scan:liquidation_fade] trades=0 | cache hits=10 miss=10 err=0 | positions=1
+2026-03-29 16:37:48,884 [INFO] [Scan:asymmetric_sniper] trades=0 | cache hits=10 miss=0 err=0 | positions=1
+2026-03-29 16:37:58,913 [INFO] [Heartbeat] equity=$4595.04 | daily=0.00% | pos=1 | notional=$4499.88 | kill=False
+2026-03-29 16:38:12,758 [INFO] [Scan:cvd_spike] trades=0 | cache hits=0 miss=10 err=0 | positions=1
+2026-03-29 16:38:17,583 [INFO] [Scan:liquidation_fade] trades=0 | cache hits=0 miss=10 err=0 | positions=1
+2026-03-29 16:38:45,649 [INFO] [Scan:asymmetric_sniper] trades=0 | cache hits=10 miss=0 err=0 | positions=1
+2026-03-29 16:38:55,055 [INFO] [Heartbeat] equity=$4595.04 | daily=0.00% | pos=1 | notional=$4499.88 | kill=False
+2026-03-29 16:39:08,934 [INFO] [Scan:cvd_spike] trades=0 | cache hits=10 miss=0 err=0 | positions=1
+2026-03-29 16:39:13,712 [INFO] [Scan:liquidation_fade] trades=0 | cache hits=10 miss=0 err=0 | positions=1
+2026-03-29 16:39:45,394 [INFO] [Scan:asymmetric_sniper] trades=0 | cache hits=0 miss=10 err=0 | positions=1
+2026-03-29 16:39:51,206 [INFO] [Heartbeat] equity=$4595.04 | daily=0.00% | pos=1 | notional=$4499.88 | kill=False
+2026-03-29 16:40:05,094 [INFO] [Scan:cvd_spike] trades=0 | cache hits=10 miss=0 err=0 | positions=1
+2026-03-29 16:40:12,852 [INFO] [Scan:liquidation_fade] trades=0 | cache hits=0 miss=10 err=0 | positions=1
+2026-03-29 16:40:42,173 [INFO] [Scan:asymmetric_sniper] trades=0 | cache hits=10 miss=0 err=0 | positions=1
+2026-03-29 16:40:47,353 [INFO] [Heartbeat] equity=$4595.04 | daily=0.00% | pos=1 | notional=$4499.88 | kill=False
+2026-03-29 16:41:02,417 [INFO] [Scan:cvd_spike] trades=0 | cache hits=0 miss=10 err=0 | positions=1
+2026-03-29 16:41:08,988 [INFO] [Scan:liquidation_fade] trades=0 | cache hits=10 miss=0 err=0 | positions=1
+2026-03-29 16:41:38,621 [INFO] [ADA] ASYMMETRIC SNIPER -> LONG | z=-4.08 strength=31.558
+2026-03-29 16:41:38,875 [INFO] [ARB] ASYMMETRIC SNIPER -> LONG | z=-2.28 strength=2526.796
+2026-03-29 16:41:39,402 [INFO] [Leverage] ADA set to 5x (isolated)
+2026-03-29 16:41:45,437 [INFO] [Heartbeat] equity=$4595.04 | daily=0.00% | pos=1 | notional=$4499.88 | kill=False
+2026-03-29 16:41:59,109 [INFO] [Scan:cvd_spike] trades=0 | cache hits=20 miss=1 err=0 | positions=1
+2026-03-29 16:42:00,873 [INFO] [WaitFill] ADA timeout (20.0s), cancelling
+2026-03-29 16:42:01,080 [INFO] [Scan:asymmetric_sniper] trades=0 | cache hits=0 miss=0 err=0 | positions=1
+2026-03-29 16:42:06,353 [INFO] [Scan:liquidation_fade] trades=0 | cache hits=0 miss=10 err=0 | positions=1
+2026-03-29 16:42:41,629 [INFO] [Heartbeat] equity=$4595.04 | daily=0.00% | pos=1 | notional=$4499.88 | kill=False
+2026-03-29 16:42:56,369 [INFO] [Scan:cvd_spike] trades=0 | cache hits=0 miss=10 err=0 | positions=1
+2026-03-29 16:42:57,832 [INFO] [Scan:asymmetric_sniper] trades=0 | cache hits=10 miss=0 err=0 | positions=1
+2026-03-29 16:43:02,505 [INFO] [Scan:liquidation_fade] trades=0 | cache hits=10 miss=0 err=0 | positions=1
+2026-03-29 16:43:37,852 [INFO] [Heartbeat] equity=$4595.04 | daily=0.00% | pos=1 | notional=$4499.88 | kill=False
+2026-03-29 16:43:52,544 [INFO] [Scan:cvd_spike] trades=0 | cache hits=10 miss=0 err=0 | positions=1
+2026-03-29 16:43:55,212 [INFO] [Scan:asymmetric_sniper] trades=0 | cache hits=4 miss=6 err=0 | positions=1
+2026-03-29 16:43:59,692 [INFO] [Scan:liquidation_fade] trades=0 | cache hits=0 miss=10 err=0 | positions=1
+2026-03-29 16:44:34,020 [INFO] [Heartbeat] equity=$4595.04 | daily=0.00% | pos=1 | notional=$4499.88 | kill=False
+2026-03-29 16:44:51,062 [INFO] [Scan:cvd_spike] trades=0 | cache hits=6 miss=4 err=0 | positions=1
+2026-03-29 16:44:52,017 [INFO] [Scan:asymmetric_sniper] trades=0 | cache hits=10 miss=0 err=0 | positions=1
+2026-03-29 16:44:55,908 [INFO] [Scan:liquidation_fade] trades=0 | cache hits=10 miss=0 err=0 | positions=1
+2026-03-29 16:45:30,208 [INFO] [Heartbeat] equity=$4595.04 | daily=0.00% | pos=1 | notional=$4499.88 | kill=False
+2026-03-29 16:45:47,896 [INFO] [Scan:cvd_spike] trades=0 | cache hits=4 miss=6 err=0 | positions=1
+2026-03-29 16:45:51,154 [INFO] [Scan:asymmetric_sniper] trades=0 | cache hits=6 miss=4 err=0 | positions=1
+2026-03-29 16:45:53,100 [INFO] [Scan:liquidation_fade] trades=0 | cache hits=0 miss=10 err=0 | positions=1
+2026-03-29 16:46:26,361 [INFO] [Heartbeat] equity=$4595.04 | daily=0.00% | pos=1 | notional=$4499.88 | kill=False
+2026-03-29 16:46:44,066 [INFO] [Scan:cvd_spike] trades=0 | cache hits=10 miss=0 err=0 | positions=1
+2026-03-29 16:46:48,513 [INFO] [Scan:asymmetric_sniper] trades=0 | cache hits=4 miss=6 err=0 | positions=1
+2026-03-29 16:46:52,204 [INFO] [Scan:liquidation_fade] trades=0 | cache hits=0 miss=10 err=0 | positions=1
+2026-03-29 16:47:24,440 [INFO] [Heartbeat] equity=$4595.04 | daily=0.00% | pos=1 | notional=$4499.88 | kill=False
+2026-03-29 16:47:40,609 [INFO] [Scan:cvd_spike] trades=0 | cache hits=6 miss=4 err=0 | positions=1
+2026-03-29 16:47:45,250 [INFO] [Scan:asymmetric_sniper] trades=0 | cache hits=10 miss=0 err=0 | positions=1
+2026-03-29 16:47:48,337 [INFO] [Scan:liquidation_fade] trades=0 | cache hits=10 miss=0 err=0 | positions=1
+2026-03-29 16:48:20,602 [INFO] [Heartbeat] equity=$4595.04 | daily=0.00% | pos=1 | notional=$4499.88 | kill=False
+2026-03-29 16:48:37,371 [INFO] [Scan:cvd_spike] trades=0 | cache hits=4 miss=6 err=0 | positions=1
+2026-03-29 16:48:42,426 [INFO] [Scan:asymmetric_sniper] trades=0 | cache hits=6 miss=4 err=0 | positions=1
+2026-03-29 16:48:45,504 [INFO] [Scan:liquidation_fade] trades=0 | cache hits=0 miss=10 err=0 | positions=1
+2026-03-29 16:49:16,761 [INFO] [Heartbeat] equity=$4595.04 | daily=0.00% | pos=1 | notional=$4499.88 | kill=False
+2026-03-29 16:49:33,612 [INFO] [Scan:cvd_spike] trades=0 | cache hits=10 miss=0 err=0 | positions=1
+2026-03-29 16:49:39,786 [INFO] [Scan:asymmetric_sniper] trades=0 | cache hits=4 miss=6 err=0 | positions=1
+2026-03-29 16:49:41,646 [INFO] [Scan:liquidation_fade] trades=0 | cache hits=10 miss=0 err=0 | positions=1
+2026-03-29 16:50:12,172 [INFO] [EVGuardian] momentum_breakout: EV=0.0000% tp_rate=0.0% n=7 ok
+2026-03-29 16:50:12,172 [INFO] [EVGuardian] cvd_spike: EV=0.0000% tp_rate=0.0% n=66 ok
+2026-03-29 16:50:12,172 [INFO] [EVGuardian] asymmetric_sniper: EV=0.0000% tp_rate=0.0% n=33 ok
+2026-03-29 16:50:12,172 [INFO] [EVGuardian] liquidation_fade: EV=0.0000% tp_rate=0.0% n=28 ok
+2026-03-29 16:50:12,984 [INFO] [CoinSelect] Volatility top 30 → 1 passed safety filter | rejected: 0
+2026-03-29 16:50:12,984 [INFO]   ✓ DOT    vol%= 0.00% vol=$      0M spread= 0.0bps $0.0000
+2026-03-29 16:50:12,984 [INFO] [CoinRefresh] 11 coins active (base=13 + selective=0) | +{} -{}
+2026-03-29 16:50:12,984 [INFO] [Heartbeat] equity=$4595.04 | daily=0.00% | pos=1 | notional=$4499.88 | kill=False
+2026-03-29 16:50:30,088 [ERROR] [DataHub] OHLCV fetch failed ARB/1m: binanceusdm 429 Too Many Requests {"code":-1003,"msg":"Too many requests; current limit of IP(15.158.3.51) is 6000 requests per minute. Please use the websocket for live updates to avoid polling the API."}
+2026-03-29 16:50:30,187 [INFO] [Scan:cvd_spike] trades=0 | cache hits=6 miss=3 err=1 | positions=1
+2026-03-29 16:50:36,655 [INFO] [Scan:asymmetric_sniper] trades=0 | cache hits=9 miss=1 err=0 | positions=1
+2026-03-29 16:50:38,289 [ERROR] [DataHub] OHLCV fetch failed ETH/5m: binanceusdm 429 Too Many Requests {"code":-1003,"msg":"Too many requests; current limit of IP(15.158.3.51) is 6000 requests per minute. Please use the websocket for live updates to avoid polling the API."}
+2026-03-29 16:50:38,783 [ERROR] [DataHub] OHLCV fetch failed SUI/5m: binanceusdm 429 Too Many Requests {"code":-1003,"msg":"Too many requests; current limit of IP(15.158.3.51) is 6000 requests per minute. Please use the websocket for live updates to avoid polling the API."}
+2026-03-29 16:50:38,783 [INFO] [Scan:liquidation_fade] trades=0 | cache hits=0 miss=8 err=2 | positions=1
+2026-03-29 16:51:09,120 [INFO] [Heartbeat] equity=$4595.04 | daily=0.00% | pos=1 | notional=$4499.88 | kill=False
+2026-03-29 16:51:25,067 [INFO] [CoinSelect] Volatility top 30 → 0 passed safety filter | rejected: 0
+2026-03-29 16:51:28,946 [ERROR] [DataHub] OHLCV fetch failed ADA/1m: binanceusdm 429 Too Many Requests {"code":-1003,"msg":"Too many requests; current limit of IP(15.158.3.51) is 6000 requests per minute. Please use the websocket for live updates to avoid polling the API."}
+2026-03-29 16:51:29,884 [INFO] [Scan:cvd_spike] trades=0 | cache hits=1 miss=14 err=1 | positions=1
+2026-03-29 16:51:31,615 [INFO] [SignalScan] 11 coins | 10 candidates
+2026-03-29 16:51:33,212 [INFO] [ETH] ASYMMETRIC SNIPER -> SHORT | z=2.01 strength=-0.482
+2026-03-29 16:51:33,470 [INFO] [SUI] ASYMMETRIC SNIPER -> SHORT | z=10.81 strength=-184.482
+2026-03-29 16:51:33,944 [INFO] [Leverage] ETH set to 5x (isolated)
+2026-03-29 16:51:35,336 [INFO] [Scan:liquidation_fade] trades=0 | cache hits=17 miss=9 err=0 | positions=1
+2026-03-29 16:51:36,720 [INFO] [MultiPos] Added asymmetric_sniper:ETH: SELL ETH @ 2005.7
+2026-03-29 16:51:36,720 [INFO] [ETH] 신규 종목 — SL/TP 등록 전 3.0s 대기 (margin mode 전파 대기)
+2026-03-29 16:51:40,065 [INFO] [ETH] Exchange SL registered @ 2019.0713
+2026-03-29 16:51:40,175 [INFO] [ETH] Exchange TP registered @ 1961.9757
+2026-03-29 16:51:40,175 [INFO] [TradeLog] Entry skeleton saved: asymmetric_sniper_ETH_0329_075140_0002
+2026-03-29 16:51:40,650 [ERROR] [DataHub] OHLCV fetch failed BTC/1h: binanceusdm 429 Too Many Requests {"code":-1003,"msg":"Too many requests; current limit of IP(15.158.3.51) is 6000 requests per minute. Please use the websocket for live updates to avoid polling the API."}
+2026-03-29 16:51:40,651 [INFO] [TradeLog] Entry enriched: asymmetric_sniper_ETH_0329_075140_0002
+2026-03-29 16:51:40,651 [INFO] [ETH] ENTRY SELL @ 2005.7000 | qty=2.243 | SL=2019.0713(-0.67%) | TP=1961.9757(+2.18%) | risk=$29.99 | notional=$4500.00 | fee≈$8.100(0.180%) | trade #2 today
+2026-03-29 16:51:40,651 [INFO] [Scan:asymmetric_sniper] trades=1 | cache hits=0 miss=2 err=1 | positions=2
+2026-03-29 16:51:40,651 [INFO] [asymmetric_sniper] TRADE: {'strategy': 'asymmetric_sniper', 'coin': 'ETH', 'side': 'SELL', 'price': 2005.7, 'qty': 2.243, 'sl': 2019.0713333333333, 'tp': 1961.9757400000003, 'trailing': True, 'risk_usdt': 29.99190066666652, 'rr_estimate': 0.03021479428013163}
+2026-03-29 16:51:46,916 [ERROR] [SL] ETH BUY @ 2019.07 failed: binanceusdm {"code":-4130,"msg":"An open stop or take profit order with GTE and closePosition in the direction is existing."}
+2026-03-29 16:51:47,577 [ERROR] [SL] ETH BUY @ 2019.07 failed: binanceusdm {"code":-4130,"msg":"An open stop or take profit order with GTE and closePosition in the direction is existing."}
+2026-03-29 16:51:48,194 [ERROR] [SL] ETH BUY @ 2019.07 failed: binanceusdm {"code":-4130,"msg":"An open stop or take profit order with GTE and closePosition in the direction is existing."}
+2026-03-29 16:51:48,194 [WARNING] [Trail] ETH duplicate SL order (-4130), old SL still active — skipping update
+2026-03-29 16:52:05,284 [INFO] [Heartbeat] equity=$4595.04 | daily=0.00% | pos=2 | notional=$8998.66 | kill=False
+2026-03-29 16:52:28,158 [ERROR] [DataHub] OHLCV fetch failed SOL/1m: binanceusdm 429 Too Many Requests {"code":-1003,"msg":"Too many requests; current limit of IP(15.158.3.51) is 6000 requests per minute. Please use the websocket for live updates to avoid polling the API."}
+2026-03-29 16:52:28,470 [ERROR] [DataHub] OHLCV fetch failed AVAX/1m: binanceusdm 429 Too Many Requests {"code":-1003,"msg":"Too many requests; current limit of IP(15.158.3.51) is 6000 requests per minute. Please use the websocket for live updates to avoid polling the API."}
+2026-03-29 16:52:28,757 [ERROR] [DataHub] OHLCV fetch failed SUI/1m: binanceusdm 429 Too Many Requests {"code":-1003,"msg":"Too many requests; current limit of IP(15.158.3.51) is 6000 requests per minute. Please use the websocket for live updates to avoid polling the API."}
+2026-03-29 16:52:28,990 [INFO] [Scan:cvd_spike] trades=0 | cache hits=1 miss=5 err=3 | positions=2
+2026-03-29 16:52:31,904 [ERROR] [DataHub] OHLCV fetch failed ADA/5m: binanceusdm 429 Too Many Requests {"code":-1003,"msg":"Too many requests; current limit of IP(15.158.3.51) is 6000 requests per minute. Please use the websocket for live updates to avoid polling the API."}
+2026-03-29 16:52:32,314 [INFO] [Scan:liquidation_fade] trades=0 | cache hits=1 miss=7 err=1 | positions=2
+2026-03-29 16:52:36,826 [INFO] [Scan:asymmetric_sniper] trades=0 | cache hits=0 miss=0 err=0 | positions=2
+2026-03-29 16:53:01,416 [INFO] [Heartbeat] equity=$4595.04 | daily=0.00% | pos=2 | notional=$8998.66 | kill=False
+2026-03-29 16:53:25,846 [INFO] [Scan:cvd_spike] trades=0 | cache hits=5 miss=4 err=0 | positions=2
+2026-03-29 16:53:30,453 [ERROR] [DataHub] OHLCV fetch failed XRP/5m: binanceusdm 429 Too Many Requests {"code":-1003,"msg":"Too many requests; current limit of IP(15.158.3.51) is 6000 requests per minute. Please use the websocket for live updates to avoid polling the API."}
+2026-03-29 16:53:31,266 [INFO] [Scan:liquidation_fade] trades=0 | cache hits=0 miss=8 err=1 | positions=2
+2026-03-29 16:53:32,963 [INFO] [Scan:asymmetric_sniper] trades=0 | cache hits=0 miss=0 err=0 | positions=2
+2026-03-29 16:53:59,535 [INFO] [Heartbeat] equity=$4595.04 | daily=0.00% | pos=2 | notional=$8998.66 | kill=False
+2026-03-29 16:54:22,586 [INFO] [Scan:cvd_spike] trades=0 | cache hits=4 miss=5 err=0 | positions=2
+2026-03-29 16:54:27,534 [INFO] [Scan:liquidation_fade] trades=0 | cache hits=8 miss=1 err=0 | positions=2
+2026-03-29 16:54:31,057 [INFO] [Scan:asymmetric_sniper] trades=0 | cache hits=0 miss=0 err=0 | positions=2
+2026-03-29 16:54:55,668 [INFO] [Heartbeat] equity=$4595.04 | daily=0.00% | pos=2 | notional=$8998.66 | kill=False
+2026-03-29 16:55:19,280 [INFO] [Scan:cvd_spike] trades=0 | cache hits=5 miss=4 err=0 | positions=2
+2026-03-29 16:55:24,482 [INFO] [Scan:liquidation_fade] trades=0 | cache hits=1 miss=8 err=0 | positions=2
+2026-03-29 16:55:28,269 [INFO] [Scan:asymmetric_sniper] trades=0 | cache hits=4 miss=5 err=0 | positions=2
+2026-03-29 16:55:51,805 [INFO] [Heartbeat] equity=$4595.04 | daily=0.00% | pos=2 | notional=$8998.66 | kill=False
+2026-03-29 16:55:52,181 [INFO] [MonitorV2] ETH EARLY EXIT: zero MFE after 5 bars (favorable=0.0000%)
+2026-03-29 16:55:52,497 [INFO] [Cancel] ETH algo order cancelled: 1000000036901671
+2026-03-29 16:55:52,497 [INFO] [MonitorV2] ETH exchange SL order cancelled
+2026-03-29 16:55:52,815 [INFO] [Cancel] ETH algo order cancelled: 1000000036901674
+2026-03-29 16:55:52,815 [INFO] [MonitorV2] ETH exchange TP order cancelled
+2026-03-29 16:55:52,914 [INFO] [PortRisk] asymmetric_sniper PnL: -8.1403 | equity: 4586.90 | daily: 0.07%
+2026-03-29 16:55:53,255 [INFO] [TradeLog] asymmetric_sniper_ETH_0329_075140_0002 closed: pnl=-0.03% net=-0.1809% fee=6.7496$ drag=0.150% reason=EARLY_EXIT_NO_MFE bars=5 mfe=0.00% mae=-0.07% mfe/trail=0.00 btc=BULL vs_btc=COUNTER
+2026-03-29 16:55:53,256 [INFO] [MultiPos] Removed asymmetric_sniper:ETH
+2026-03-29 16:55:53,256 [INFO] [Close] ❌ asymmetric_sniper:ETH EARLY_EXIT_NO_MFE | PnL=-1.3907 net=-8.1403 fee=6.7496 | entry=2005.7000 exit=2006.3200 | bars=5 | mfe=0.00% mae=-0.07%
+2026-03-29 16:56:15,547 [INFO] [Scan:cvd_spike] trades=0 | cache hits=9 miss=1 err=0 | positions=1
+2026-03-29 16:56:20,745 [INFO] [Scan:liquidation_fade] trades=0 | cache hits=8 miss=1 err=0 | positions=1
+2026-03-29 16:56:25,345 [INFO] [Scan:asymmetric_sniper] trades=0 | cache hits=5 miss=4 err=0 | positions=1
+2026-03-29 16:56:47,940 [INFO] [Heartbeat] equity=$4586.90 | daily=0.07% | pos=1 | notional=$4499.88 | kill=False
+2026-03-29 16:57:12,199 [INFO] [Scan:cvd_spike] trades=0 | cache hits=4 miss=5 err=0 | positions=1
+2026-03-29 16:57:17,749 [INFO] [Scan:liquidation_fade] trades=0 | cache hits=1 miss=8 err=0 | positions=1
+2026-03-29 16:57:22,027 [INFO] [Scan:asymmetric_sniper] trades=0 | cache hits=9 miss=0 err=0 | positions=1
+2026-03-29 16:57:44,102 [INFO] [Heartbeat] equity=$4586.90 | daily=0.07% | pos=1 | notional=$4499.88 | kill=False
+2026-03-29 16:58:08,770 [INFO] [Scan:cvd_spike] trades=0 | cache hits=5 miss=4 err=0 | positions=1
+2026-03-29 16:58:14,065 [INFO] [Scan:liquidation_fade] trades=0 | cache hits=8 miss=1 err=0 | positions=1
+2026-03-29 16:58:19,232 [INFO] [Scan:asymmetric_sniper] trades=0 | cache hits=4 miss=5 err=0 | positions=1
+2026-03-29 16:58:40,256 [INFO] [Heartbeat] equity=$4586.90 | daily=0.07% | pos=1 | notional=$4499.88 | kill=False
+2026-03-29 16:59:07,292 [INFO] [Scan:cvd_spike] trades=0 | cache hits=5 miss=4 err=0 | positions=1
+2026-03-29 16:59:11,096 [INFO] [Scan:liquidation_fade] trades=0 | cache hits=1 miss=8 err=0 | positions=1
+2026-03-29 16:59:15,971 [INFO] [Scan:asymmetric_sniper] trades=0 | cache hits=9 miss=0 err=0 | positions=1
+2026-03-29 16:59:36,418 [INFO] [Heartbeat] equity=$4586.90 | daily=0.07% | pos=1 | notional=$4499.88 | kill=False
+2026-03-29 17:00:04,408 [INFO] [Scan:cvd_spike] trades=0 | cache hits=4 miss=5 err=0 | positions=1
+2026-03-29 17:00:07,378 [INFO] [Scan:liquidation_fade] trades=0 | cache hits=8 miss=1 err=0 | positions=1
+2026-03-29 17:00:13,033 [INFO] [Scan:asymmetric_sniper] trades=0 | cache hits=5 miss=4 err=0 | positions=1
+2026-03-29 17:00:34,457 [INFO] [Heartbeat] equity=$4586.90 | daily=0.07% | pos=1 | notional=$4499.88 | kill=False
+2026-03-29 17:01:00,572 [INFO] [Scan:cvd_spike] trades=0 | cache hits=9 miss=0 err=0 | positions=1
+2026-03-29 17:01:06,400 [INFO] [Scan:liquidation_fade] trades=0 | cache hits=0 miss=9 err=0 | positions=1
+2026-03-29 17:01:10,315 [INFO] [Scan:asymmetric_sniper] trades=0 | cache hits=4 miss=5 err=0 | positions=1
+2026-03-29 17:01:30,635 [INFO] [Heartbeat] equity=$4586.90 | daily=0.07% | pos=1 | notional=$4499.88 | kill=False
+2026-03-29 17:01:57,378 [INFO] [Scan:cvd_spike] trades=0 | cache hits=5 miss=4 err=0 | positions=1
+2026-03-29 17:02:02,559 [INFO] [Scan:liquidation_fade] trades=0 | cache hits=9 miss=0 err=0 | positions=1
+2026-03-29 17:02:09,204 [INFO] [SUI] ASYMMETRIC SNIPER -> SHORT | z=6.20 strength=-210.752
+2026-03-29 17:02:09,891 [INFO] [Leverage] SUI set to 5x (isolated)
+2026-03-29 17:02:10,096 [WARNING] [Entry] SUI Post-Only FAILED, fallback to limit: binanceusdm {"code":-5022,"msg":"Due to the order could not be executed as maker, the Post Only order will be rejected. The order will not be recorded in the order history"}
+2026-03-29 17:02:10,774 [INFO] [MultiPos] Added asymmetric_sniper:SUI: SELL SUI @ 0.8636
+2026-03-29 17:02:10,774 [INFO] [SUI] 신규 종목 — SL/TP 등록 전 3.0s 대기 (margin mode 전파 대기)
+2026-03-29 17:02:12,179 [INFO] [SUI] Exchange SL registered @ 0.8694
+2026-03-29 17:02:12,287 [INFO] [SUI] Exchange TP registered @ 0.8448
+2026-03-29 17:02:12,287 [INFO] [TradeLog] Entry skeleton saved: asymmetric_sniper_SUI_0329_080212_0003
+2026-03-29 17:02:12,783 [INFO] [TradeLog] Entry enriched: asymmetric_sniper_SUI_0329_080212_0003
+2026-03-29 17:02:12,783 [INFO] [SUI] ENTRY SELL @ 0.8636 | qty=5210.1 | SL=0.8694(-0.67%) | TP=0.8448(+2.18%) | risk=$30.00 | notional=$4500.00 | fee≈$8.100(0.180%) | trade #3 today
+2026-03-29 17:02:12,783 [INFO] [Scan:asymmetric_sniper] trades=1 | cache hits=4 miss=9 err=0 | positions=2
+2026-03-29 17:02:12,783 [INFO] [asymmetric_sniper] TRADE: {'strategy': 'asymmetric_sniper', 'coin': 'SUI', 'side': 'SELL', 'price': 0.8636, 'qty': 5210.1, 'sl': 0.8693573333333333, 'tp': 0.8447735200000002, 'trailing': True, 'risk_usdt': 29.99628239999973, 'rr_estimate': 0.03870391504986728}
+2026-03-29 17:02:17,875 [ERROR] [SL] SUI BUY @ 0.8694 failed: binanceusdm {"code":-4130,"msg":"An open stop or take profit order with GTE and closePosition in the direction is existing."}
+2026-03-29 17:02:18,505 [ERROR] [SL] SUI BUY @ 0.8694 failed: binanceusdm {"code":-4130,"msg":"An open stop or take profit order with GTE and closePosition in the direction is existing."}
+2026-03-29 17:02:19,127 [ERROR] [SL] SUI BUY @ 0.8694 failed: binanceusdm {"code":-4130,"msg":"An open stop or take profit order with GTE and closePosition in the direction is existing."}
+2026-03-29 17:02:19,127 [WARNING] [Trail] SUI duplicate SL order (-4130), old SL still active — skipping update
+2026-03-29 17:02:26,809 [INFO] [Heartbeat] equity=$4586.90 | daily=0.07% | pos=2 | notional=$8999.32 | kill=False
+2026-03-29 17:02:53,655 [INFO] [Scan:cvd_spike] trades=0 | cache hits=8 miss=0 err=0 | positions=2
+2026-03-29 17:02:59,543 [INFO] [Scan:liquidation_fade] trades=0 | cache hits=0 miss=8 err=0 | positions=2
+2026-03-29 17:03:10,997 [INFO] [Scan:asymmetric_sniper] trades=0 | cache hits=0 miss=0 err=0 | positions=2
+2026-03-29 17:03:16,510 [ERROR] [SL] SUI BUY @ 0.8633 failed: binanceusdm {"code":-4130,"msg":"An open stop or take profit order with GTE and closePosition in the direction is existing."}
+2026-03-29 17:03:17,156 [ERROR] [SL] SUI BUY @ 0.8633 failed: binanceusdm {"code":-4130,"msg":"An open stop or take profit order with GTE and closePosition in the direction is existing."}
+2026-03-29 17:03:18,065 [ERROR] [SL] SUI BUY @ 0.8633 failed: binanceusdm {"code":-4130,"msg":"An open stop or take profit order with GTE and closePosition in the direction is existing."}
+2026-03-29 17:03:18,065 [WARNING] [Trail] SUI duplicate SL order (-4130), old SL still active — skipping update
+2026-03-29 17:03:22,952 [INFO] [Heartbeat] equity=$4586.90 | daily=0.07% | pos=2 | notional=$8999.32 | kill=False
+2026-03-29 17:03:50,733 [INFO] [Scan:cvd_spike] trades=0 | cache hits=0 miss=8 err=0 | positions=2
+2026-03-29 17:03:55,703 [INFO] [Scan:liquidation_fade] trades=0 | cache hits=8 miss=0 err=0 | positions=2
+2026-03-29 17:04:07,130 [INFO] [Scan:asymmetric_sniper] trades=0 | cache hits=0 miss=0 err=0 | positions=2
+2026-03-29 17:04:15,184 [INFO] [MonitorV2] SUI SL HIT: 0.8627 vs 0.8626
+2026-03-29 17:04:15,504 [INFO] [Cancel] SUI algo order cancelled: 1000000036907666
+2026-03-29 17:04:15,504 [INFO] [MonitorV2] SUI exchange SL order cancelled
+2026-03-29 17:04:15,821 [INFO] [Cancel] SUI algo order cancelled: 1000000036907667
+2026-03-29 17:04:15,821 [INFO] [MonitorV2] SUI exchange TP order cancelled
+2026-03-29 17:04:15,923 [INFO] [PortRisk] asymmetric_sniper PnL: -1.6535 | equity: 4585.25 | daily: 0.11%
+2026-03-29 17:04:16,268 [INFO] [TradeLog] asymmetric_sniper_SUI_0329_080212_0003 closed: pnl=+0.10% net=-0.0457% fee=6.7445$ drag=0.150% reason=SL_HIT bars=2 mfe=0.14% mae=-0.01% mfe/trail=5.38 btc=BULL vs_btc=COUNTER
+2026-03-29 17:04:16,269 [INFO] [MultiPos] Removed asymmetric_sniper:SUI
+2026-03-29 17:04:16,269 [INFO] [Close] ❌ asymmetric_sniper:SUI SL_HIT | PnL=+5.0910 net=-1.6535 fee=6.7445 | entry=0.8636 exit=0.8627 | bars=2 | mfe=0.14% mae=-0.01%
+2026-03-29 17:04:19,078 [INFO] [CoinSelect] Volatility top 30 → 1 passed safety filter | rejected: 0
+2026-03-29 17:04:19,078 [INFO]   ✓ DOT    vol%= 0.00% vol=$      0M spread= 0.0bps $0.0000
+2026-03-29 17:04:19,078 [INFO] [CoinRefresh] 11 coins active (base=13 + selective=0) | +{} -{}
+2026-03-29 17:04:19,100 [INFO] [Heartbeat] equity=$4585.25 | daily=0.11% | pos=1 | notional=$4499.88 | kill=False
+2026-03-29 17:04:47,009 [INFO] [Scan:cvd_spike] trades=0 | cache hits=8 miss=1 err=0 | positions=1
+2026-03-29 17:04:52,664 [INFO] [Scan:liquidation_fade] trades=0 | cache hits=0 miss=8 err=0 | positions=1
+2026-03-29 17:05:03,286 [INFO] [Scan:asymmetric_sniper] trades=0 | cache hits=0 miss=0 err=0 | positions=1
+2026-03-29 17:05:15,252 [INFO] [Heartbeat] equity=$4585.25 | daily=0.11% | pos=1 | notional=$4499.88 | kill=False
+2026-03-29 17:05:39,624 [INFO] [CoinSelect] Volatility top 30 → 0 passed safety filter | rejected: 0
+2026-03-29 17:05:45,201 [INFO] [SignalScan] 11 coins | 10 candidates
+2026-03-29 17:05:45,631 [ERROR] [SL] DOT SELL @ 1.268 failed: binanceusdm {"code":-4130,"msg":"An open stop or take profit order with GTE and closePosition in the direction is existing."}
+2026-03-29 17:05:46,163 [INFO] [Scan:cvd_spike] trades=0 | cache hits=0 miss=19 err=0 | positions=1
+2026-03-29 17:05:46,255 [ERROR] [SL] DOT SELL @ 1.268 failed: binanceusdm {"code":-4130,"msg":"An open stop or take profit order with GTE and closePosition in the direction is existing."}
+2026-03-29 17:05:46,868 [ERROR] [SL] DOT SELL @ 1.268 failed: binanceusdm {"code":-4130,"msg":"An open stop or take profit order with GTE and closePosition in the direction is existing."}
+2026-03-29 17:05:46,868 [WARNING] [Trail] DOT duplicate SL order (-4130), old SL still active — skipping update
+2026-03-29 17:05:48,819 [INFO] [Scan:liquidation_fade] trades=0 | cache hits=8 miss=0 err=0 | positions=1
+2026-03-29 17:05:59,925 [INFO] [Scan:asymmetric_sniper] trades=0 | cache hits=8 miss=0 err=0 | positions=1
+2026-03-29 17:06:02,011 [INFO] [MonitorV2] DOT SL HIT: 1.2680 vs 1.2681
+2026-03-29 17:06:02,375 [INFO] [Cancel] DOT algo order cancelled: 1000000036888962
+2026-03-29 17:06:02,375 [INFO] [MonitorV2] DOT exchange SL order cancelled
+2026-03-29 17:06:02,723 [INFO] [Cancel] DOT algo order cancelled: 1000000036888963
+2026-03-29 17:06:02,723 [INFO] [MonitorV2] DOT exchange TP order cancelled
+2026-03-29 17:06:02,825 [INFO] [PortRisk] asymmetric_sniper PnL: -2.6944 | equity: 4582.55 | daily: 0.17%
+2026-03-29 17:06:03,242 [INFO] [TradeLog] asymmetric_sniper_DOT_0329_072854_0001 closed: pnl=+0.08% net=-0.0712% fee=6.7534$ drag=0.150% reason=SL_HIT bars=39 mfe=0.16% mae=-0.16% mfe/trail=2.33 btc=BULL vs_btc=ALIGNED
+2026-03-29 17:06:03,242 [INFO] [MultiPos] Removed asymmetric_sniper:DOT
+2026-03-29 17:06:03,242 [INFO] [Close] ❌ asymmetric_sniper:DOT SL_HIT | PnL=+4.0590 net=-2.6944 fee=6.7534 | entry=1.2670 exit=1.2680 | bars=39 | mfe=0.16% mae=-0.16%
+2026-03-29 17:06:13,370 [INFO] [Heartbeat] equity=$4582.55 | daily=0.17% | pos=0 | notional=$0.00 | kill=False
+2026-03-29 17:06:45,268 [INFO] [Scan:cvd_spike] trades=0 | cache hits=0 miss=9 err=0 | positions=0
+2026-03-29 17:06:45,823 [INFO] [Scan:liquidation_fade] trades=0 | cache hits=0 miss=8 err=0 | positions=0
+2026-03-29 17:06:56,661 [INFO] [Scan:asymmetric_sniper] trades=0 | cache hits=8 miss=0 err=0 | positions=0
+2026-03-29 17:07:09,547 [INFO] [Heartbeat] equity=$4582.55 | daily=0.17% | pos=0 | notional=$0.00 | kill=False
+2026-03-29 17:07:41,604 [INFO] [Scan:cvd_spike] trades=0 | cache hits=8 miss=0 err=0 | positions=0
+2026-03-29 17:07:44,671 [INFO] [Scan:liquidation_fade] trades=0 | cache hits=0 miss=8 err=0 | positions=0
+2026-03-29 17:07:54,123 [INFO] [Scan:asymmetric_sniper] trades=0 | cache hits=0 miss=8 err=0 | positions=0
+2026-03-29 17:08:05,673 [INFO] [Heartbeat] equity=$4582.55 | daily=0.17% | pos=0 | notional=$0.00 | kill=False
+2026-03-29 17:08:37,927 [INFO] [Scan:cvd_spike] trades=0 | cache hits=8 miss=0 err=0 | positions=0
+2026-03-29 17:08:40,891 [INFO] [Scan:liquidation_fade] trades=0 | cache hits=8 miss=0 err=0 | positions=0
+2026-03-29 17:08:50,823 [INFO] [Scan:asymmetric_sniper] trades=0 | cache hits=8 miss=0 err=0 | positions=0
+2026-03-29 17:09:01,818 [INFO] [Heartbeat] equity=$4582.55 | daily=0.17% | pos=0 | notional=$0.00 | kill=False
+2026-03-29 17:09:35,001 [INFO] [Scan:cvd_spike] trades=0 | cache hits=0 miss=8 err=0 | positions=0
+2026-03-29 17:09:37,831 [INFO] [Scan:liquidation_fade] trades=0 | cache hits=0 miss=8 err=0 | positions=0
+2026-03-29 17:09:49,413 [INFO] [Scan:asymmetric_sniper] trades=0 | cache hits=8 miss=0 err=0 | positions=0
+2026-03-29 17:09:57,954 [INFO] [Heartbeat] equity=$4582.55 | daily=0.17% | pos=0 | notional=$0.00 | kill=False
+2026-03-29 17:10:31,380 [INFO] [Scan:cvd_spike] trades=0 | cache hits=8 miss=0 err=0 | positions=0
+2026-03-29 17:10:33,975 [INFO] [Scan:liquidation_fade] trades=0 | cache hits=8 miss=0 err=0 | positions=0
+2026-03-29 17:10:46,857 [INFO] [Scan:asymmetric_sniper] trades=0 | cache hits=0 miss=8 err=0 | positions=0
+2026-03-29 17:10:54,067 [INFO] [Heartbeat] equity=$4582.55 | daily=0.17% | pos=0 | notional=$0.00 | kill=False
+2026-03-29 17:11:27,713 [INFO] [Scan:cvd_spike] trades=0 | cache hits=8 miss=1 err=0 | positions=0
+2026-03-29 17:11:31,106 [INFO] [Scan:liquidation_fade] trades=0 | cache hits=0 miss=9 err=0 | positions=0
+2026-03-29 17:11:43,552 [INFO] [Scan:asymmetric_sniper] trades=0 | cache hits=9 miss=0 err=0 | positions=0
+2026-03-29 17:11:50,221 [INFO] [Heartbeat] equity=$4582.55 | daily=0.17% | pos=0 | notional=$0.00 | kill=False
+2026-03-29 17:12:24,693 [INFO] [Scan:cvd_spike] trades=0 | cache hits=1 miss=8 err=0 | positions=0
+2026-03-29 17:12:27,247 [INFO] [Scan:liquidation_fade] trades=0 | cache hits=9 miss=0 err=0 | positions=0
+2026-03-29 17:12:40,474 [INFO] [Scan:asymmetric_sniper] trades=0 | cache hits=8 miss=1 err=0 | positions=0
+2026-03-29 17:12:48,314 [INFO] [Heartbeat] equity=$4582.55 | daily=0.17% | pos=0 | notional=$0.00 | kill=False
+2026-03-29 17:13:23,707 [INFO] [Scan:cvd_spike] trades=0 | cache hits=1 miss=8 err=0 | positions=0
+2026-03-29 17:13:24,573 [INFO] [Scan:liquidation_fade] trades=0 | cache hits=0 miss=9 err=0 | positions=0
+2026-03-29 17:13:37,212 [INFO] [Scan:asymmetric_sniper] trades=0 | cache hits=9 miss=0 err=0 | positions=0
+2026-03-29 17:13:44,461 [INFO] [Heartbeat] equity=$4582.55 | daily=0.17% | pos=0 | notional=$0.00 | kill=False
+2026-03-29 17:14:22,871 [INFO] [Scan:cvd_spike] trades=0 | cache hits=0 miss=9 err=0 | positions=0
+2026-03-29 17:14:23,733 [INFO] [Scan:liquidation_fade] trades=0 | cache hits=0 miss=9 err=0 | positions=0
+2026-03-29 17:14:33,603 [INFO] [SOL] ASYMMETRIC SNIPER -> SHORT | z=2.83 strength=-1.889
+2026-03-29 17:14:34,404 [INFO] [Leverage] SOL set to 5x (isolated)
+2026-03-29 17:14:40,607 [INFO] [Heartbeat] equity=$4582.55 | daily=0.17% | pos=0 | notional=$0.00 | kill=False
+2026-03-29 17:14:55,952 [INFO] [WaitFill] SOL timeout (20.0s), cancelling
+2026-03-29 17:14:56,361 [INFO] [Scan:asymmetric_sniper] trades=0 | cache hits=9 miss=1 err=0 | positions=0
+2026-03-29 17:15:19,487 [INFO] [Scan:cvd_spike] trades=0 | cache hits=9 miss=0 err=0 | positions=0
+2026-03-29 17:15:19,919 [INFO] [Scan:liquidation_fade] trades=0 | cache hits=9 miss=0 err=0 | positions=0
+2026-03-29 17:15:36,762 [INFO] [Heartbeat] equity=$4582.55 | daily=0.17% | pos=0 | notional=$0.00 | kill=False
+2026-03-29 17:15:55,492 [INFO] [SOL] ASYMMETRIC SNIPER -> SHORT | z=2.83 strength=-1.889
+2026-03-29 17:15:56,289 [INFO] [Leverage] SOL set to 5x (isolated)
+2026-03-29 17:16:15,960 [INFO] [Scan:cvd_spike] trades=0 | cache hits=9 miss=10 err=0 | positions=0
+2026-03-29 17:16:17,010 [INFO] [Scan:liquidation_fade] trades=0 | cache hits=0 miss=9 err=0 | positions=0
+2026-03-29 17:16:17,504 [INFO] [WaitFill] SOL timeout (20.0s), cancelling
+2026-03-29 17:16:17,769 [INFO] [Scan:asymmetric_sniper] trades=0 | cache hits=0 miss=0 err=0 | positions=0
+2026-03-29 17:16:32,918 [INFO] [Heartbeat] equity=$4582.55 | daily=0.17% | pos=0 | notional=$0.00 | kill=False
+2026-03-29 17:17:13,164 [INFO] [Scan:liquidation_fade] trades=0 | cache hits=9 miss=8 err=0 | positions=0
+2026-03-29 17:17:13,232 [INFO] [Scan:cvd_spike] trades=0 | cache hits=0 miss=1 err=0 | positions=0
+2026-03-29 17:17:14,584 [INFO] [Scan:asymmetric_sniper] trades=0 | cache hits=9 miss=0 err=0 | positions=0
+2026-03-29 17:17:29,049 [INFO] [Heartbeat] equity=$4582.55 | daily=0.17% | pos=0 | notional=$0.00 | kill=False
+2026-03-29 17:18:09,329 [INFO] [Scan:cvd_spike] trades=0 | cache hits=9 miss=0 err=0 | positions=0
+2026-03-29 17:18:10,215 [INFO] [Scan:liquidation_fade] trades=0 | cache hits=0 miss=9 err=0 | positions=0
+2026-03-29 17:18:11,570 [INFO] [Scan:asymmetric_sniper] trades=0 | cache hits=6 miss=3 err=0 | positions=0
+2026-03-29 17:18:27,095 [INFO] [CoinSelect] Volatility top 30 → 0 passed safety filter | rejected: 0
+2026-03-29 17:18:27,095 [INFO] [CoinRefresh] 11 coins active (base=13 + selective=0) | +{} -{}
+2026-03-29 17:18:27,096 [INFO] [Heartbeat] equity=$4582.55 | daily=0.17% | pos=0 | notional=$0.00 | kill=False
+2026-03-29 17:18:30,828 [INFO] [BnbKeeper] BNB 잔고: 0.0000 BNB (≈$0.00 USDT) @ $613.62
+2026-03-29 17:18:30,829 [INFO] [BnbKeeper] BNB 부족 — $15.00 상당 (0.02 BNB) 시장가 매수 시도
+2026-03-29 17:18:30,931 [INFO] [BnbKeeper] BNB 매수 완료: 0.0200 BNB ($12.27 USDT)
+2026-03-29 17:19:06,316 [INFO] [Scan:cvd_spike] trades=0 | cache hits=3 miss=6 err=0 | positions=0
+2026-03-29 17:19:06,408 [INFO] [Scan:liquidation_fade] trades=0 | cache hits=9 miss=0 err=0 | positions=0
+2026-03-29 17:19:08,626 [INFO] [Scan:asymmetric_sniper] trades=0 | cache hits=9 miss=0 err=0 | positions=0
+2026-03-29 17:19:23,289 [INFO] [Heartbeat] equity=$4582.55 | daily=0.17% | pos=0 | notional=$0.00 | kill=False
+2026-03-29 17:19:53,286 [INFO] [CoinSelect] Volatility top 30 → 0 passed safety filter | rejected: 0
+2026-03-29 17:19:58,642 [INFO] [SignalScan] 11 coins | 9 candidates
+2026-03-29 17:20:03,170 [INFO] [Scan:cvd_spike] trades=0 | cache hits=6 miss=15 err=0 | positions=0
+2026-03-29 17:20:04,134 [INFO] [Scan:liquidation_fade] trades=0 | cache hits=0 miss=10 err=0 | positions=0
+2026-03-29 17:20:05,930 [INFO] [AVAX] ASYMMETRIC SNIPER -> SHORT | z=3.75 strength=-16.564
+2026-03-29 17:20:06,531 [INFO] [Leverage] AVAX set to 5x (isolated)
+2026-03-29 17:20:19,421 [INFO] [Heartbeat] equity=$4582.55 | daily=0.17% | pos=0 | notional=$0.00 | kill=False
+2026-03-29 17:20:27,545 [INFO] [WaitFill] AVAX timeout (20.0s), cancelling
+2026-03-29 17:20:27,954 [INFO] [Scan:asymmetric_sniper] trades=0 | cache hits=4 miss=7 err=0 | positions=0
+2026-03-29 17:21:00,040 [INFO] [Scan:cvd_spike] trades=0 | cache hits=6 miss=4 err=0 | positions=0
+2026-03-29 17:21:00,266 [INFO] [Scan:liquidation_fade] trades=0 | cache hits=10 miss=0 err=0 | positions=0
+2026-03-29 17:21:15,552 [INFO] [Heartbeat] equity=$4582.55 | daily=0.17% | pos=0 | notional=$0.00 | kill=False
+2026-03-29 17:21:25,373 [INFO] [DOT] ASYMMETRIC SNIPER -> SHORT | z=2.36 strength=-19.409
+2026-03-29 17:21:25,407 [INFO] [AVAX] ASYMMETRIC SNIPER -> SHORT | z=5.83 strength=-28.043
+2026-03-29 17:21:25,974 [INFO] [Leverage] DOT set to 5x (isolated)
+2026-03-29 17:21:47,625 [INFO] [WaitFill] DOT timeout (20.0s), cancelling
+2026-03-29 17:21:48,044 [INFO] [Scan:asymmetric_sniper] trades=0 | cache hits=4 miss=8 err=0 | positions=0
+2026-03-29 17:21:58,574 [INFO] [Scan:cvd_spike] trades=0 | cache hits=10 miss=1 err=0 | positions=0
+2026-03-29 17:21:59,355 [ERROR] [DataHub] OHLCV fetch failed AVAX/5m: binanceusdm 429 Too Many Requests {"code":-1003,"msg":"Too many requests; current limit of IP(15.158.3.19) is 6000 requests per minute. Please use the websocket for live updates to avoid polling the API."}
+2026-03-29 17:21:59,664 [INFO] [Scan:liquidation_fade] trades=0 | cache hits=0 miss=10 err=1 | positions=0
+2026-03-29 17:22:11,667 [INFO] [Heartbeat] equity=$4582.55 | daily=0.17% | pos=0 | notional=$0.00 | kill=False
+2026-03-29 17:22:45,867 [INFO] [Scan:asymmetric_sniper] trades=0 | cache hits=1 miss=10 err=0 | positions=0
+2026-03-29 17:22:54,814 [INFO] [Scan:cvd_spike] trades=0 | cache hits=11 miss=0 err=0 | positions=0
+2026-03-29 17:22:55,874 [INFO] [Scan:liquidation_fade] trades=0 | cache hits=10 miss=1 err=0 | positions=0
+2026-03-29 17:23:07,809 [INFO] [Heartbeat] equity=$4582.55 | daily=0.17% | pos=0 | notional=$0.00 | kill=False
+2026-03-29 17:23:42,960 [INFO] [Scan:asymmetric_sniper] trades=0 | cache hits=10 miss=1 err=0 | positions=0
+2026-03-29 17:23:52,075 [INFO] [Scan:cvd_spike] trades=0 | cache hits=2 miss=10 err=0 | positions=0
+2026-03-29 17:23:53,042 [INFO] [Scan:liquidation_fade] trades=0 | cache hits=0 miss=10 err=0 | positions=0
+2026-03-29 17:24:03,916 [INFO] [Heartbeat] equity=$4582.55 | daily=0.17% | pos=0 | notional=$0.00 | kill=False
+2026-03-29 17:24:39,832 [INFO] [Scan:asymmetric_sniper] trades=0 | cache hits=11 miss=0 err=0 | positions=0
+2026-03-29 17:24:48,440 [INFO] [Scan:cvd_spike] trades=0 | cache hits=10 miss=1 err=0 | positions=0
+2026-03-29 17:24:49,409 [INFO] [Scan:liquidation_fade] trades=0 | cache hits=10 miss=1 err=0 | positions=0
+2026-03-29 17:25:02,023 [INFO] [Heartbeat] equity=$4582.55 | daily=0.17% | pos=0 | notional=$0.00 | kill=False
+2026-03-29 17:25:37,544 [INFO] [DOT] ASYMMETRIC SNIPER -> SHORT | z=3.65 strength=-26.950
+2026-03-29 17:25:38,123 [INFO] [Leverage] DOT set to 5x (isolated)
+2026-03-29 17:25:44,945 [INFO] [Scan:cvd_spike] trades=0 | cache hits=12 miss=11 err=0 | positions=0
+2026-03-29 17:25:47,793 [INFO] [Scan:liquidation_fade] trades=0 | cache hits=1 miss=10 err=0 | positions=0
+2026-03-29 17:25:54,723 [INFO] [MultiPos] Added asymmetric_sniper:DOT: SELL DOT @ 1.27
+2026-03-29 17:25:56,034 [INFO] [DOT] Exchange SL registered @ 1.2785
+2026-03-29 17:25:56,162 [INFO] [DOT] Exchange TP registered @ 1.2423
+2026-03-29 17:25:56,163 [INFO] [TradeLog] Entry skeleton saved: asymmetric_sniper_DOT_0329_082556_0004
+2026-03-29 17:25:56,745 [INFO] [TradeLog] Entry enriched: asymmetric_sniper_DOT_0329_082556_0004
+2026-03-29 17:25:56,746 [INFO] [DOT] ENTRY SELL @ 1.2700 | qty=3543.3 | SL=1.2785(-0.67%) | TP=1.2423(+2.18%) | risk=$30.00 | notional=$4500.00 | fee≈$8.100(0.180%) | trade #4 today
+2026-03-29 17:25:56,746 [INFO] [Scan:asymmetric_sniper] trades=1 | cache hits=0 miss=3 err=0 | positions=1
+2026-03-29 17:25:56,746 [INFO] [asymmetric_sniper] TRADE: {'strategy': 'asymmetric_sniper', 'coin': 'DOT', 'side': 'SELL', 'price': 1.27, 'qty': 3543.3, 'sl': 1.2784666666666666, 'tp': 1.2423140000000001, 'trailing': True, 'risk_usdt': 29.999939999999846, 'rr_estimate': 0.08098987626546432}
+2026-03-29 17:25:58,151 [INFO] [Heartbeat] equity=$4582.55 | daily=0.17% | pos=1 | notional=$4499.99 | kill=False
+2026-03-29 17:26:04,777 [ERROR] [SL] DOT BUY @ 1.278 failed: binanceusdm {"code":-4130,"msg":"An open stop or take profit order with GTE and closePosition in the direction is existing."}
+2026-03-29 17:26:05,409 [ERROR] [SL] DOT BUY @ 1.278 failed: binanceusdm {"code":-4130,"msg":"An open stop or take profit order with GTE and closePosition in the direction is existing."}
+2026-03-29 17:26:06,056 [ERROR] [SL] DOT BUY @ 1.278 failed: binanceusdm {"code":-4130,"msg":"An open stop or take profit order with GTE and closePosition in the direction is existing."}
+2026-03-29 17:26:06,056 [WARNING] [Trail] DOT duplicate SL order (-4130), old SL still active — skipping update
+2026-03-29 17:26:42,233 [INFO] [Scan:cvd_spike] trades=0 | cache hits=0 miss=10 err=0 | positions=1
+2026-03-29 17:26:44,165 [INFO] [Scan:liquidation_fade] trades=0 | cache hits=8 miss=2 err=0 | positions=1
+2026-03-29 17:26:52,953 [INFO] [Scan:asymmetric_sniper] trades=0 | cache hits=0 miss=0 err=0 | positions=1
+2026-03-29 17:26:54,313 [INFO] [Heartbeat] equity=$4582.55 | daily=0.17% | pos=1 | notional=$4499.99 | kill=False
+2026-03-29 17:27:38,587 [INFO] [Scan:cvd_spike] trades=0 | cache hits=10 miss=0 err=0 | positions=1
+2026-03-29 17:27:41,158 [INFO] [Scan:liquidation_fade] trades=0 | cache hits=2 miss=8 err=0 | positions=1
+2026-03-29 17:27:49,119 [INFO] [Scan:asymmetric_sniper] trades=0 | cache hits=0 miss=0 err=0 | positions=1
+2026-03-29 17:27:50,477 [INFO] [Heartbeat] equity=$4582.55 | daily=0.17% | pos=1 | notional=$4499.99 | kill=False
+2026-03-29 17:28:37,671 [INFO] [Scan:cvd_spike] trades=0 | cache hits=0 miss=10 err=0 | positions=1
+2026-03-29 17:28:40,330 [INFO] [Scan:liquidation_fade] trades=0 | cache hits=0 miss=10 err=0 | positions=1
+2026-03-29 17:28:45,287 [INFO] [Scan:asymmetric_sniper] trades=0 | cache hits=0 miss=0 err=0 | positions=1
+2026-03-29 17:28:46,611 [INFO] [Heartbeat] equity=$4582.55 | daily=0.17% | pos=1 | notional=$4499.99 | kill=False
+2026-03-29 17:29:33,831 [INFO] [Scan:cvd_spike] trades=0 | cache hits=10 miss=0 err=0 | positions=1
+2026-03-29 17:29:36,653 [INFO] [Scan:liquidation_fade] trades=0 | cache hits=10 miss=0 err=0 | positions=1
+2026-03-29 17:29:42,776 [INFO] [Heartbeat] equity=$4582.55 | daily=0.17% | pos=1 | notional=$4499.99 | kill=False
+2026-03-29 17:29:43,068 [INFO] [Scan:asymmetric_sniper] trades=0 | cache hits=0 miss=10 err=0 | positions=1
+2026-03-29 17:29:53,326 [INFO] [MonitorV2] DOT EARLY EXIT: zero MFE after 5 bars (favorable=0.0000%)
+2026-03-29 17:29:53,633 [INFO] [Cancel] DOT algo order cancelled: 1000000036919896
+2026-03-29 17:29:53,633 [INFO] [MonitorV2] DOT exchange SL order cancelled
+2026-03-29 17:29:53,951 [INFO] [Cancel] DOT algo order cancelled: 1000000036919898
+2026-03-29 17:29:53,951 [INFO] [MonitorV2] DOT exchange TP order cancelled
+2026-03-29 17:29:54,049 [INFO] [PortRisk] asymmetric_sniper PnL: -10.2968 | equity: 4572.25 | daily: 0.39%
+2026-03-29 17:29:54,383 [INFO] [TradeLog] asymmetric_sniper_DOT_0329_082556_0004 closed: pnl=-0.08% net=-0.2288% fee=6.7535$ drag=0.150% reason=EARLY_EXIT_NO_MFE bars=5 mfe=0.00% mae=-0.08% mfe/trail=0.00 btc=BULL vs_btc=COUNTER
+2026-03-29 17:29:54,384 [INFO] [MultiPos] Removed asymmetric_sniper:DOT
+2026-03-29 17:29:54,384 [INFO] [Close] ❌ asymmetric_sniper:DOT EARLY_EXIT_NO_MFE | PnL=-3.5433 net=-10.2968 fee=6.7535 | entry=1.2700 exit=1.2710 | bars=5 | mfe=0.00% mae=-0.08%
+2026-03-29 17:30:30,002 [INFO] [Scan:cvd_spike] trades=0 | cache hits=10 miss=1 err=0 | positions=0
+2026-03-29 17:30:33,875 [INFO] [Scan:liquidation_fade] trades=0 | cache hits=0 miss=10 err=0 | positions=0
+2026-03-29 17:30:40,858 [INFO] [Heartbeat] equity=$4572.25 | daily=0.39% | pos=0 | notional=$0.00 | kill=False
+2026-03-29 17:30:42,775 [INFO] [Scan:asymmetric_sniper] trades=0 | cache hits=0 miss=10 err=0 | positions=0
+2026-03-29 17:31:26,177 [INFO] [Scan:cvd_spike] trades=0 | cache hits=10 miss=0 err=0 | positions=0
+2026-03-29 17:31:30,078 [INFO] [Scan:liquidation_fade] trades=0 | cache hits=10 miss=0 err=0 | positions=0
+2026-03-29 17:31:37,017 [INFO] [Heartbeat] equity=$4572.25 | daily=0.39% | pos=0 | notional=$0.00 | kill=False
+2026-03-29 17:31:39,722 [INFO] [Scan:asymmetric_sniper] trades=0 | cache hits=10 miss=0 err=0 | positions=0
+2026-03-29 17:32:23,472 [INFO] [Scan:cvd_spike] trades=0 | cache hits=0 miss=10 err=0 | positions=0
+2026-03-29 17:32:30,108 [INFO] [Scan:liquidation_fade] trades=0 | cache hits=0 miss=10 err=0 | positions=0
+2026-03-29 17:32:33,167 [INFO] [Heartbeat] equity=$4572.25 | daily=0.39% | pos=0 | notional=$0.00 | kill=False
+2026-03-29 17:32:33,336 [INFO] [CoinSelect] Volatility top 30 → 0 passed safety filter | rejected: 0
+2026-03-29 17:32:33,336 [INFO] [CoinRefresh] 11 coins active (base=13 + selective=0) | +{} -{}
+2026-03-29 17:32:38,511 [INFO] [Scan:asymmetric_sniper] trades=0 | cache hits=10 miss=0 err=0 | positions=0
+2026-03-29 17:33:19,636 [INFO] [Scan:cvd_spike] trades=0 | cache hits=10 miss=0 err=0 | positions=0
+2026-03-29 17:33:26,475 [INFO] [Scan:liquidation_fade] trades=0 | cache hits=8 miss=2 err=0 | positions=0
+2026-03-29 17:33:29,301 [INFO] [Heartbeat] equity=$4572.25 | daily=0.39% | pos=0 | notional=$0.00 | kill=False
+2026-03-29 17:33:36,276 [INFO] [Scan:asymmetric_sniper] trades=0 | cache hits=0 miss=10 err=0 | positions=0
+2026-03-29 17:34:04,729 [INFO] [CoinSelect] Volatility top 30 → 0 passed safety filter | rejected: 0
+2026-03-29 17:34:09,974 [INFO] [SignalScan] 11 coins | 10 candidates
+2026-03-29 17:34:15,789 [INFO] [Scan:cvd_spike] trades=0 | cache hits=10 miss=11 err=0 | positions=0
+2026-03-29 17:34:23,611 [INFO] [Scan:liquidation_fade] trades=0 | cache hits=2 miss=8 err=0 | positions=0
+2026-03-29 17:34:25,435 [INFO] [Heartbeat] equity=$4572.25 | daily=0.39% | pos=0 | notional=$0.00 | kill=False
+2026-03-29 17:34:33,114 [INFO] [Scan:asymmetric_sniper] trades=0 | cache hits=10 miss=0 err=0 | positions=0
+2026-03-29 17:35:14,873 [INFO] [Scan:cvd_spike] trades=0 | cache hits=0 miss=10 err=0 | positions=0
+2026-03-29 17:35:19,963 [INFO] [Scan:liquidation_fade] trades=0 | cache hits=8 miss=2 err=0 | positions=0
+2026-03-29 17:35:21,564 [INFO] [Heartbeat] equity=$4572.25 | daily=0.39% | pos=0 | notional=$0.00 | kill=False
+2026-03-29 17:35:29,926 [INFO] [Scan:asymmetric_sniper] trades=0 | cache hits=10 miss=0 err=0 | positions=0
+2026-03-29 17:36:11,011 [INFO] [Scan:cvd_spike] trades=0 | cache hits=10 miss=0 err=0 | positions=0
+2026-03-29 17:36:19,018 [INFO] [Scan:liquidation_fade] trades=0 | cache hits=0 miss=10 err=0 | positions=0
+2026-03-29 17:36:17,656 [INFO] [Heartbeat] equity=$4572.25 | daily=0.39% | pos=0 | notional=$0.00 | kill=False
+2026-03-29 17:36:27,672 [INFO] [Scan:asymmetric_sniper] trades=0 | cache hits=0 miss=10 err=0 | positions=0
+2026-03-29 17:37:07,155 [INFO] [Scan:cvd_spike] trades=0 | cache hits=10 miss=0 err=0 | positions=0
+2026-03-29 17:37:14,705 [INFO] Signal 15 received, shutting down...
+2026-03-29 17:37:14,705 [INFO] Shutting down...
+2026-03-29 17:37:14,705 [INFO] [BnbKeeper] 백그라운드 루프 종료
+2026-03-29 17:37:14,705 [INFO] [FeeScanner] 백그라운드 루프 종료
+2026-03-29 17:37:14,705 [INFO] [MonitorV2] Stopped
+2026-03-29 17:37:14,705 [INFO] ============================================================
+2026-03-29 17:37:14,705 [INFO] Session summary (net of fees):
+2026-03-29 17:37:14,705 [INFO]   Trades: 4
+2026-03-29 17:37:14,705 [INFO]   Net PnL: $-22.7850 (fee: $27.0010)
+2026-03-29 17:37:14,705 [INFO]   Win rate: 0.0%
+2026-03-29 17:37:14,706 [INFO]   Final equity: $4572.25
+2026-03-29 17:37:14,706 [INFO]   [cvd_spike] trades=0 net_pnl=$+0.0000
+2026-03-29 17:37:14,706 [INFO]   [liquidation_fade] trades=0 net_pnl=$+0.0000
+2026-03-29 17:37:14,706 [INFO]   [asymmetric_sniper] trades=4 net_pnl=$-22.7850
+2026-03-29 17:37:14,706 [INFO] ============================================================
+[OK] Discord 연동 확인 완료

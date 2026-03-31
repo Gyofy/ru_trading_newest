@@ -30,6 +30,7 @@ class FeeEVGate:
         self._fee_rate = round_trip_fee_rate
         self._cache: dict[str, dict] = {}  # strategy → {wr, avg_win, avg_loss, n}
         self._last_refresh = 0.0
+        self.last_blocked: dict[str, float] = {}  # strategy → 마지막 차단 timestamp
 
     def refresh(self) -> None:
         """trade_context.jsonl에서 전략별 WR/avg_win/avg_loss 재계산."""
@@ -109,6 +110,8 @@ class FeeEVGate:
                 f"- fee={fee_pct:.3%} = EV={ev:.4%}"
             )
             logger.info(f"[FeeEV] {strategy} REJECTED — {reason}")
+            import time as _time
+            self.last_blocked[strategy] = _time.time()
             return False, ev, reason
 
         return True, ev, "positive_ev"

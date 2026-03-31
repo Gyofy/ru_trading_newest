@@ -1,62 +1,151 @@
 {
-  "generated_at": "2026-03-29T05:41:48.079598+00:00",
-  "total_trades": 133,
-  "total_pnl_usdt": -115.52792999999866,
-  "overall_win_rate": 0.3458646616541353,
+  "generated_at": "2026-03-31T01:07:36.417717+00:00",
+  "total_trades": 223,
+  "total_pnl_usdt": -133.99192233899905,
+  "overall_win_rate": 0.29596412556053814,
   "strategy_stats": [
     {
       "name": "liquidation_fade",
-      "total_trades": 28,
-      "wins": 14,
-      "losses": 14,
-      "total_pnl_usdt": 51.3600500000002,
-      "total_pnl_pct": 0.019487285174002077,
-      "gross_profit": 236.03714000000008,
-      "gross_loss": 184.67708999999985,
-      "avg_win_usdt": 16.85979571428572,
-      "avg_loss_usdt": 13.191220714285704,
+      "total_trades": 41,
+      "wins": 17,
+      "losses": 24,
+      "total_pnl_usdt": 54.24548618100018,
+      "total_pnl_pct": 0.010136300072670655,
+      "gross_profit": 244.2071700000001,
+      "gross_loss": 189.9616838189999,
+      "avg_win_usdt": 14.365127647058829,
+      "avg_loss_usdt": 7.915070159124995,
       "max_win": 32.798789999999926,
       "max_loss": 37.12869000000049,
-      "avg_bars_held": 55.714285714285715,
-      "avg_mfe_pct": 0.003917287266751898,
-      "avg_mae_pct": -0.0030278927085989485,
-      "sharpe": 2.1365380276888946,
-      "profit_factor": 1.2781073169389894,
+      "avg_bars_held": 56.048780487804876,
+      "avg_mfe_pct": 0.003833804510173127,
+      "avg_mae_pct": -0.003319593594019092,
+      "sharpe": 0.6868406533428906,
+      "profit_factor": 1.2855601460802308,
       "mdd_pct": 1.0406290381433847,
-      "win_rate": 0.5,
-      "exit_sl": 10,
+      "win_rate": 0.4146341463414634,
+      "exit_sl": 11,
       "exit_tp": 9,
-      "exit_time": 6,
+      "exit_time": 11,
       "exit_trailing": 0,
       "suggestions": []
     },
     {
       "name": "asymmetric_sniper",
-      "total_trades": 32,
-      "wins": 14,
+      "total_trades": 33,
+      "wins": 15,
       "losses": 18,
-      "total_pnl_usdt": 4.534890000002683,
-      "total_pnl_pct": 0.0016985302515946567,
-      "gross_profit": 111.00402000000051,
+      "total_pnl_usdt": 8.080890000002292,
+      "total_pnl_pct": 0.0024865523162123796,
+      "gross_profit": 114.55002000000012,
       "gross_loss": 106.46912999999783,
-      "avg_win_usdt": 7.9288585714286075,
+      "avg_win_usdt": 7.636668000000008,
       "avg_loss_usdt": 5.914951666666546,
       "max_win": 32.73599999999882,
       "max_loss": 34.48274999999939,
       "avg_bars_held": 5.0,
-      "avg_mfe_pct": 0.0008419792565674684,
-      "avg_mae_pct": -0.0005793091282370397,
-      "sharpe": 0.8258197289863077,
-      "profit_factor": 1.0425934728686406,
+      "avg_mfe_pct": 0.0008642236466483215,
+      "avg_mae_pct": -0.0005856337626728232,
+      "sharpe": 1.1812452887820688,
+      "profit_factor": 1.0758989013998936,
       "mdd_pct": 1.8089718917782824,
-      "win_rate": 0.4375,
-      "exit_sl": 21,
+      "win_rate": 0.45454545454545453,
+      "exit_sl": 22,
       "exit_tp": 0,
       "exit_time": 0,
       "exit_trailing": 0,
       "suggestions": [
-        "PF 1.04 < 1.2 \u2014 TP \ud655\ub300 \ub610\ub294 SL \ucd95\uc18c \uac80\ud1a0",
-        "SL\ud788\ud2b8(21) >> TP\ud788\ud2b8(0) \u2014 SL \uac70\ub9ac ATR\u00d72.0 \uac80\ud1a0"
+        "PF 1.08 < 1.2 \u2014 TP \ud655\ub300 \ub610\ub294 SL \ucd95\uc18c \uac80\ud1a0",
+        "SL\ud788\ud2b8(22) >> TP\ud788\ud2b8(0) \u2014 SL \uac70\ub9ac ATR\u00d72.0 \uac80\ud1a0"
+      ]
+    },
+    {
+      "name": "volume_impulse",
+      "total_trades": 11,
+      "wins": 1,
+      "losses": 10,
+      "total_pnl_usdt": -3.0123699999999816,
+      "total_pnl_pct": -0.01039486926699886,
+      "gross_profit": 0.5676000000000004,
+      "gross_loss": 3.5799699999999826,
+      "avg_win_usdt": 0.5676000000000004,
+      "avg_loss_usdt": 0.35799699999999823,
+      "max_win": 0.5676000000000004,
+      "max_loss": 1.6275399999999633,
+      "avg_bars_held": 26.09090909090909,
+      "avg_mfe_pct": 0.001535078962944033,
+      "avg_mae_pct": -0.001665365331899406,
+      "sharpe": -6.491551848659394,
+      "profit_factor": 0.1585488146548723,
+      "mdd_pct": 0.0,
+      "win_rate": 0.09090909090909091,
+      "exit_sl": 2,
+      "exit_tp": 0,
+      "exit_time": 1,
+      "exit_trailing": 0,
+      "suggestions": [
+        "\uc2b9\ub960 9% < 40% \u2014 \uc2e0\ud638 \ud544\ud130 \uac15\ud654 \ud544\uc694",
+        "PF 0.16 < 1.2 \u2014 TP \ud655\ub300 \ub610\ub294 SL \ucd95\uc18c \uac80\ud1a0",
+        "SL\ud788\ud2b8(2) >> TP\ud788\ud2b8(0) \u2014 SL \uac70\ub9ac ATR\u00d72.0 \uac80\ud1a0"
+      ]
+    },
+    {
+      "name": "cvd_extreme",
+      "total_trades": 22,
+      "wins": 5,
+      "losses": 17,
+      "total_pnl_usdt": -7.163460000000041,
+      "total_pnl_pct": -0.014077450299042768,
+      "gross_profit": 3.148330000000021,
+      "gross_loss": 10.31179000000006,
+      "avg_win_usdt": 0.6296660000000042,
+      "avg_loss_usdt": 0.6065758823529448,
+      "max_win": 1.5152000000000014,
+      "max_loss": 2.5887999999999844,
+      "avg_bars_held": 31.454545454545453,
+      "avg_mfe_pct": 0.002140397843420022,
+      "avg_mae_pct": -0.0021841552052400855,
+      "sharpe": -2.4535380771079125,
+      "profit_factor": 0.30531362644119037,
+      "mdd_pct": 0.0,
+      "win_rate": 0.22727272727272727,
+      "exit_sl": 3,
+      "exit_tp": 0,
+      "exit_time": 4,
+      "exit_trailing": 0,
+      "suggestions": [
+        "\uc2b9\ub960 23% < 40% \u2014 \uc2e0\ud638 \ud544\ud130 \uac15\ud654 \ud544\uc694",
+        "PF 0.31 < 1.2 \u2014 TP \ud655\ub300 \ub610\ub294 SL \ucd95\uc18c \uac80\ud1a0",
+        "SL\ud788\ud2b8(3) >> TP\ud788\ud2b8(0) \u2014 SL \uac70\ub9ac ATR\u00d72.0 \uac80\ud1a0"
+      ]
+    },
+    {
+      "name": "vwap_reversion",
+      "total_trades": 43,
+      "wins": 10,
+      "losses": 33,
+      "total_pnl_usdt": -14.719598519999963,
+      "total_pnl_pct": -0.06585493673507894,
+      "gross_profit": 12.918109999999967,
+      "gross_loss": 27.637708519999933,
+      "avg_win_usdt": 1.2918109999999967,
+      "avg_loss_usdt": 0.8375063187878767,
+      "max_win": 4.72067999999999,
+      "max_loss": 3.480400000000038,
+      "avg_bars_held": 21.6046511627907,
+      "avg_mfe_pct": 0.0017019127808565427,
+      "avg_mae_pct": -0.0029654843838985557,
+      "sharpe": -6.023609142877401,
+      "profit_factor": 0.4674088660661509,
+      "mdd_pct": 20.56538995470531,
+      "win_rate": 0.23255813953488372,
+      "exit_sl": 1,
+      "exit_tp": 1,
+      "exit_time": 13,
+      "exit_trailing": 0,
+      "suggestions": [
+        "\uc2b9\ub960 23% < 40% \u2014 \uc2e0\ud638 \ud544\ud130 \uac15\ud654 \ud544\uc694",
+        "PF 0.47 < 1.2 \u2014 TP \ud655\ub300 \ub610\ub294 SL \ucd95\uc18c \uac80\ud1a0"
       ]
     },
     {
@@ -124,13 +213,13 @@
     {
       "coin": "OP",
       "strategy": "liquidation_fade",
-      "total_trades": 4,
-      "win_rate": 0.75,
-      "total_pnl_usdt": 61.88199000000026,
-      "avg_pnl_pct": 0.004125469189991709,
-      "avg_mfe_pct": 0.005086083983459522,
-      "avg_mae_pct": -0.00241177711111915,
-      "avg_hold_bars": 33.75
+      "total_trades": 8,
+      "win_rate": 0.5,
+      "total_pnl_usdt": 67.77154618100025,
+      "avg_pnl_pct": 0.0039050900349594784,
+      "avg_mfe_pct": 0.006015429625532375,
+      "avg_mae_pct": -0.002461463561510191,
+      "avg_hold_bars": 48.125
     },
     {
       "coin": "DOT",
@@ -199,6 +288,17 @@
       "avg_hold_bars": 2.6666666666666665
     },
     {
+      "coin": "DOT",
+      "strategy": "asymmetric_sniper",
+      "total_trades": 5,
+      "win_rate": 0.6,
+      "total_pnl_usdt": 14.07900000000001,
+      "avg_pnl_pct": 0.0006257449184032662,
+      "avg_mfe_pct": 0.00109548359655694,
+      "avg_mae_pct": -0.0007794583356993494,
+      "avg_hold_bars": 5.0
+    },
+    {
       "coin": "DOGE",
       "strategy": "asymmetric_sniper",
       "total_trades": 3,
@@ -212,13 +312,13 @@
     {
       "coin": "SOL",
       "strategy": "liquidation_fade",
-      "total_trades": 2,
+      "total_trades": 4,
       "win_rate": 0.5,
-      "total_pnl_usdt": 11.20400000000021,
-      "avg_pnl_pct": 0.0012006109174852544,
-      "avg_mfe_pct": 0.0019333011116481837,
-      "avg_mae_pct": -0.0011555998123359184,
-      "avg_hold_bars": 15.0
+      "total_pnl_usdt": 11.307800000000169,
+      "avg_pnl_pct": 0.000537808523294203,
+      "avg_mfe_pct": 0.0011467248756819085,
+      "avg_mae_pct": -0.0009691970136078904,
+      "avg_hold_bars": 10.0
     },
     {
       "coin": "ETH",
@@ -234,24 +334,13 @@
     {
       "coin": "ETH",
       "strategy": "liquidation_fade",
-      "total_trades": 1,
-      "win_rate": 1.0,
-      "total_pnl_usdt": 10.64832000000006,
-      "avg_pnl_pct": 0.004733704073292208,
-      "avg_mfe_pct": 0.005220112224890987,
-      "avg_mae_pct": -0.0015996309315468554,
-      "avg_hold_bars": 120.0
-    },
-    {
-      "coin": "DOT",
-      "strategy": "asymmetric_sniper",
-      "total_trades": 4,
+      "total_trades": 2,
       "win_rate": 0.5,
-      "total_pnl_usdt": 10.5330000000004,
-      "avg_pnl_pct": 0.0005851756318496521,
-      "avg_mfe_pct": 0.00097534346338727,
-      "avg_mae_pct": -0.0007773174034697125,
-      "avg_hold_bars": 5.0
+      "total_pnl_usdt": 9.79398000000006,
+      "avg_pnl_pct": -0.0012202839530673676,
+      "avg_mfe_pct": 0.0026100561124454934,
+      "avg_mae_pct": -0.004576901630094938,
+      "avg_hold_bars": 62.5
     },
     {
       "coin": "ADA",
@@ -267,13 +356,13 @@
     {
       "coin": "SUI",
       "strategy": "liquidation_fade",
-      "total_trades": 6,
-      "win_rate": 0.5,
-      "total_pnl_usdt": 8.254450000000014,
-      "avg_pnl_pct": 0.0003667795788250574,
-      "avg_mfe_pct": 0.002943159405050589,
-      "avg_mae_pct": -0.002480536820663134,
-      "avg_hold_bars": 75.5
+      "total_trades": 8,
+      "win_rate": 0.375,
+      "total_pnl_usdt": 6.254730000000031,
+      "avg_pnl_pct": -0.0013471690441018381,
+      "avg_mfe_pct": 0.002992206246613946,
+      "avg_mae_pct": -0.0037787312365670667,
+      "avg_hold_bars": 84.5
     },
     {
       "coin": "XRP",
@@ -309,6 +398,94 @@
       "avg_hold_bars": 8.5
     },
     {
+      "coin": "DOGE",
+      "strategy": "vwap_reversion",
+      "total_trades": 6,
+      "win_rate": 0.3333333333333333,
+      "total_pnl_usdt": 3.8097299999999956,
+      "avg_pnl_pct": 0.001229752174038515,
+      "avg_mfe_pct": 0.00279549958163969,
+      "avg_mae_pct": -0.0009874888767206318,
+      "avg_hold_bars": 14.5
+    },
+    {
+      "coin": "DOT",
+      "strategy": "cvd_extreme",
+      "total_trades": 2,
+      "win_rate": 0.5,
+      "total_pnl_usdt": 1.5152000000000014,
+      "avg_pnl_pct": 0.0063191153238546655,
+      "avg_mfe_pct": 0.0071090047393364995,
+      "avg_mae_pct": -0.00039651070578901267,
+      "avg_hold_bars": 62.5
+    },
+    {
+      "coin": "BNB",
+      "strategy": "vwap_reversion",
+      "total_trades": 2,
+      "win_rate": 0.5,
+      "total_pnl_usdt": 1.4080999999999824,
+      "avg_pnl_pct": 0.0011665127919458478,
+      "avg_mfe_pct": 0.004026318540379896,
+      "avg_mae_pct": -0.0013540020782762119,
+      "avg_hold_bars": 60.0
+    },
+    {
+      "coin": "AVAX",
+      "strategy": "cvd_extreme",
+      "total_trades": 1,
+      "win_rate": 1.0,
+      "total_pnl_usdt": 0.8100000000000307,
+      "avg_pnl_pct": 0.0020313734341497213,
+      "avg_mfe_pct": 0.005981266222774046,
+      "avg_mae_pct": -0.000564270398374789,
+      "avg_hold_bars": 120.0
+    },
+    {
+      "coin": "BNB",
+      "strategy": "cvd_extreme",
+      "total_trades": 2,
+      "win_rate": 0.5,
+      "total_pnl_usdt": 0.6231999999999949,
+      "avg_pnl_pct": 0.002641552713475938,
+      "avg_mfe_pct": 0.0033759330094876626,
+      "avg_mae_pct": -0.0013072067130330883,
+      "avg_hold_bars": 62.5
+    },
+    {
+      "coin": "DOT",
+      "strategy": "volume_impulse",
+      "total_trades": 1,
+      "win_rate": 1.0,
+      "total_pnl_usdt": 0.5676000000000004,
+      "avg_pnl_pct": 0.004731861198738175,
+      "avg_mfe_pct": 0.012618296529968466,
+      "avg_mae_pct": -0.0007886435331231166,
+      "avg_hold_bars": 120.0
+    },
+    {
+      "coin": "XRP",
+      "strategy": "vwap_reversion",
+      "total_trades": 4,
+      "win_rate": 0.25,
+      "total_pnl_usdt": 0.20756000000006902,
+      "avg_pnl_pct": 4.5118816060909275e-05,
+      "avg_mfe_pct": 0.000819209823434094,
+      "avg_mae_pct": -0.0011181852405659763,
+      "avg_hold_bars": 18.75
+    },
+    {
+      "coin": "DOGE",
+      "strategy": "cvd_extreme",
+      "total_trades": 2,
+      "win_rate": 0.5,
+      "total_pnl_usdt": 0.043039999999983314,
+      "avg_pnl_pct": 5.380393844827356e-05,
+      "avg_mfe_pct": 0.0002691939466033276,
+      "avg_mae_pct": -0.0012933855751007368,
+      "avg_hold_bars": 5.0
+    },
+    {
       "coin": "DOT",
       "strategy": "cvd_spike",
       "total_trades": 1,
@@ -331,6 +508,61 @@
       "avg_hold_bars": 5.0
     },
     {
+      "coin": "ETH",
+      "strategy": "volume_impulse",
+      "total_trades": 1,
+      "win_rate": 0.0,
+      "total_pnl_usdt": -0.001159999999998945,
+      "avg_pnl_pct": -9.761144787051748e-06,
+      "avg_mfe_pct": 0.0,
+      "avg_mae_pct": -9.761144787051748e-06,
+      "avg_hold_bars": 5.0
+    },
+    {
+      "coin": "SOL",
+      "strategy": "cvd_extreme",
+      "total_trades": 1,
+      "win_rate": 0.0,
+      "total_pnl_usdt": -0.09560000000004891,
+      "avg_pnl_pct": -0.0002393203302621782,
+      "avg_mfe_pct": 0.0003589804953929272,
+      "avg_mae_pct": -0.00047864066052418636,
+      "avg_hold_bars": 5.0
+    },
+    {
+      "coin": "AVAX",
+      "strategy": "liquidation_fade",
+      "total_trades": 2,
+      "win_rate": 0.5,
+      "total_pnl_usdt": -0.12299999999997624,
+      "avg_pnl_pct": -0.0012979180086430666,
+      "avg_mfe_pct": 0.0020140986908359273,
+      "avg_mae_pct": -0.0062270162912157236,
+      "avg_hold_bars": 62.5
+    },
+    {
+      "coin": "XRP",
+      "strategy": "cvd_extreme",
+      "total_trades": 2,
+      "win_rate": 0.5,
+      "total_pnl_usdt": -0.2555300000000246,
+      "avg_pnl_pct": -0.00040863139252058246,
+      "avg_mfe_pct": 3.700140605342596e-05,
+      "avg_mae_pct": -0.0008897843317095211,
+      "avg_hold_bars": 5.0
+    },
+    {
+      "coin": "ARB",
+      "strategy": "volume_impulse",
+      "total_trades": 1,
+      "win_rate": 0.0,
+      "total_pnl_usdt": -0.2611399999999893,
+      "avg_pnl_pct": -0.0021786492374726778,
+      "avg_mfe_pct": 0.0,
+      "avg_mae_pct": -0.0021786492374726778,
+      "avg_hold_bars": 5.0
+    },
+    {
       "coin": "BNB",
       "strategy": "asymmetric_sniper",
       "total_trades": 2,
@@ -340,6 +572,83 @@
       "avg_mfe_pct": 7.303416375885079e-05,
       "avg_mae_pct": -0.00011368252019717852,
       "avg_hold_bars": 5.0
+    },
+    {
+      "coin": "BNB",
+      "strategy": "volume_impulse",
+      "total_trades": 2,
+      "win_rate": 0.0,
+      "total_pnl_usdt": -0.40880000000001016,
+      "avg_pnl_pct": -0.0006457932238987948,
+      "avg_mfe_pct": 0.00020442039832761725,
+      "avg_mae_pct": -0.000840210383379452,
+      "avg_hold_bars": 5.0
+    },
+    {
+      "coin": "ETH",
+      "strategy": "cvd_extreme",
+      "total_trades": 2,
+      "win_rate": 0.0,
+      "total_pnl_usdt": -0.4103100000000238,
+      "avg_pnl_pct": -0.0010316388990106115,
+      "avg_mfe_pct": 0.00018327610853885278,
+      "avg_mae_pct": -0.0011295082825313312,
+      "avg_hold_bars": 5.0
+    },
+    {
+      "coin": "AVAX",
+      "strategy": "vwap_reversion",
+      "total_trades": 5,
+      "win_rate": 0.2,
+      "total_pnl_usdt": -0.49099999999990906,
+      "avg_pnl_pct": -0.0008991090289756493,
+      "avg_mfe_pct": 0.0014787824565322444,
+      "avg_mae_pct": -0.0035396532441339854,
+      "avg_hold_bars": 16.0
+    },
+    {
+      "coin": "ADA",
+      "strategy": "volume_impulse",
+      "total_trades": 1,
+      "win_rate": 0.0,
+      "total_pnl_usdt": -0.5313000000000085,
+      "avg_pnl_pct": -0.004430124848973088,
+      "avg_mfe_pct": 0.0016109544905355767,
+      "avg_mae_pct": -0.004430124848973088,
+      "avg_hold_bars": 96.0
+    },
+    {
+      "coin": "XRP",
+      "strategy": "volume_impulse",
+      "total_trades": 2,
+      "win_rate": 0.0,
+      "total_pnl_usdt": -0.531900000000007,
+      "avg_pnl_pct": -0.0006650410108623453,
+      "avg_mfe_pct": 0.0,
+      "avg_mae_pct": -0.001401648950361981,
+      "avg_hold_bars": 5.0
+    },
+    {
+      "coin": "OP",
+      "strategy": "vwap_reversion",
+      "total_trades": 2,
+      "win_rate": 0.5,
+      "total_pnl_usdt": -0.8940300000000094,
+      "avg_pnl_pct": -0.0005239642854614206,
+      "avg_mfe_pct": 0.004694436773796126,
+      "avg_mae_pct": -0.004248359071308699,
+      "avg_hold_bars": 60.0
+    },
+    {
+      "coin": "ADA",
+      "strategy": "vwap_reversion",
+      "total_trades": 2,
+      "win_rate": 0.5,
+      "total_pnl_usdt": -0.8967000000000047,
+      "avg_pnl_pct": -0.001966309419101707,
+      "avg_mfe_pct": 0.006532674973816011,
+      "avg_mae_pct": -0.004825079654328263,
+      "avg_hold_bars": 60.0
     },
     {
       "coin": "DOGE",
@@ -353,6 +662,61 @@
       "avg_hold_bars": 9.0
     },
     {
+      "coin": "ARB",
+      "strategy": "cvd_extreme",
+      "total_trades": 5,
+      "win_rate": 0.0,
+      "total_pnl_usdt": -1.7505399999999895,
+      "avg_pnl_pct": -0.0010941096846134415,
+      "avg_mfe_pct": 0.0026086956521739276,
+      "avg_mae_pct": -0.001529128845326895,
+      "avg_hold_bars": 28.0
+    },
+    {
+      "coin": "DOGE",
+      "strategy": "volume_impulse",
+      "total_trades": 3,
+      "win_rate": 0.0,
+      "total_pnl_usdt": -1.845669999999968,
+      "avg_pnl_pct": -0.0019621755883273127,
+      "avg_mfe_pct": 0.0007492589250750287,
+      "avg_mae_pct": -0.0021427070730182227,
+      "avg_hold_bars": 13.666666666666666
+    },
+    {
+      "coin": "SUI",
+      "strategy": "cvd_extreme",
+      "total_trades": 1,
+      "win_rate": 0.0,
+      "total_pnl_usdt": -2.0569499999999765,
+      "avg_pnl_pct": -0.005142857142857084,
+      "avg_mfe_pct": 0.0015999999999999506,
+      "avg_mae_pct": -0.005142857142857084,
+      "avg_hold_bars": 17.0
+    },
+    {
+      "coin": "ETH",
+      "strategy": "vwap_reversion",
+      "total_trades": 5,
+      "win_rate": 0.2,
+      "total_pnl_usdt": -2.2916300000000196,
+      "avg_pnl_pct": -0.002187534108471287,
+      "avg_mfe_pct": 0.0004678959121076815,
+      "avg_mae_pct": -0.0026978212074290726,
+      "avg_hold_bars": 15.4
+    },
+    {
+      "coin": "ADA",
+      "strategy": "cvd_extreme",
+      "total_trades": 1,
+      "win_rate": 0.0,
+      "total_pnl_usdt": -2.5887999999999844,
+      "avg_pnl_pct": -0.006472491909385074,
+      "avg_mfe_pct": 0.003236245954692537,
+      "avg_mae_pct": -0.006472491909385074,
+      "avg_hold_bars": 31.0
+    },
+    {
       "coin": "XRP",
       "strategy": "momentum_breakout",
       "total_trades": 2,
@@ -362,6 +726,50 @@
       "avg_mfe_pct": 0.0005240193379411513,
       "avg_mae_pct": -0.0013100847724458985,
       "avg_hold_bars": 4.0
+    },
+    {
+      "coin": "ARB",
+      "strategy": "vwap_reversion",
+      "total_trades": 4,
+      "win_rate": 0.0,
+      "total_pnl_usdt": -2.935508520000012,
+      "avg_pnl_pct": -0.0033633787185994423,
+      "avg_mfe_pct": 0.0,
+      "avg_mae_pct": -0.0036372012815786394,
+      "avg_hold_bars": 5.0
+    },
+    {
+      "coin": "OP",
+      "strategy": "cvd_extreme",
+      "total_trades": 3,
+      "win_rate": 0.0,
+      "total_pnl_usdt": -2.9971700000000023,
+      "avg_pnl_pct": -0.004644003098705438,
+      "avg_mfe_pct": 0.00030665440049061323,
+      "avg_mae_pct": -0.0059049063203929645,
+      "avg_hold_bars": 33.0
+    },
+    {
+      "coin": "DOT",
+      "strategy": "vwap_reversion",
+      "total_trades": 3,
+      "win_rate": 0.3333333333333333,
+      "total_pnl_usdt": -3.4496000000000837,
+      "avg_pnl_pct": -0.0034030086898479256,
+      "avg_mfe_pct": 0.0034120734908136222,
+      "avg_mae_pct": -0.004189586191835972,
+      "avg_hold_bars": 23.333333333333332
+    },
+    {
+      "coin": "SOL",
+      "strategy": "vwap_reversion",
+      "total_trades": 4,
+      "win_rate": 0.0,
+      "total_pnl_usdt": -3.8526999999999743,
+      "avg_pnl_pct": -0.0026813999190790213,
+      "avg_mfe_pct": 0.0002083085346982722,
+      "avg_mae_pct": -0.0028311543218584546,
+      "avg_hold_bars": 18.75
     },
     {
       "coin": "BNB",
@@ -384,6 +792,17 @@
       "avg_mfe_pct": 0.002206929069289993,
       "avg_mae_pct": -0.0007498022993110052,
       "avg_hold_bars": 14.0
+    },
+    {
+      "coin": "SUI",
+      "strategy": "vwap_reversion",
+      "total_trades": 6,
+      "win_rate": 0.16666666666666666,
+      "total_pnl_usdt": -5.333819999999997,
+      "avg_pnl_pct": -0.0034908411518044663,
+      "avg_mfe_pct": 0.0003037842938065284,
+      "avg_mae_pct": -0.0044389532383587145,
+      "avg_hold_bars": 14.166666666666666
     },
     {
       "coin": "SOL",
@@ -586,33 +1005,33 @@
     {
       "coin": "ARB",
       "strategy": "liquidation_fade",
-      "total_trades": 3,
-      "win_rate": 0.3333333333333333,
-      "total_pnl_usdt": -49.76906000000085,
-      "avg_pnl_pct": -0.004423919896339698,
-      "avg_mfe_pct": 0.0022334945401077133,
-      "avg_mae_pct": -0.0047967759738937205,
-      "avg_hold_bars": 48.666666666666664
+      "total_trades": 5,
+      "win_rate": 0.2,
+      "total_pnl_usdt": -49.899920000000854,
+      "avg_pnl_pct": -0.0028726925491575363,
+      "avg_mfe_pct": 0.0030792271588472265,
+      "avg_mae_pct": -0.003749529415739303,
+      "avg_hold_bars": 54.2
     }
   ],
   "session_stats": {
     "London": {
-      "trades": 11,
-      "win_rate": 0.2727272727272727,
-      "total_pnl": 20.0691,
-      "avg_pnl": 1.8245
+      "trades": 41,
+      "win_rate": 0.17073170731707318,
+      "total_pnl": 4.7668,
+      "avg_pnl": 0.1163
     },
     "NY": {
-      "trades": 110,
-      "win_rate": 0.3181818181818182,
-      "total_pnl": -219.8239,
-      "avg_pnl": -1.9984
+      "trades": 119,
+      "win_rate": 0.31932773109243695,
+      "total_pnl": -214.7382,
+      "avg_pnl": -1.8045
     },
     "Asia": {
-      "trades": 7,
-      "win_rate": 0.8571428571428571,
-      "total_pnl": 71.4476,
-      "avg_pnl": 10.2068
+      "trades": 58,
+      "win_rate": 0.3275862068965517,
+      "total_pnl": 63.2,
+      "avg_pnl": 1.0897
     },
     "Off": {
       "trades": 5,
@@ -623,54 +1042,54 @@
   },
   "regime_stats": {
     "MED": {
-      "trades": 95,
-      "win_rate": 0.3368421052631579,
-      "total_pnl": -25.968,
-      "avg_pnl": -0.2733
+      "trades": 151,
+      "win_rate": 0.304635761589404,
+      "total_pnl": -35.3374,
+      "avg_pnl": -0.234
     },
     "LOW": {
-      "trades": 6,
-      "win_rate": 0.3333333333333333,
-      "total_pnl": -20.4966,
-      "avg_pnl": -3.4161
+      "trades": 12,
+      "win_rate": 0.25,
+      "total_pnl": -22.0103,
+      "avg_pnl": -1.8342
     },
     "HIGH": {
-      "trades": 32,
-      "win_rate": 0.375,
-      "total_pnl": -69.0633,
-      "avg_pnl": -2.1582
+      "trades": 60,
+      "win_rate": 0.2833333333333333,
+      "total_pnl": -76.6442,
+      "avg_pnl": -1.2774
     }
   },
   "zscore_buckets": {
     "z1-2": {
-      "trades": 15,
-      "win_rate": 0.4,
-      "avg_pnl": 2.4255,
-      "total_pnl": 36.383
+      "trades": 47,
+      "win_rate": 0.34,
+      "avg_pnl": 0.7913,
+      "total_pnl": 37.1896
     },
     "z2-3": {
-      "trades": 20,
-      "win_rate": 0.45,
-      "avg_pnl": -0.8064,
-      "total_pnl": -16.1273
+      "trades": 37,
+      "win_rate": 0.297,
+      "avg_pnl": -0.6601,
+      "total_pnl": -24.4254
     },
     "z3-4": {
-      "trades": 6,
-      "win_rate": 0.667,
-      "avg_pnl": 6.0765,
-      "total_pnl": 36.4588
+      "trades": 18,
+      "win_rate": 0.389,
+      "avg_pnl": 1.4232,
+      "total_pnl": 25.6179
     },
     "z<1": {
-      "trades": 88,
-      "win_rate": 0.284,
-      "avg_pnl": -2.1168,
-      "total_pnl": -186.2769
+      "trades": 112,
+      "win_rate": 0.259,
+      "avg_pnl": -1.6643,
+      "total_pnl": -186.4038
     },
     "z>4": {
-      "trades": 4,
-      "win_rate": 0.5,
-      "avg_pnl": 3.5086,
-      "total_pnl": 14.0343
+      "trades": 9,
+      "win_rate": 0.333,
+      "avg_pnl": 1.5589,
+      "total_pnl": 14.0298
     }
   },
   "sl_tp_hints": {
@@ -697,19 +1116,19 @@
       "note": "SL \uc801\uc808"
     },
     "asymmetric_sniper": {
-      "sample_size": 32,
+      "sample_size": 33,
       "mae_p50_atr": 0.82,
-      "mae_p75_atr": 1.13,
-      "mfe_p50_atr_wins": 2.47,
+      "mae_p75_atr": 1.11,
+      "mfe_p50_atr_wins": 2.46,
       "mfe_p75_atr_wins": 3.82,
       "current_sl_atr_mult": 3.0,
-      "suggested_sl_atr_mult": 1.4,
+      "suggested_sl_atr_mult": 1.3,
       "suggested_tp_atr_mult": 2.2,
       "note": "SL\uc774 \ub108\ubb34 \ub113\uc74c \u2014 \ub9ac\uc2a4\ud06c \uacfc\ub2e4"
     },
     "liquidation_fade": {
-      "sample_size": 28,
-      "mae_p50_atr": 1.94,
+      "sample_size": 41,
+      "mae_p50_atr": 1.54,
       "mae_p75_atr": 2.8,
       "mfe_p50_atr_wins": 3.82,
       "mfe_p75_atr_wins": 4.2,
@@ -717,13 +1136,48 @@
       "suggested_sl_atr_mult": 3.4,
       "suggested_tp_atr_mult": 3.4,
       "note": "SL \uc801\uc808"
+    },
+    "vwap_reversion": {
+      "sample_size": 43,
+      "mae_p50_atr": 2.05,
+      "mae_p75_atr": 3.07,
+      "mfe_p50_atr_wins": 5.51,
+      "mfe_p75_atr_wins": 14.16,
+      "current_sl_atr_mult": 4.0,
+      "suggested_sl_atr_mult": 3.7,
+      "suggested_tp_atr_mult": 5.0,
+      "note": "SL \uc801\uc808"
+    },
+    "cvd_extreme": {
+      "sample_size": 22,
+      "mae_p50_atr": 1.8,
+      "mae_p75_atr": 2.51,
+      "mfe_p50_atr_wins": 6.87,
+      "mfe_p75_atr_wins": 12.54,
+      "current_sl_atr_mult": 4.0,
+      "suggested_sl_atr_mult": 3.0,
+      "suggested_tp_atr_mult": 6.2,
+      "note": "SL \uc801\uc808"
+    },
+    "volume_impulse": {
+      "sample_size": 11,
+      "mae_p50_atr": 1.65,
+      "mae_p75_atr": 2.05,
+      "mfe_p50_atr_wins": 11.79,
+      "mfe_p75_atr_wins": 11.79,
+      "current_sl_atr_mult": 4.0,
+      "suggested_sl_atr_mult": 2.5,
+      "suggested_tp_atr_mult": 10.6,
+      "note": "SL \uc801\uc808"
     }
   },
   "top_recommendations": [
+    "[volume_impulse] \uc2b9\ub960 9% \u2014 \ube44\ud65c\uc131\ud654 \ub610\ub294 \uc2e0\ud638 \ud544\ud130 \uac15\ud654",
+    "[cvd_extreme] \uc2b9\ub960 23% \u2014 \ube44\ud65c\uc131\ud654 \ub610\ub294 \uc2e0\ud638 \ud544\ud130 \uac15\ud654",
+    "[vwap_reversion] \uc2b9\ub960 23% \u2014 \ube44\ud65c\uc131\ud654 \ub610\ub294 \uc2e0\ud638 \ud544\ud130 \uac15\ud654",
     "[cvd_spike] \uc2b9\ub960 27% \u2014 \ube44\ud65c\uc131\ud654 \ub610\ub294 \uc2e0\ud638 \ud544\ud130 \uac15\ud654",
-    "London \uc138\uc158 \uc2b9\ub960 27% \u2014 \ud574\ub2f9 \uc138\uc158 \uac70\ub798 \uc911\ub2e8 \uace0\ub824",
-    "\uc800\ubcc0\ub3d9\uc131 \ub808\uc9d0 \uc2b9\ub960 33% \u2014 \uc800\ubcc0\ub3d9\uc131 \uc2dc \uc9c4\uc785 \uc5b5\uc81c",
-    "CVD z3-4 \uad6c\uac04\uc5d0\uc11c \uc2b9\ub960 67% \u2014 \uc774 \uad6c\uac04 \uc9c4\uc785 \uc6b0\uc120\ud654",
-    "[asymmetric_sniper] SL \uc870\uc815: \ud604\uc7ac ATR\u00d73.0 \u2192 \uad8c\uc7a5 ATR\u00d71.4"
+    "London \uc138\uc158 \uc2b9\ub960 17% \u2014 \ud574\ub2f9 \uc138\uc158 \uac70\ub798 \uc911\ub2e8 \uace0\ub824",
+    "\uc800\ubcc0\ub3d9\uc131 \ub808\uc9d0 \uc2b9\ub960 25% \u2014 \uc800\ubcc0\ub3d9\uc131 \uc2dc \uc9c4\uc785 \uc5b5\uc81c",
+    "[asymmetric_sniper] SL \uc870\uc815: \ud604\uc7ac ATR\u00d73.0 \u2192 \uad8c\uc7a5 ATR\u00d71.3"
   ]
 }

@@ -1,0 +1,44 @@
+2026-03-29 15:40:26,042 [INFO] [EquityState] Restored equity=$4599.11 (restarts=1)
+2026-03-29 15:40:26,045 [INFO] ProcessPoolExecutor initialized: 10 workers (16 cores, 80% target)
+2026-03-29 15:40:26,046 [INFO] ============================================================
+2026-03-29 15:40:26,046 [INFO] Multi-Strategy Bot v8.5 | mode=demo
+2026-03-29 15:40:26,046 [INFO] equity=$4599.105317 | coins=['XRP', 'SOL', 'TAO', 'DOGE', 'ADA', 'DOT', 'AVAX', 'BNB', 'LINK']
+2026-03-29 15:40:26,046 [INFO] ============================================================
+2026-03-29 15:40:26,661 [INFO] Exchange initialized (binance/sandbox): 704 markets loaded
+2026-03-29 15:40:27,112 [WARNING] [GhostClean] ghost 포지션 점검 실패: 'NoneType' object has no attribute 'has_coin_any_strategy'
+2026-03-29 15:40:27,112 [INFO] Demo/testnet mode: virtual funds, real orders on testnet | equity=$4599.11
+2026-03-29 15:40:27,137 [INFO] [MultiPos] Recovered 0 positions
+2026-03-29 15:40:27,140 [INFO] [EVGuardian] Initial evaluation: ['momentum_breakout', 'cvd_spike', 'asymmetric_sniper', 'liquidation_fade']
+2026-03-29 15:40:27,140 [INFO] Loaded 15 coin profiles from data/reports/multi_strategy/coin_profiles.json
+2026-03-29 15:40:27,141 [INFO] [EntryFilters] vpin=True blacklist=True atr_regime=True
+2026-03-29 15:40:27,141 [INFO] [PortRisk] Daily state restored: day_start=$4590.16 strategy_pnl={'liquidation_fade': 8.94142}
+2026-03-29 15:40:27,141 [INFO] [cvd_spike] loaded | $9000.0 | 6x | cycle=60s | max_pos=15
+2026-03-29 15:40:27,141 [INFO] [liquidation_fade] loaded | $4500.0 | 5x | cycle=60s | max_pos=10
+2026-03-29 15:40:27,141 [INFO] [asymmetric_sniper] loaded | $9000.0 | 5x | cycle=60s | max_pos=10
+2026-03-29 15:40:27,141 [INFO] [MonitorV2] Started (poll every 15s)
+2026-03-29 15:40:27,142 [INFO] [Discord] System ready notification sent
+2026-03-29 15:40:27,142 [INFO] [cvd_spike] loop started (every 60s)
+2026-03-29 15:40:27,142 [INFO] [liquidation_fade] loop started (every 60s)
+2026-03-29 15:40:27,142 [INFO] [asymmetric_sniper] loop started (every 60s)
+2026-03-29 15:40:27,270 [INFO] [CoinSelect] Volatility top 30 → 0 passed safety filter | rejected: 0
+2026-03-29 15:40:27,270 [INFO] [CoinRefresh] 11 coins active (base=13 + selective=0) | +{'ARB', 'SUI', 'OP', 'ETH'} -{'LINK', 'TAO'}
+2026-03-29 15:40:30,071 [INFO] [Scan:cvd_spike] trades=0 | cache hits=0 miss=9 err=0 | positions=0
+2026-03-29 15:40:33,251 [INFO] [Scan:asymmetric_sniper] trades=0 | cache hits=7 miss=4 err=0 | positions=0
+2026-03-29 15:40:38,310 [INFO] [Scan:liquidation_fade] trades=0 | cache hits=0 miss=11 err=0 | positions=0
+2026-03-29 15:41:23,349 [INFO] [Heartbeat] equity=$4599.11 | daily=0.00% | pos=0 | notional=$0.00 | kill=False
+2026-03-29 15:41:23,643 [INFO] [CoinSelect] Volatility top 30 → 0 passed safety filter | rejected: 0
+2026-03-29 15:41:26,295 [INFO] [Scan:cvd_spike] trades=0 | cache hits=11 miss=2 err=0 | positions=0
+2026-03-29 15:41:28,750 [INFO] Signal 15 received, shutting down...
+2026-03-29 15:41:28,750 [INFO] Shutting down...
+2026-03-29 15:41:28,751 [INFO] [MonitorV2] Stopped
+2026-03-29 15:41:28,751 [INFO] ============================================================
+2026-03-29 15:41:28,751 [INFO] Session summary (net of fees):
+2026-03-29 15:41:28,751 [INFO]   Trades: 0
+2026-03-29 15:41:28,751 [INFO]   Net PnL: $+0.0000 (fee: $0.0000)
+2026-03-29 15:41:28,751 [INFO]   Win rate: 0.0%
+2026-03-29 15:41:28,751 [INFO]   Final equity: $4599.11
+2026-03-29 15:41:28,751 [INFO]   [cvd_spike] trades=0 net_pnl=$+0.0000
+2026-03-29 15:41:28,751 [INFO]   [liquidation_fade] trades=0 net_pnl=$+0.0000
+2026-03-29 15:41:28,751 [INFO]   [asymmetric_sniper] trades=0 net_pnl=$+0.0000
+2026-03-29 15:41:28,751 [INFO] ============================================================
+[OK] Discord 연동 확인 완료

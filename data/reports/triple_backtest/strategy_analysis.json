@@ -1,0 +1,155 @@
+{
+  "generated_at": "2026-03-30T10:51:27.337700+00:00",
+  "total_trades": 5,
+  "total_pnl_usdt": 4.750009196789691,
+  "overall_win_rate": 0.6,
+  "strategy_stats": [
+    {
+      "name": "vwap_reversion",
+      "total_trades": 3,
+      "wins": 3,
+      "losses": 0,
+      "total_pnl_usdt": 8.750209196766322,
+      "total_pnl_pct": 0.0175012934628111,
+      "gross_profit": 8.750209196766322,
+      "gross_loss": 0.0,
+      "avg_win_usdt": 2.9167363989221076,
+      "avg_loss_usdt": 0,
+      "max_win": 3.7467199030084126,
+      "max_loss": 0.0,
+      "avg_bars_held": 60.0,
+      "avg_mfe_pct": 0.0,
+      "avg_mae_pct": 0.0,
+      "sharpe": 63.49740916979373,
+      "profit_factor": Infinity,
+      "mdd_pct": 0.0,
+      "win_rate": 1.0,
+      "exit_sl": 0,
+      "exit_tp": 0,
+      "exit_time": 3,
+      "exit_trailing": 0,
+      "suggestions": []
+    },
+    {
+      "name": "volume_impulse",
+      "total_trades": 2,
+      "wins": 0,
+      "losses": 2,
+      "total_pnl_usdt": -4.000199999976632,
+      "total_pnl_pct": -0.00799999999999997,
+      "gross_profit": 0.0,
+      "gross_loss": 4.000199999976632,
+      "avg_win_usdt": 0,
+      "avg_loss_usdt": 2.000099999988316,
+      "max_win": 0.0,
+      "max_loss": 2.0001000000045277,
+      "avg_bars_held": 7.0,
+      "avg_mfe_pct": 0.0,
+      "avg_mae_pct": 0.0,
+      "sharpe": 0.0,
+      "profit_factor": 0.0,
+      "mdd_pct": 0.0,
+      "win_rate": 0.0,
+      "exit_sl": 2,
+      "exit_tp": 0,
+      "exit_time": 0,
+      "exit_trailing": 0,
+      "suggestions": []
+    }
+  ],
+  "coin_stats": [
+    {
+      "coin": "SOL",
+      "strategy": "vwap_reversion",
+      "total_trades": 1,
+      "win_rate": 1.0,
+      "total_pnl_usdt": 3.7467199030084126,
+      "avg_pnl_pct": 0.00749381449927757,
+      "avg_mfe_pct": 0.0,
+      "avg_mae_pct": 0.0,
+      "avg_hold_bars": 60.0
+    },
+    {
+      "coin": "DOGE",
+      "strategy": "vwap_reversion",
+      "total_trades": 1,
+      "win_rate": 1.0,
+      "total_pnl_usdt": 3.0317685589448855,
+      "avg_pnl_pct": 0.00606384030991948,
+      "avg_mfe_pct": 0.0,
+      "avg_mae_pct": 0.0,
+      "avg_hold_bars": 60.0
+    },
+    {
+      "coin": "ETH",
+      "strategy": "vwap_reversion",
+      "total_trades": 1,
+      "win_rate": 1.0,
+      "total_pnl_usdt": 1.9717207348130241,
+      "avg_pnl_pct": 0.00394363865361405,
+      "avg_mfe_pct": 0.0,
+      "avg_mae_pct": 0.0,
+      "avg_hold_bars": 60.0
+    },
+    {
+      "coin": "XRP",
+      "strategy": "volume_impulse",
+      "total_trades": 1,
+      "win_rate": 0.0,
+      "total_pnl_usdt": -2.0000999999721043,
+      "avg_pnl_pct": -0.0040000000000000036,
+      "avg_mfe_pct": 0.0,
+      "avg_mae_pct": 0.0,
+      "avg_hold_bars": 7.0
+    },
+    {
+      "coin": "ADA",
+      "strategy": "volume_impulse",
+      "total_trades": 1,
+      "win_rate": 0.0,
+      "total_pnl_usdt": -2.0001000000045277,
+      "avg_pnl_pct": -0.003999999999999967,
+      "avg_mfe_pct": 0.0,
+      "avg_mae_pct": 0.0,
+      "avg_hold_bars": 7.0
+    }
+  ],
+  "session_stats": {
+    "London": {
+      "trades": 5,
+      "win_rate": 0.6,
+      "total_pnl": 4.75,
+      "avg_pnl": 0.95
+    }
+  },
+  "regime_stats": {
+    "MED": {
+      "trades": 5,
+      "win_rate": 0.6,
+      "total_pnl": 4.75,
+      "avg_pnl": 0.95
+    }
+  },
+  "zscore_buckets": {
+    "z3-4": {
+      "trades": 1,
+      "win_rate": 1.0,
+      "avg_pnl": 1.9717,
+      "total_pnl": 1.9717
+    },
+    "z<1": {
+      "trades": 2,
+      "win_rate": 0.0,
+      "avg_pnl": -2.0001,
+      "total_pnl": -4.0002
+    },
+    "z>4": {
+      "trades": 2,
+      "win_rate": 1.0,
+      "avg_pnl": 3.3892,
+      "total_pnl": 6.7785
+    }
+  },
+  "sl_tp_hints": {},
+  "top_recommendations": []
+}

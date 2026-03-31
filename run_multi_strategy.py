@@ -43,7 +43,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 # ── Logging ──────────────────────────────────────────────
 
-STATE_DIR = Path("data/reports/multi_strategy")
+STATE_DIR = Path(os.environ.get("TRIPLE_STATE_DIR", "data/reports/multi_strategy"))
 STATE_DIR.mkdir(parents=True, exist_ok=True)
 EQUITY_STATE_FILE = STATE_DIR / "equity_state.json"
 TRADES_FILE = STATE_DIR / "trades.jsonl"
@@ -103,6 +103,7 @@ from src.strategies.cluster_tracker import ClusterTracker
 from src.meta.drawdown_throttle import DrawdownThrottle
 from src.meta.fee_ev_gate import FeeEVGate
 from src.meta.dsr import DSREvaluator
+from src.meta.param_adjuster import ParamAdjuster, EVGridSearch
 from src.utils.bnb_keeper import BnbKeeper
 from src.utils.fee_scanner import FeeScanner
 
@@ -238,6 +239,8 @@ class MultiStrategyBot:
         self._session_trades: list[dict] = []  # current session only — NOT loaded from history
         self._session_start_time: float = time.time()  # for filtering in briefings
         self._first_trade_notified = False
+        # DrawdownThrottle Discord 알림 중복 방지 (한 번만 알림)
+        self._dd_pause_notified: set[str] = set()
 
         # Graceful update: --keep-positions prevents closing positions on shutdown
         self._keep_positions: bool = False
@@ -408,7 +411,11 @@ class MultiStrategyBot:
         )
         self.fee_ev_gate.refresh()
         self.dsr_evaluator = DSREvaluator(significance_level=0.95)
-        log.info("[v10.0] ClusterTracker + DrawdownThrottle + FeeEVGate + DSR initialized")
+        self.param_adjuster = ParamAdjuster(
+            trade_context_path=STATE_DIR / "trade_context.jsonl",
+        )
+        self.ev_grid_search = EVGridSearch()
+        log.info("[v10.0] ClusterTracker + DrawdownThrottle + FeeEVGate + DSR + ParamAdjuster + EVGridSearch initialized")
 
         # Portfolio risk
         strategy_allocations = {}
@@ -496,6 +503,7 @@ class MultiStrategyBot:
             strategy.cluster_tracker = self.cluster_tracker
             strategy.drawdown_throttle = self.drawdown_throttle
             strategy.fee_ev_gate = self.fee_ev_gate
+            strategy.ev_grid_search = self.ev_grid_search
             self.strategies[name] = strategy
             log.info(
                 f"[{name}] loaded | ${config.allocation_usdt} | "
@@ -701,12 +709,56 @@ class MultiStrategyBot:
 
                 # ── v10.0: DrawdownThrottle gate ──────────────
                 if self.drawdown_throttle.is_paused(strategy.name):
-                    log.info(f"[{strategy.name}] PAUSED by DrawdownThrottle (5+ consecutive losses)")
+                    # 최초 일시정지 시에만 Discord 알림 + 파라미터 자동 조정
+                    if strategy.name not in self._dd_pause_notified:
+                        self._dd_pause_notified.add(strategy.name)
+                        _dt_status = self.drawdown_throttle.get_status(strategy.name)
+                        log.warning(
+                            f"[{strategy.name}] PAUSED by DrawdownThrottle "
+                            f"(streak={_dt_status['streak']})"
+                        )
+                        # ── 파라미터 자동 미세조정 ──
+                        try:
+                            loop = asyncio.get_running_loop()
+                            _changed, _summary = await loop.run_in_executor(
+                                None, self.param_adjuster.adjust, strategy
+                            )
+                        except Exception as _adj_err:
+                            log.warning(f"[ParamAdjuster] {strategy.name} 조정 실패: {_adj_err}")
+                            _changed, _summary = {}, "조정 오류"
+
+                        _adj_lines = ""
+                        if _changed:
+                            _adj_lines = "\n\n**자동 파라미터 조정:**\n" + "\n".join(
+                                f"  {'▲' if nv > ov else '▼'} `{p}`: `{ov}` → `{nv}`"
+                                for p, (ov, nv) in _changed.items()
+                            )
+                            log.info(
+                                f"[ParamAdjuster] {strategy.name} 조정 적용: "
+                                + ", ".join(f"{p}={nv}" for p, (_, nv) in _changed.items())
+                            )
+                        else:
+                            _adj_lines = f"\n\n조정 없음: {_summary}"
+
+                        discord_post(
+                            f"전략: `{strategy.name}`\n"
+                            f"{_dt_status['streak']*-1}연속 손실 → 자동 일시정지\n"
+                            f"연속 상태: `{_dt_status['status']}` | 복귀 조건: 2연승"
+                            + _adj_lines,
+                            title="⏸️ DrawdownThrottle — 전략 일시정지 + 파라미터 조정",
+                        )
                     try:
                         await asyncio.sleep(cycle)
                     except asyncio.CancelledError:
                         break
                     continue
+                # 정지 해제 시 알림 (이전에 정지 알림을 보낸 경우만)
+                if strategy.name in self._dd_pause_notified:
+                    self._dd_pause_notified.discard(strategy.name)
+                    discord_post(
+                        f"전략: `{strategy.name}` 2연승 달성 → 정상 재개",
+                        title="▶️ DrawdownThrottle — 전략 재개",
+                    )
 
                 # ── F1 + F5: EV/Fee budget gate ──────────────
                 if self.ev_guardian:
@@ -954,33 +1006,70 @@ class MultiStrategyBot:
                 else:
                     pos_text = "포지션 없음"
 
-                # 전략별 오늘 PnL
-                strat_pnl = status.get("strategy_pnl", {})
-                strat_lines = "\n".join(
-                    f"• {n}: `{v:+.4f} USDT`" for n, v in strat_pnl.items()
-                ) or "• 거래 없음"
+                # ── 전략별 승률 + 차단 상태 + 파라미터 조정 횟수 ──
+                import time as _time_mod
+                _now_ts = _time_mod.time()
+                _strat_stat_lines = []
+                for _sname, _strat_obj in self.strategies.items():
+                    # 전략별 세션 거래 통계
+                    _st = [t for t in self._session_trades if t.get("strategy") == _sname]
+                    _st_n = len(_st)
+                    _st_wins = sum(1 for t in _st if t.get("pnl_net_usdt", t.get("pnl_usdt", 0)) > 0)
+                    _st_pnl = sum(t.get("pnl_net_usdt", t.get("pnl_usdt", 0)) for t in _st)
+                    _st_wr = f"{_st_wins/_st_n*100:.1f}%" if _st_n > 0 else "N/A"
 
-                # 오늘 세션 통계 (수수료 포함 순수익 기준)
+                    # 차단 상태
+                    _status_icons = []
+                    _dd_st = self.drawdown_throttle.get_status(_sname)
+                    if _dd_st["paused"]:
+                        _status_icons.append(f"⏸️ DDThrottle({_dd_st['status']})")
+                    elif _dd_st["size_factor"] < 1.0:
+                        _status_icons.append(f"⚠️ 사이즈×{_dd_st['size_factor']:.1f}({_dd_st['status']})")
+
+                    _fev_stats = self.fee_ev_gate.get_strategy_stats(_sname)
+                    _fev_blocked_recently = (
+                        _sname in self.fee_ev_gate.last_blocked
+                        and (_now_ts - self.fee_ev_gate.last_blocked[_sname]) < 3600
+                    )
+                    if _fev_blocked_recently:
+                        _fev_wr = f"{_fev_stats['wr']:.1%}" if _fev_stats else "?"
+                        _status_icons.append(f"🔴 FeeEV차단(WR={_fev_wr})")
+
+                    _status_str = " | ".join(_status_icons) if _status_icons else "✅ 정상"
+
+                    # 파라미터 조정 횟수 합산
+                    _adj_dd = self.param_adjuster.apply_count.get(_sname, 0)
+                    _adj_ev = self.ev_grid_search.apply_count.get(_sname, 0)
+                    _adj_total = _adj_dd + _adj_ev
+                    _adj_str = f"조정 {_adj_total}회" if _adj_total > 0 else ""
+
+                    _line = (
+                        f"• **{_sname}**: WR `{_st_wr}` ({_st_n}건) PnL `{_st_pnl:+.2f}`"
+                        f" | {_status_str}"
+                        + (f" | {_adj_str}" if _adj_str else "")
+                    )
+                    _strat_stat_lines.append(_line)
+
+                strat_status_text = "\n".join(_strat_stat_lines) or "• 전략 없음"
+
+                # 세션 전체 통계
                 total_trades = len(self._session_trades)
                 session_pnl = sum(t.get("pnl_net_usdt", t["pnl_usdt"]) for t in self._session_trades)
-                wins = sum(1 for t in self._session_trades if t.get("pnl_net_usdt", t["pnl_usdt"]) > 0)
-                wr = f"{wins/total_trades*100:.1f}%" if total_trades > 0 else "N/A"
-
-                # 수수료 통계
                 session_fee = sum(t.get("fee_usdt", 0.0) for t in self._session_trades)
-                session_net = session_pnl  # already net
                 ev_text = self.ev_guardian.format_discord_summary() if self.ev_guardian else ""
 
                 # 세션 통계 섹션 — 거래 있을 때만 상세 표시
                 if total_trades > 0:
                     session_stat_text = (
                         f"**📈 세션 통계** (거래: {total_trades}건)\n"
-                        f"세션 PnL: `{session_pnl:+.4f} USDT` | 수수료: `{session_fee:.4f} USDT` | 순수익: `{session_net:+.4f} USDT`\n"
-                        f"승률: `{wr}`\n\n"
-                        f"**전략별 PnL:**\n{strat_lines}"
+                        f"PnL: `{session_pnl:+.4f} USDT` | 수수료: `{session_fee:.4f} USDT`\n\n"
+                        f"**🎯 전략별 현황:**\n{strat_status_text}"
                     )
                 else:
-                    session_stat_text = "**📈 세션 통계** — 아직 거래 없음"
+                    session_stat_text = (
+                        f"**📈 세션 통계** — 아직 거래 없음\n\n"
+                        f"**🎯 전략별 현황:**\n{strat_status_text}"
+                    )
 
                 discord_post(
                     f"**💰 잔고**\n"
@@ -1672,6 +1761,9 @@ class MultiStrategyBot:
             try:
                 if not self.ev_guardian:
                     break
+
+                # v10.0: FeeEVGate 통계 갱신 (누적된 거래 데이터 반영)
+                self.fee_ev_gate.refresh()
 
                 # EV 재평가 (blocking I/O → executor)
                 loop = asyncio.get_running_loop()

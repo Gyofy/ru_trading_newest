@@ -348,6 +348,22 @@ class StrategyBase(ABC):
             )
             if not _ev_ok:
                 self._log.info(f"[{coin}] FeeEV REJECTED: {_ev_reason}")
+                # ── EV 그리드 서치: EV > 0 달성 파라미터 탐색 + 적용 ──
+                if hasattr(self, "ev_grid_search") and self.ev_grid_search and atr > 0:
+                    _atr_pct = atr / price if price > 0 else 0.01
+                    _gs_applied, _gs_summary = self.ev_grid_search.search_and_apply(
+                        strategy_obj=self,
+                        fee_ev_gate=self.fee_ev_gate,
+                        atr_pct=_atr_pct,
+                        sl_floor_pct=SL_FLOOR_PCT,
+                    )
+                    if _gs_applied:
+                        self._log.warning(
+                            f"[{coin}] EV GridSearch 파라미터 조정: "
+                            + ", ".join(
+                                f"{k}={v[0]}→{v[1]}" for k, v in _gs_applied.items()
+                            )
+                        )
                 return None
 
         # Fetch funding rate for gate check
