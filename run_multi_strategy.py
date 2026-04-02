@@ -88,6 +88,10 @@ from src.strategies.vwap_reversion import VWAPReversion
 from src.strategies.funding_arb import FundingArb
 from src.strategies.volume_impulse import VolumeImpulse
 from src.strategies.oi_divergence import OIDivergence
+from src.strategies.tsmom_1h import TSMOM1h
+from src.strategies.tsmom_12h import TSMOM12h
+from src.strategies.rel_strength_1h import RelStrength1h
+from src.strategies.tsmom_1d import TSMOM1d
 from src.strategies.multi_position_manager import MultiPositionManager
 from src.strategies.portfolio_risk import PortfolioRiskConfig, PortfolioRiskManager
 from src.strategies.data_hub import DataHub
@@ -117,6 +121,11 @@ STRATEGY_MAP = {
     "funding_arb": FundingArb,
     "volume_impulse": VolumeImpulse,
     "oi_divergence": OIDivergence,
+    "tsmom_1h": TSMOM1h,
+    "tsmom_12h": TSMOM12h,
+    "rel_strength_1h": RelStrength1h,
+    "tsmom_1d": TSMOM1d,
+    "tsmom_1d_slow": TSMOM1d,
 }
 
 

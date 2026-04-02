@@ -1,9 +1,19 @@
-version: "v10.0-triple-backtest"
-mode: "backtest"
+version: v10.0-triple-backtest
+mode: backtest
 initial_equity: 5000.0
-daily_loss_limit: 0.20
-
+daily_loss_limit: 0.2
 coins:
+- SOL
+- XRP
+- DOGE
+- ADA
+- BNB
+- ETH
+- DOT
+backtest:
+  start_date: '2025-01-01'
+  end_date: '2025-03-30'
+  coins:
   - SOL
   - XRP
   - DOGE
@@ -11,21 +21,8 @@ coins:
   - BNB
   - ETH
   - DOT
-
-backtest:
-  start_date: "2025-01-01"
-  end_date: "2025-03-30"
-  coins:
-    - SOL
-    - XRP
-    - DOGE
-    - ADA
-    - BNB
-    - ETH
-    - DOT
-  data_cache_dir: "data/backtest_cache"
+  data_cache_dir: data/backtest_cache
   slippage_bps: 5.0
-
 dynamic_coins:
   enabled: false
   volatility_pool: 30
@@ -34,23 +31,21 @@ dynamic_coins:
   max_spread_bps: 8.0
   refresh_interval_sec: 900
   base_coins:
-    - SOL
-    - XRP
-    - DOGE
-    - ADA
-    - BNB
-    - ETH
-    - DOT
+  - SOL
+  - XRP
+  - DOGE
+  - ADA
+  - BNB
+  - ETH
+  - DOT
   exclude_coins: []
-
 portfolio:
-  total_exposure_pct: 0.80
+  total_exposure_pct: 0.8
   same_direction_max: 3
-  daily_loss_pct: 0.20
-  strategy_loss_pct: 0.40
+  daily_loss_pct: 0.2
+  strategy_loss_pct: 0.4
   min_notional_usdt: 5.0
   max_funding_rate: 0.001
-
 position_sizing:
   risk_pct_per_trade: 0.02
   vol_adjust_enabled: true
@@ -58,10 +53,9 @@ position_sizing:
   confidence_adjust_enabled: true
   min_factor: 0.5
   max_factor: 2.0
-
 strategies:
   cvd_extreme:
-    enabled: true
+    enabled: false
     allocation_usdt: 500.0
     leverage: 3
     cycle_seconds: 60
@@ -75,9 +69,8 @@ strategies:
       tp_rr: 2.5
       max_daily_trades: 30
       cooldown_sec: 120
-
   liquidation_fade:
-    enabled: true
+    enabled: false
     allocation_usdt: 500.0
     leverage: 3
     cycle_seconds: 60
@@ -88,9 +81,8 @@ strategies:
       taker_spike_mult: 1.0
       swing_lookback: 24
       tp_atr_mult: 5.0
-
   vwap_reversion:
-    enabled: true
+    enabled: false
     allocation_usdt: 500.0
     leverage: 3
     cycle_seconds: 60
@@ -101,9 +93,8 @@ strategies:
       sigma_mult: 1.2
       vol_decay_threshold: 0.85
       tp_rr: 2.0
-
   funding_arb:
-    enabled: true
+    enabled: false
     allocation_usdt: 500.0
     leverage: 3
     cycle_seconds: 60
@@ -114,9 +105,8 @@ strategies:
       slow_ema: 21
       min_body_pct: 0.001
       tp_rr: 3.0
-
   volume_impulse:
-    enabled: true
+    enabled: false
     allocation_usdt: 500.0
     leverage: 3
     cycle_seconds: 60
@@ -127,9 +117,8 @@ strategies:
       min_body_pct: 0.002
       lookback: 50
       tp_rr: 3.0
-
   oi_divergence:
-    enabled: true
+    enabled: false
     allocation_usdt: 500.0
     leverage: 3
     cycle_seconds: 120
@@ -140,7 +129,6 @@ strategies:
       min_price_move_pct: 0.002
       oi_change_threshold: 0.003
       tp_rr: 2.5
-
   momentum_breakout:
     enabled: false
     allocation_usdt: 0
@@ -165,21 +153,57 @@ strategies:
     max_positions: 0
     sl_atr_mult: 2.5
     extra: {}
-
+  tsmom_1d:
+    enabled: true
+    allocation_usdt: 2500.0
+    leverage: 3
+    cycle_seconds: 3600
+    max_positions: 5
+    sl_atr_mult: 2.0
+    extra:
+      sl_mult: 2.0
+      tp_mult: 3.0
+      min_move_pct: 0.03
+      body_filter: false
+      max_daily_trades: 10
+      cooldown_sec: 86400
+      vol_filter: true
+      skip_days:
+      - 0
+      - 5
+      mom_slow: 28
+      mom_fast: 7
+  tsmom_1d_slow:
+    enabled: true
+    allocation_usdt: 1500.0
+    leverage: 3
+    cycle_seconds: 3600
+    max_positions: 5
+    sl_atr_mult: 2.0
+    extra:
+      sl_mult: 2.0
+      tp_mult: 3.0
+      min_move_pct: 0.03
+      mom_slow: 28
+      mom_fast: 14
+      vol_filter: true
+      skip_days:
+      - 0
+      - 5
+      body_filter: false
+      max_daily_trades: 10
+      cooldown_sec: 86400
 monitoring:
   sl_tp_poll_seconds: 15
   heartbeat_seconds: 60
-
 exchange:
   maker_fee: 0.0002
   taker_fee: 0.0005
   slippage_entry: 0.0005
   slippage_exit: 0.0005
   liquidation_fee: 0.005
-
 multiprocessing:
   workers: 4
-
 entry_filters:
   vpin_filter_enabled: false
   vpin_min: 0.15
@@ -188,12 +212,10 @@ entry_filters:
   blacklist_window_sec: 86400
   atr_regime_enabled: false
   atr_min_percentile: 15
-
 ev_guardian:
   fee_budget_pct: 100.0
   ev_threshold: -0.05
   ev_min_sample: 100
-
 fee_optimization:
   bnb_keeper:
     enabled: false
