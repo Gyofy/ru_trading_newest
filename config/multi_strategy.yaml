@@ -89,8 +89,8 @@ strategies:
     sl_atr_mult: 4.0
     extra:
       vwap_window: 60
-      sigma_mult: 1.2
-      vol_decay_threshold: 0.85
+      sigma_mult: 1.7              # 1.2→1.7 (노이즈 시그널 제거)
+      vol_decay_threshold: 0.75    # 0.85→0.75 (거래량 25% 이상 감소 필요)
       tp_rr: 2.5
   funding_arb:
     enabled: false
@@ -244,11 +244,11 @@ multiprocessing:
   workers: 10
 entry_filters:
   vpin_filter_enabled: true
-  vpin_min: 0.3
+  vpin_min: 0.15                  # 0.3→0.15: testnet VPIN 분포가 실전과 다름 (완화)
   blacklist_enabled: true
   blacklist_sl_count: 2
   blacklist_window_sec: 86400
-  atr_regime_enabled: true
+  atr_regime_enabled: false       # testnet 초기 히스토리 부족 → 과도한 차단 방지
   atr_min_percentile: 15
 ev_guardian:
   fee_budget_pct: 100.0
